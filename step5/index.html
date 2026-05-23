@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI漫剧创作大师 — 环节5 合成视频</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;background:#111;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
+
+.phone-frame{width:390px;height:844px;background:#0d0d0d;border-radius:44px;border:3px solid #222;overflow:hidden;position:relative;box-shadow:0 0 40px rgba(0,0,0,0.5)}
+.phone-notch{width:126px;height:30px;background:#0d0d0d;border-radius:0 0 18px 18px;margin:0 auto;position:relative;z-index:100}
+.phone-notch::before{content:'';width:8px;height:8px;background:#1a1a1a;border-radius:50%;position:absolute;right:26px;top:10px}
+.status-bar{display:flex;justify-content:space-between;align-items:center;padding:0 28px;height:18px;color:#ccc;font-size:11px;font-weight:600}
+.app-content{height:calc(844px - 30px - 18px);display:flex;flex-direction:column;background:#0d0d0d}
+
+/* Nav */
+.nav-bar{display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid #1a1a1a;flex-shrink:0}
+.nav-bar .back{color:#8b7bf7;font-size:18px;cursor:pointer;padding:4px}
+.nav-bar .title{font-size:16px;font-weight:700;color:#fff;margin-left:8px;flex:1}
+.nav-bar .hist-btn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:6px;transition:background .15s}
+.nav-bar .hist-btn:hover{background:#1a1a1a}
+.nav-bar .hist-btn svg{width:18px;height:18px;fill:#8b7bf7}
+
+/* Page transitions */
+.page{display:none;flex-direction:column;height:100%}
+.page.active{display:flex}
+
+/* ===== Page1: 视频播放 ===== */
+.video-area{flex:1;position:relative;display:flex;align-items:center;justify-content:center;background:#000;overflow:hidden}
+.video-area .placeholder{width:100%;height:100%;background:linear-gradient(135deg,#1a0f2e 0%,#0d1a2e 40%,#1a1a0f 100%);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.play-big{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.1);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s}
+.play-big:active{transform:scale(.93)}
+.play-big::after{content:'';width:0;height:0;border-top:11px solid transparent;border-bottom:11px solid transparent;border-left:18px solid rgba(255,255,255,0.8);margin-left:4px}
+.dur-info{position:absolute;top:12px;right:12px;padding:3px 8px;border-radius:5px;background:rgba(0,0,0,0.6);color:#aaa;font-size:10px}
+.ep-tag{position:absolute;top:12px;left:12px;padding:3px 10px;border-radius:5px;background:rgba(124,58,237,0.6);color:#fff;font-size:11px;font-weight:600}
+.progress-bar{position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,0.08)}
+.progress-fill{height:100%;width:35%;background:#7c3aed;border-radius:0 2px 2px 0}
+
+.bottom-bar{padding:14px 16px 28px;background:#0d0d0d;display:flex;gap:8px;flex-shrink:0}
+.bar-btn{flex:1;padding:11px 0;border-radius:10px;font-size:12px;font-weight:700;border:none;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;transition:all .15s}
+.bar-btn:active{transform:scale(.97)}
+.bar-btn.out{background:transparent;border:1px solid #333;color:#8b7bf7}
+.bar-btn.out svg{width:14px;height:14px;fill:#8b7bf7}
+.bar-btn.solid{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff}
+.bar-btn.solid svg{width:14px;height:14px;fill:#fff}
+
+/* ===== Page2: 我的漫剧 剧本列表 ===== */
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.scroll::-webkit-scrollbar{width:0}
+
+.script-card{display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid #1a1a1a;cursor:pointer;transition:background .12s}
+.script-card:active{background:#1a1a1a}
+.script-cover{width:68px;height:90px;flex-shrink:0;border-radius:8px;overflow:hidden;background:linear-gradient(135deg,#1e1236,#2a1a3c);display:flex;align-items:center;justify-content:center}
+.script-cover .sc-icon{font-size:22px;opacity:.3}
+.script-info{flex:1;display:flex;flex-direction:column;justify-content:center;min-width:0}
+.script-name{font-size:15px;font-weight:700;color:#fff;margin-bottom:4px}
+.script-meta{font-size:11px;color:#555;line-height:1.5}
+.script-arrow{color:#333;font-size:16px;align-self:center;flex-shrink:0}
+
+/* ===== Page3: 我的漫剧 剧集列表 ===== */
+.ep-card{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid #1a1a1a;cursor:pointer;transition:background .12s}
+.ep-card:active{background:#1a1a1a}
+.ep-thumb{width:96px;height:54px;flex-shrink:0;border-radius:8px;overflow:hidden;background:linear-gradient(135deg,#1e1236,#2a1a3c);position:relative;display:flex;align-items:center;justify-content:center}
+.ep-thumb .play-sm{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3)}
+.ep-thumb .play-sm::after{content:'▶';font-size:12px;color:rgba(255,255,255,0.7)}
+.ep-thumb .dur{position:absolute;bottom:2px;right:3px;padding:1px 4px;border-radius:3px;background:rgba(0,0,0,0.7);color:#999;font-size:8px}
+.ep-detail{flex:1;min-width:0}
+.ep-name{font-size:14px;font-weight:700;color:#fff;margin-bottom:2px}
+.ep-meta{font-size:10px;color:#555}
+.ep-dl{padding:5px 10px;border-radius:6px;font-size:10px;font-weight:600;border:1px solid #333;background:transparent;color:#8b7bf7;cursor:pointer;font-family:inherit;flex-shrink:0}
+.ep-dl:active{transform:scale(.97)}
+
+.ep-bottom{padding:16px 16px 28px;flex-shrink:0}
+.create-btn{width:100%;padding:13px;border-radius:12px;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;transition:all .15s}
+.create-btn:active{transform:scale(.98)}
+
+/* === History Sheet === */
+.sheet-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.6);z-index:300;opacity:0;pointer-events:none;transition:opacity .25s}
+.sheet-overlay.show{opacity:1;pointer-events:all}
+.sheet{position:absolute;bottom:0;left:0;right:0;background:#151515;border-radius:20px 20px 0 0;padding:20px 16px 28px;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1)}
+.sheet-overlay.show .sheet{transform:translateY(0)}
+.sheet-handle{width:36px;height:4px;background:#333;border-radius:2px;margin:0 auto 16px}
+.sheet-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:14px}
+.h-list{max-height:360px;overflow-y:auto}
+.h-list::-webkit-scrollbar{width:0}
+.h-item{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #1e1e1e}
+.h-item:last-child{border-bottom:none}
+.h-thumb{width:48px;height:27px;flex-shrink:0;border-radius:4px;overflow:hidden;background:linear-gradient(135deg,#1e1236,#2a1a3c)}
+.h-info{flex:1;min-width:0}
+.h-name{font-size:13px;font-weight:600;color:#fff}
+.h-time{font-size:10px;color:#555;margin-top:2px}
+.h-dl{padding:5px 10px;border-radius:6px;font-size:10px;font-weight:600;border:1px solid #333;background:transparent;color:#8b7bf7;cursor:pointer;font-family:inherit;flex-shrink:0}
+
+/* === Save Sheet === */
+.save-sheet .sheet{padding:24px 16px 28px;text-align:center}
+.save-icon{font-size:36px;margin-bottom:10px}
+.save-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:4px}
+.save-sub{font-size:12px;color:#555;margin-bottom:18px}
+.save-btns{display:flex;gap:10px}
+.save-btns .s-btn{flex:1;padding:11px;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:inherit}
+.s-btn.cancel{background:#222;color:#666}
+.s-btn.ok{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff}
+
+.toast{position:absolute;top:56px;left:50%;transform:translateX(-50%);padding:8px 16px;background:rgba(124,58,237,0.9);color:#fff;border-radius:8px;font-size:12px;z-index:500;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="phone-frame">
+  <div class="phone-notch"></div>
+  <div class="status-bar"><span>9:41</span><span>&#9679;&#9679;&#9679;&#9679;</span></div>
+
+  <div class="app-content">
+
+    <!-- ===== Page1: 视频播放 ===== -->
+    <div class="page active" id="page1">
+      <div class="nav-bar">
+        <div class="back" onclick="showPage('page2')">&larr;</div>
+        <div class="title">合成视频</div>
+        <div style="font-size:11px;color:#555;margin-left:auto">5/5</div>
+        <div class="hist-btn" onclick="openHist()">
+          <svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+        </div>
+      </div>
+      <div class="video-area">
+        <div class="placeholder">
+          <div class="ep-tag" id="epTag">预览</div>
+          <div class="play-big" onclick="togglePlay()"></div>
+          <div class="dur-info">0:22</div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progFill"></div></div>
+      </div>
+      <div class="bottom-bar">
+        <button class="bar-btn out" onclick="goBack()">
+          <svg viewBox="0 0 24 24"><path d="M19 12H5m0 0l4-4m-4 4l4 4"/></svg>
+          返回修改
+        </button>
+        <button class="bar-btn out" onclick="download()">
+          <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+          下载视频
+        </button>
+        <button class="bar-btn solid" onclick="openSave()">
+          <svg viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+          保存剧集
+        </button>
+      </div>
+    </div>
+
+    <!-- ===== Page2: 我的漫剧 剧本列表 ===== -->
+    <div class="page" id="page2">
+      <div class="nav-bar">
+        <div class="title">我的漫剧</div>
+      </div>
+      <div class="scroll" id="scriptList"></div>
+    </div>
+
+    <!-- ===== Page3: 剧集列表 ===== -->
+    <div class="page" id="page3">
+      <div class="nav-bar">
+        <div class="back" onclick="showPage('page2')">&larr;</div>
+        <div class="title" id="epPageTitle">剧本名称</div>
+      </div>
+      <div class="scroll" id="epList"></div>
+      <div class="ep-bottom">
+        <button class="create-btn" onclick="createNext()">创建下一集</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- History Sheet -->
+  <div class="sheet-overlay" id="histSheet" onclick="if(event.target===this)closeHist()">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">剧集记录</div>
+      <div class="h-list" id="histList"></div>
+    </div>
+  </div>
+
+  <!-- Save Sheet -->
+  <div class="sheet-overlay save-sheet" id="saveSheet" onclick="if(event.target===this)closeSave()">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="save-icon">&#128190;</div>
+      <div class="save-title">保存成功</div>
+      <div class="save-sub" id="saveSub">已保存为第一集</div>
+      <div class="save-btns">
+        <button class="s-btn cancel" onclick="closeSave()">继续编辑</button>
+        <button class="s-btn ok" onclick="goMyDrama()">查看我的漫剧</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+/* ===== Data ===== */
+const numCn=n=>{const m=['','一','二','三','四','五','六','七','八','九','十'];return n<=10?m[n]:n;};
+
+const scripts=[
+  {id:1,name:'仙途缘起',genre:'修仙',epCount:2,
+   episodes:[
+     {ep:'第一集',time:'2026-05-21 14:32',duration:22},
+     {ep:'第二集',time:'2026-05-21 15:10',duration:19},
+   ]},
+  {id:2,name:'都市暗影',genre:'都市',epCount:1,
+   episodes:[
+     {ep:'第一集',time:'2026-05-20 20:48',duration:25},
+   ]},
+];
+
+let currentScript=null;
+
+/* ===== Page Navigation ===== */
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==='page2') renderScripts();
+  if(id==='page3') renderEps();
+}
+
+/* ===== Page1: 视频播放 ===== */
+let playing=false,progTimer=null;
+function togglePlay(){
+  playing=!playing;
+  if(playing){
+    progTimer=setInterval(()=>{const el=document.getElementById('progFill');let w=parseFloat(el.style.width)||35;w+=1.5;if(w>100)w=0;el.style.width=w+'%';},200);
+  }else{clearInterval(progTimer);}
+}
+function goBack(){showToast('返回环节4：分镜生成');}
+function download(){showToast('下载视频');}
+
+/* ===== 保存剧集 ===== */
+function openSave(){
+  const epNum=1;
+  document.getElementById('saveSub').textContent='已保存为第一集';
+  document.getElementById('epTag').textContent='第一集';
+  document.getElementById('saveSheet').classList.add('show');
+}
+function closeSave(){document.getElementById('saveSheet').classList.remove('show');}
+function goMyDrama(){closeSave();showPage('page2');}
+
+/* ===== Page2: 剧本列表 ===== */
+function renderScripts(){
+  document.getElementById('scriptList').innerHTML=scripts.map(s=>`
+  <div class="script-card" onclick="openScript(${s.id})">
+    <div class="script-cover"><div class="sc-icon">&#127917;</div></div>
+    <div class="script-info">
+      <div class="script-name">${s.name}</div>
+      <div class="script-meta">${s.genre} · ${s.epCount}集</div>
+    </div>
+    <div class="script-arrow">&rsaquo;</div>
+  </div>`).join('');
+}
+
+function openScript(id){
+  currentScript=scripts.find(s=>s.id===id);
+  document.getElementById('epPageTitle').textContent=currentScript.name;
+  showPage('page3');
+}
+
+/* ===== Page3: 剧集列表 ===== */
+function renderEps(){
+  if(!currentScript)return;
+  document.getElementById('epList').innerHTML=currentScript.episodes.map(e=>`
+  <div class="ep-card">
+    <div class="ep-thumb">
+      <div class="play-sm"></div>
+      <div class="dur">${e.duration}s</div>
+    </div>
+    <div class="ep-detail">
+      <div class="ep-name">${e.ep}</div>
+      <div class="ep-meta">${e.time}</div>
+    </div>
+    <button class="ep-dl" onclick="dlEp('${e.ep}')">下载</button>
+  </div>`).join('');
+}
+
+function dlEp(ep){showToast('下载 '+ep);}
+function createNext(){showToast('创建下一集，返回环节1');}
+
+/* ===== History ===== */
+function openHist(){
+  const list=document.getElementById('histList');
+  const allEps=scripts.flatMap(s=>s.episodes.map(e=>({...e,scriptName:s.name})));
+  if(!allEps.length){
+    list.innerHTML='<div style="text-align:center;padding:40px 0;color:#444;font-size:12px">暂无记录</div>';
+  }else{
+    list.innerHTML=allEps.map(h=>`
+    <div class="h-item">
+      <div class="h-thumb"></div>
+      <div class="h-info">
+        <div class="h-name">${h.scriptName} · ${h.ep}</div>
+        <div class="h-time">${h.time}</div>
+      </div>
+      <button class="h-dl" onclick="dlHist('${h.scriptName}','${h.ep}')">下载</button>
+    </div>`).join('');
+  }
+  document.getElementById('histSheet').classList.add('show');
+}
+function closeHist(){document.getElementById('histSheet').classList.remove('show');}
+function dlHist(s,ep){showToast('下载 '+s+' '+ep);}
+
+/* ===== Toast ===== */
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+renderScripts();
+</script>
+</body>
+</html>

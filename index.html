@@ -12,9 +12,10 @@ body {
   background: #f5f0e8;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   min-height: 100vh;
-  padding: 20px;
+  padding: 30px 20px;
+  gap: 24px;
 }
 
 /* iPhone Frame */
@@ -27,6 +28,7 @@ body {
   overflow: hidden;
   position: relative;
   box-shadow: 0 4px 30px rgba(0,0,0,0.15), 0 10px 20px rgba(0,0,0,0.1);
+  flex-shrink: 0;
 }
 
 .phone-notch {
@@ -1144,13 +1146,17 @@ body {
 
 /* === Debug Panel === */
 .debug-panel {
-  margin-top: 16px;
   background: #fff;
   border: 2px solid #c8c0b4;
   border-radius: 16px;
   padding: 16px 20px;
-  max-width: 390px;
+  width: 280px;
+  flex-shrink: 0;
   font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+  position: sticky;
+  top: 30px;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 .dbg-title {
   font-size: 14px;
@@ -1204,15 +1210,68 @@ body {
 }
 .dbg-btn.danger:hover { background: #fee2e2; }
 
+.dbg-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  margin-top: 4px;
+}
+.dbg-divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 10px 0;
+}
+.dbg-select {
+  flex: 1;
+  padding: 3px 6px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #374151;
+  background: #fff;
+  outline: none;
+  font-family: inherit;
+  max-width: 130px;
+}
+.dbg-select:focus { border-color: #7c3aed; }
+.dbg-input {
+  width: 60px;
+  padding: 3px 6px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #374151;
+  background: #fff;
+  outline: none;
+  font-family: inherit;
+  text-align: center;
+}
+.dbg-input:focus { border-color: #7c3aed; }
+.dbg-btn.preset {
+  background: #ede5f7;
+  color: #7c3aed;
+  border-color: #d8c8f0;
+  font-size: 10px;
+  padding: 4px 8px;
+}
+.dbg-btn.preset:hover { background: #ddd0f0; }
+
 /* === Guide Panel === */
 .guide-panel {
-  margin-top: 16px;
   background: #fff;
   border: 2px solid #c8c0b4;
   border-radius: 16px;
   padding: 20px 24px;
-  max-width: 600px;
+  width: 420px;
+  flex-shrink: 0;
   font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+  position: sticky;
+  top: 30px;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 .guide-title {
   font-size: 16px;
@@ -2567,18 +2626,102 @@ function deductPoints(cost) {
 
 // ===== Debug Panel =====
 function updateDebugPanel() {
-  document.getElementById('dbgLogin').textContent = isLoggedIn ? '已登录' : '未登录';
-  document.getElementById('dbgLogin').className = isLoggedIn ? 'dbg-val on' : 'dbg-val off';
-  document.getElementById('dbgMember').textContent = hasMembership ? '会员' : '非会员';
-  document.getElementById('dbgMember').className = hasMembership ? 'dbg-val on' : 'dbg-val off';
+  document.getElementById('dbgLoginSel').value = isLoggedIn ? '1' : '0';
+  document.getElementById('dbgMemberSel').value = hasMembership ? '1' : '0';
+  document.getElementById('dbgPtsInput').value = userPoints;
   document.getElementById('dbgPoints').textContent = userPoints;
+  document.getElementById('dbgEpSel').value = String(state.currentEpisode);
   document.getElementById('dbgEpisode').textContent = state.currentEpisode + '/' + state.episodeCount;
   document.getElementById('dbgAiBusy').textContent = aiBusy ? '生成中' : '空闲';
   document.getElementById('dbgAiBusy').className = aiBusy ? 'dbg-val warn' : 'dbg-val';
+  document.getElementById('dbgFormStatus').textContent = formLocked ? '已锁定' : '可编辑';
+  document.getElementById('dbgFormStatus').className = formLocked ? 'dbg-val warn' : 'dbg-val on';
   document.getElementById('dbgDraft').textContent = localStorage.getItem(DRAFT_KEY) ? '有' : '无';
-  document.getElementById('dbgStyle').textContent = state.artStyle;
-  document.getElementById('dbgRatio').textContent = state.ratio;
-  document.getElementById('dbgRes').textContent = state.resolution;
+  document.getElementById('dbgStyleSel').value = state.artStyle;
+  document.getElementById('dbgRatioSel').value = state.ratio;
+  document.getElementById('dbgResSel').value = state.resolution;
+}
+
+function dbgSetLogin(val) {
+  isLoggedIn = val === '1';
+  if (!isLoggedIn) hasMembership = false;
+  updateDebugPanel();
+  showToast(isLoggedIn ? '调试：已登录' : '调试：已登出');
+}
+
+function dbgSetMember(val) {
+  hasMembership = val === '1';
+  updateDebugPanel();
+  showToast(hasMembership ? '调试：设为会员' : '调试：取消会员');
+}
+
+function dbgSetEpisode(val) {
+  state.currentEpisode = parseInt(val);
+  updateOutlineReadonly();
+  updateDebugPanel();
+  showToast('调试：第' + state.currentEpisode + '集');
+}
+
+function dbgSetArtStyle(val) {
+  state.artStyle = val;
+  document.querySelectorAll('#artStyleGroup .style-card').forEach(c => {
+    c.classList.toggle('selected', c.dataset.value === val);
+  });
+  updateDebugPanel();
+}
+
+function dbgSetRatio(val) {
+  state.ratio = val;
+  document.querySelectorAll('#ratioGroup .ratio-btn').forEach(b => {
+    b.classList.toggle('selected', b.dataset.value === val);
+  });
+  updateDebugPanel();
+}
+
+function dbgSetRes(val) {
+  state.resolution = val;
+  document.querySelectorAll('#resGroup .ratio-btn').forEach(b => {
+    b.classList.toggle('selected', b.dataset.value === val);
+  });
+  updateDebugPanel();
+}
+
+// Quick presets
+function dbgPreset(type) {
+  switch (type) {
+    case 'newUser':
+      isLoggedIn = false; hasMembership = false; userPoints = 0;
+      state.currentEpisode = 1; formLocked = false;
+      clearDraft();
+      document.getElementById('scriptInput').value = '';
+      document.getElementById('outlineInput').value = '';
+      document.getElementById('seriesName').value = '';
+      unlockFormForNextEpisode();
+      break;
+    case 'freeUser':
+      isLoggedIn = true; hasMembership = false; userPoints = 0;
+      state.currentEpisode = 1; formLocked = false;
+      break;
+    case 'member':
+      isLoggedIn = true; hasMembership = true; userPoints = 100;
+      state.currentEpisode = 1; formLocked = false;
+      break;
+    case 'lowPts':
+      isLoggedIn = true; hasMembership = false; userPoints = 2;
+      state.currentEpisode = 1; formLocked = false;
+      break;
+    case 'ep2':
+      isLoggedIn = true; hasMembership = true; userPoints = 100;
+      state.currentEpisode = 2;
+      document.getElementById('outlineInput').value = '少年陆沉出身落魄修仙家族旁支，修炼天赋极低，在宗门中备受欺凌。一日偶然发现祖传玉佩中封印着上古修仙者的记忆传承，从此命运改写。';
+      break;
+  }
+  updateOutlineReadonly();
+  updatePtsDisplay();
+  updateCharCount();
+  updateOutlineCharCount();
+  updateDebugPanel();
+  showToast('调试：' + {newUser:'新用户',freeUser:'免费用户',member:'会员',lowPts:'积分紧张',ep2:'第2集续写'}[type]);
 }
 
 // Override updatePtsDisplay to also refresh debug panel
@@ -2588,28 +2731,6 @@ updatePtsDisplay = function() {
   updateDebugPanel();
 };
 
-function dbgToggleLogin() {
-  isLoggedIn = !isLoggedIn;
-  if (!isLoggedIn) { hasMembership = false; }
-  updateDebugPanel();
-  showToast(isLoggedIn ? '调试：已登录' : '调试：已登出');
-}
-function dbgToggleMember() {
-  hasMembership = !hasMembership;
-  updateDebugPanel();
-  showToast(hasMembership ? '调试：设为会员' : '调试：取消会员');
-}
-function dbgSetPoints(val) {
-  userPoints = parseInt(val);
-  updatePtsDisplay();
-  updateDebugPanel();
-}
-function dbgResetEpisode() {
-  state.currentEpisode = 1;
-  updateOutlineReadonly();
-  updateDebugPanel();
-  showToast('调试：重置为第1集');
-}
 function dbgClearDraft() {
   clearDraft();
   updateDebugPanel();
@@ -2627,6 +2748,9 @@ function dbgResetAll() {
   hasMembership = false;
   userPoints = 2;
   state.currentEpisode = 1;
+  state.artStyle = '3D国画风';
+  state.ratio = '16:9';
+  state.resolution = '720p';
   formLocked = false;
   clearDraft();
   document.getElementById('seriesName').value = '';
@@ -2642,6 +2766,10 @@ function dbgResetAll() {
   document.querySelectorAll('#genreGroup .tag, #episodeGroup .tag, #episodeGroup .episode-custom').forEach(t => { t.style.pointerEvents = ''; t.style.opacity = ''; });
   document.querySelectorAll('#artStyleGroup .style-card').forEach(c => { c.style.pointerEvents = ''; c.style.opacity = ''; });
   document.querySelectorAll('#ratioGroup .ratio-btn, #resGroup .ratio-btn').forEach(b => { b.style.pointerEvents = ''; b.style.opacity = ''; });
+  // Reset selections
+  document.querySelectorAll('#artStyleGroup .style-card').forEach(c => c.classList.toggle('selected', c.dataset.value === '3D国画风'));
+  document.querySelectorAll('#ratioGroup .ratio-btn').forEach(b => b.classList.toggle('selected', b.dataset.value === '16:9'));
+  document.querySelectorAll('#resGroup .ratio-btn').forEach(b => b.classList.toggle('selected', b.dataset.value === '720p'));
   document.getElementById('outlineModeToggle').style.display = '';
   document.getElementById('scriptModeToggle').style.display = '';
   document.getElementById('submitBtn').style.display = '';
@@ -2659,58 +2787,6 @@ function dbgResetAll() {
 setTimeout(updateDebugPanel, 100);
 
 </script>
-
-<!-- Debug Panel -->
-<div class="debug-panel">
-  <div class="dbg-title">调试面板</div>
-  <div class="dbg-row">
-    <span class="dbg-label">登录</span>
-    <span class="dbg-val off" id="dbgLogin">未登录</span>
-    <button class="dbg-btn" onclick="dbgToggleLogin()">切换</button>
-  </div>
-  <div class="dbg-row">
-    <span class="dbg-label">会员</span>
-    <span class="dbg-val off" id="dbgMember">非会员</span>
-    <button class="dbg-btn" onclick="dbgToggleMember()">切换</button>
-  </div>
-  <div class="dbg-row">
-    <span class="dbg-label">积分</span>
-    <span class="dbg-val" id="dbgPoints">2</span>
-    <button class="dbg-btn" onclick="dbgSetPoints(0)">0</button>
-    <button class="dbg-btn" onclick="dbgSetPoints(2)">2</button>
-    <button class="dbg-btn" onclick="dbgSetPoints(100)">100</button>
-  </div>
-  <div class="dbg-row">
-    <span class="dbg-label">集数</span>
-    <span class="dbg-val" id="dbgEpisode">1/5</span>
-    <button class="dbg-btn" onclick="dbgResetEpisode()">重置第1集</button>
-  </div>
-  <div class="dbg-row">
-    <span class="dbg-label">AI</span>
-    <span class="dbg-val" id="dbgAiBusy">空闲</span>
-  </div>
-  <div class="dbg-row">
-    <span class="dbg-label">项目</span>
-    <span class="dbg-val" id="dbgDraft">无</span>
-    <button class="dbg-btn" onclick="dbgEnterFromProject()">模拟进入</button>
-    <button class="dbg-btn" onclick="dbgClearDraft()">清除</button>
-  </div>
-  <div class="dbg-row">
-    <span class="dbg-label">画风</span>
-    <span class="dbg-val" id="dbgStyle">3D国画风</span>
-  </div>
-  <div class="dbg-row">
-    <span class="dbg-label">比例</span>
-    <span class="dbg-val" id="dbgRatio">16:9</span>
-  </div>
-  <div class="dbg-row">
-    <span class="dbg-label">分辨率</span>
-    <span class="dbg-val" id="dbgRes">720p</span>
-  </div>
-  <div class="dbg-row" style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,0,0,0.1)">
-    <button class="dbg-btn danger" onclick="dbgResetAll()">全部重置</button>
-  </div>
-</div>
 
 <!-- ============ Operation Guide ============ -->
 <div class="guide-panel">
@@ -2731,7 +2807,7 @@ setTimeout(updateDebugPanel, 100);
   <div class="guide-section">
     <div class="guide-stitle">二、调试面板使用</div>
     <div class="guide-text">
-      手机模型下方「调试面板」可切换各项状态，验证不同场景的交互表现：<br><br>
+      右侧「调试面板」可切换各项状态，验证不同场景的交互表现：<br><br>
       <table class="guide-table">
         <tr><th>调试项</th><th>操作</th><th>验证场景</th></tr>
         <tr><td>登录</td><td>点击「切换」</td><td>未登录→触发AI时弹出登录弹窗；登录后正常操作</td></tr>
@@ -2739,7 +2815,7 @@ setTimeout(updateDebugPanel, 100);
         <tr><td>积分</td><td>点击 0/2/100</td><td>0→积分不足弹窗；2→刚好够用；100→充足</td></tr>
         <tr><td>集数</td><td>点击「重置第1集」</td><td>切回第1集，大纲恢复可编辑</td></tr>
         <tr><td>AI</td><td>自动显示</td><td>AI生成中显示「生成中」，完成后恢复「空闲」</td></tr>
-        <tr><td>草稿</td><td>点击「清除」</td><td>清除localStorage中的草稿数据</td></tr>
+        <tr><td>项目</td><td>「模拟进入」/「清除」</td><td>模拟从项目进入恢复内容 / 清除保存数据</td></tr>
         <tr><td>全部重置</td><td>点击红色按钮</td><td>所有状态恢复初始值</td></tr>
       </table>
     </div>
@@ -2751,12 +2827,12 @@ setTimeout(updateDebugPanel, 100);
     <div class="guide-flow">
       <div class="guide-flow-title">流程A：自行输入 + 提交拆解</div>
       <div class="guide-flow-steps">
-        <div class="guide-step">1. 确认调试面板「已登录」「积分≥2」</div>
+        <div class="guide-step">1. 确认右侧调试面板「已登录」「积分≥2」</div>
         <div class="guide-step">2. 填写漫剧剧本（必须非空，「开始创作」才会亮起）</div>
         <div class="guide-step">3. 点击「开始创作(-2)」→ 全屏Loading「AI正在拆解剧本…」</div>
-        <div class="guide-step">4. 2.5秒后展示拆解结果：角色列表 + 分镜列表</div>
+        <div class="guide-step">4. 展示拆解结果：角色列表 + 分镜列表</div>
         <div class="guide-step">5. 点击角色/分镜中的「角色描述」「场景图提示词」「视频提示词」可折叠展开</div>
-        <div class="guide-step">6. 非最后一集→点「下一集」进入续写；最后一集→点「下一步」跳转环节2</div>
+        <div class="guide-step">6. 非最后一集→「下一集」；最后一集→「下一步」跳转环节2</div>
       </div>
     </div>
 
@@ -2764,8 +2840,8 @@ setTimeout(updateDebugPanel, 100);
       <div class="guide-flow-title">流程B：AI优化</div>
       <div class="guide-flow-steps">
         <div class="guide-step">1. 在剧本/大纲区域输入内容</div>
-        <div class="guide-step">2. 点击「AI优化(-2)」→ textarea内骨架屏Loading</div>
-        <div class="guide-step">3. 2秒后内容替换为AI优化版本（不改变原设定）</div>
+        <div class="guide-step">2. 点击「AI优化(-2)」→ 骨架屏Loading</div>
+        <div class="guide-step">3. Loading结束后内容流式输出，替换为AI优化版本</div>
       </div>
     </div>
 
@@ -2773,14 +2849,14 @@ setTimeout(updateDebugPanel, 100);
       <div class="guide-flow-title">流程C：AI灵感</div>
       <div class="guide-flow-steps">
         <div class="guide-step">1. 点击「AI灵感(-2)」→ 无弹窗，直接开始生成</div>
-        <div class="guide-step">2. textarea清空→骨架屏Loading→2秒后填入AI生成内容</div>
+        <div class="guide-step">2. 骨架屏Loading→流式输出AI生成内容</div>
       </div>
     </div>
 
     <div class="guide-flow">
       <div class="guide-flow-title">流程D：未登录 → 登录</div>
       <div class="guide-flow-steps">
-        <div class="guide-step">1. 调试面板点击「切换」设为「未登录」</div>
+        <div class="guide-step">1. 右侧调试面板点击「切换」设为「未登录」</div>
         <div class="guide-step">2. 点击任何AI按钮 → 弹出登录弹窗 + toast「您还未登录」</div>
         <div class="guide-step">3. 输入手机号+验证码（任意11位+4位以上）→ 登录成功</div>
         <div class="guide-step">4. 回到页面，用户需自行重新点击按钮（不自动继续）</div>
@@ -2790,7 +2866,7 @@ setTimeout(updateDebugPanel, 100);
     <div class="guide-flow">
       <div class="guide-flow-title">流程E：积分不足 → 会员/充值</div>
       <div class="guide-flow-steps">
-        <div class="guide-step">1. 调试面板设「已登录」+ 积分0</div>
+        <div class="guide-step">1. 右侧调试面板设「已登录」+ 积分0</div>
         <div class="guide-step">2. 点击AI按钮 → 弹出「积分不足」半弹窗</div>
         <div class="guide-step">3a. 非会员 → 按钮「开通会员」→ 跳转会员订阅Tab</div>
         <div class="guide-step">3b. 会员 → 按钮「去充值」→ 跳转积分充值Tab</div>
@@ -2815,7 +2891,6 @@ setTimeout(updateDebugPanel, 100);
         <div class="guide-step">2. 提交后表单锁定只读，内容保留不清空</div>
         <div class="guide-step">3. 从首页进入 → 空白表单（新建创作）</div>
         <div class="guide-step">4. 从项目进入 → 自动加载已保存内容（继续编辑）</div>
-        <div class="guide-step">5. 调试面板点击「模拟进入」可模拟从项目进入恢复内容</div>
       </div>
     </div>
 
@@ -2823,7 +2898,7 @@ setTimeout(updateDebugPanel, 100);
       <div class="guide-flow-title">流程H：返回确认</div>
       <div class="guide-flow-steps">
         <div class="guide-step">1. AI生成中点击左上角← → 弹窗「AI正在生成中，确定离开吗？」</div>
-        <div class="guide-step">2. 有草稿内容时点击← → 弹窗「离开创作，记录将丢失，确定离开吗？」</div>
+        <div class="guide-step">2. 有内容时点击← → 弹窗「离开创作，记录将丢失，确定离开吗？」</div>
         <div class="guide-step">3. 无内容时点击← → 直接返回</div>
       </div>
     </div>
@@ -2835,47 +2910,130 @@ setTimeout(updateDebugPanel, 100);
       <tr><th>元素</th><th>状态</th><th>表现</th></tr>
       <tr><td>「开始创作」按钮</td><td>剧本为空</td><td>灰色置灰，不可点击</td></tr>
       <tr><td>「开始创作」按钮</td><td>剧本有内容</td><td>紫色渐变，可点击</td></tr>
+      <tr><td>提交后底部</td><td>已提交</td><td>绿色「✅ 第N集已提交拆解」，表单只读</td></tr>
       <tr><td>剧本输入框</td><td>字数>4000</td><td>红色边框 + 红色字数统计</td></tr>
       <tr><td>大纲输入框</td><td>字数>500</td><td>红色边框 + 红色字数统计</td></tr>
       <tr><td>大纲输入框</td><td>第2集+</td><td>半透明+禁用，显示🔒只读标记</td></tr>
-      <tr><td>AI模式按钮组</td><td>第2集+大纲</td><td>隐藏，不可切换</td></tr>
-      <tr><td>AI生成中</td><td>Loading态</td><td>textarea内骨架屏动画 + 「AI正在生成…」</td></tr>
-      <tr><td>右上角积分</td><td>变化时</td><td>数字实时更新</td></tr>
+      <tr><td>AI生成中</td><td>Loading态</td><td>骨架屏动画→流式输出文字</td></tr>
       <tr><td>导航栏标题</td><td>第2集+</td><td>变为「内容创作 · 第N集」</td></tr>
-      <tr><td>拆解结果页</td><td>非最后一集</td><td>右下角显示「下一集 →」</td></tr>
-      <tr><td>拆解结果页</td><td>最后一集</td><td>右下角显示「下一步 →」</td></tr>
-      <tr><td>角色描述/提示词</td><td>默认收起</td><td>点击展开查看完整prompt</td></tr>
-      <tr><td>积分不足弹窗</td><td>非会员</td><td>按钮文字「开通会员」→跳转订阅Tab</td></tr>
-      <tr><td>积分不足弹窗</td><td>会员</td><td>按钮文字「去充值」→跳转充值Tab</td></tr>
+      <tr><td>积分不足弹窗</td><td>非会员</td><td>按钮「开通会员」→跳转订阅Tab</td></tr>
+      <tr><td>积分不足弹窗</td><td>会员</td><td>按钮「去充值」→跳转充值Tab</td></tr>
     </table>
   </div>
 
   <div class="guide-section">
-    <div class="guide-stitle">五、流程图与原型对应关系</div>
+    <div class="guide-stitle">五、积分消耗一览</div>
     <table class="guide-table">
-      <tr><th>流程图章节</th><th>原型交互入口</th><th>验证方式</th></tr>
-      <tr><td>一、主流程</td><td>页面整体流程</td><td>从上到下填写表单→点击「开始创作」</td></tr>
-      <tr><td>二、AI功能触发流程</td><td>点击AI优化/AI灵感/开始创作</td><td>调试面板切换「未登录」/积分0测试</td></tr>
-      <tr><td>三、返回按钮流程</td><td>点击左上角←</td><td>AI生成中点击 vs 有内容点击 vs 空白点击</td></tr>
-      <tr><td>四、拆解结果&续写</td><td>拆解结果页</td><td>查看角色/分镜卡片，点击「下一集」/「下一步」</td></tr>
-      <tr><td>五、会员中心</td><td>点击右上角积分徽章</td><td>切换Tab查看订阅/充值，点击支付</td></tr>
-      <tr><td>六、积分消耗规则</td><td>各AI操作按钮</td><td>AI优化-2 / AI灵感-2 / 开始创作-2</td></tr>
-      <tr><td>七、字数校验规则</td><td>大纲/剧本输入</td><td>超限后输入框变红+字数统计变红</td></tr>
-      <tr><td>八、关键流程说明</td><td>散布在各交互中</td><td>参照本说明第三节的流程A-H</td></tr>
-    </table>
-  </div>
-
-  <div class="guide-section">
-    <div class="guide-stitle">六、积分消耗一览</div>
-    <table class="guide-table">
-      <tr><th>操作</th><th>积分</th><th>原型中位置</th></tr>
+      <tr><th>操作</th><th>积分</th><th>位置</th></tr>
       <tr><td>AI优化（大纲/剧本）</td><td>-2</td><td>大纲/剧本区域「AI优化」按钮</td></tr>
       <tr><td>AI灵感（大纲/剧本）</td><td>-2</td><td>大纲/剧本区域「AI灵感」按钮</td></tr>
       <tr><td>剧本拆解</td><td>-2</td><td>底部「开始创作」按钮</td></tr>
-      <tr><td>角色图（环节2）</td><td>-10/张</td><td>环节2原型</td></tr>
-      <tr><td>场景图（环节3）</td><td>-10/张</td><td>环节3原型</td></tr>
-      <tr><td>分镜视频（环节4）</td><td>-50/条</td><td>环节4原型</td></tr>
+      <tr><td>角色图（环节2）</td><td>-10/张</td><td>环节2</td></tr>
+      <tr><td>场景图（环节3）</td><td>-10/张</td><td>环节3</td></tr>
+      <tr><td>分镜视频（环节4）</td><td>-50/条</td><td>环节4</td></tr>
     </table>
+  </div>
+</div>
+
+<!-- Debug Panel -->
+<div class="debug-panel">
+  <div class="dbg-title">状态调试面板</div>
+
+  <!-- 快捷场景 -->
+  <div class="dbg-section-title">快捷场景</div>
+  <div class="dbg-row" style="flex-wrap:wrap;gap:6px">
+    <button class="dbg-btn preset" onclick="dbgPreset('newUser')">新用户(未登录)</button>
+    <button class="dbg-btn preset" onclick="dbgPreset('freeUser')">免费用户(无积分)</button>
+    <button class="dbg-btn preset" onclick="dbgPreset('member')">会员(充足积分)</button>
+    <button class="dbg-btn preset" onclick="dbgPreset('lowPts')">积分紧张(2分)</button>
+    <button class="dbg-btn preset" onclick="dbgPreset('ep2')">第2集续写</button>
+  </div>
+
+  <div class="dbg-divider"></div>
+
+  <!-- 用户状态 -->
+  <div class="dbg-section-title">用户状态</div>
+  <div class="dbg-row">
+    <span class="dbg-label">登录</span>
+    <select class="dbg-select" id="dbgLoginSel" onchange="dbgSetLogin(this.value)">
+      <option value="0">未登录</option>
+      <option value="1">已登录</option>
+    </select>
+  </div>
+  <div class="dbg-row">
+    <span class="dbg-label">会员</span>
+    <select class="dbg-select" id="dbgMemberSel" onchange="dbgSetMember(this.value)">
+      <option value="0">非会员</option>
+      <option value="1">会员</option>
+    </select>
+  </div>
+  <div class="dbg-row">
+    <span class="dbg-label">积分</span>
+    <input class="dbg-input" type="number" id="dbgPtsInput" value="2" min="0" onchange="dbgSetPoints(this.value)">
+    <span class="dbg-val" id="dbgPoints">2</span>
+  </div>
+
+  <div class="dbg-divider"></div>
+
+  <!-- 创作状态 -->
+  <div class="dbg-section-title">创作状态</div>
+  <div class="dbg-row">
+    <span class="dbg-label">集数</span>
+    <select class="dbg-select" id="dbgEpSel" onchange="dbgSetEpisode(this.value)">
+      <option value="1">第1集</option>
+      <option value="2">第2集</option>
+      <option value="3">第3集</option>
+      <option value="5">第5集(末集)</option>
+    </select>
+    <span class="dbg-val" id="dbgEpisode">1/5</span>
+  </div>
+  <div class="dbg-row">
+    <span class="dbg-label">画风</span>
+    <select class="dbg-select" id="dbgStyleSel" onchange="dbgSetArtStyle(this.value)">
+      <option value="3D国画风" selected>3D国画风</option>
+      <option value="古风">古风</option>
+      <option value="日漫风">日漫风</option>
+      <option value="水墨风">水墨风</option>
+      <option value="写实风">写实风</option>
+    </select>
+  </div>
+  <div class="dbg-row">
+    <span class="dbg-label">比例</span>
+    <select class="dbg-select" id="dbgRatioSel" onchange="dbgSetRatio(this.value)">
+      <option value="16:9" selected>16:9 横屏</option>
+      <option value="9:16">9:16 竖屏</option>
+    </select>
+  </div>
+  <div class="dbg-row">
+    <span class="dbg-label">分辨率</span>
+    <select class="dbg-select" id="dbgResSel" onchange="dbgSetRes(this.value)">
+      <option value="480p">480p</option>
+      <option value="720p" selected>720p</option>
+      <option value="1080p">1080p</option>
+    </select>
+  </div>
+
+  <div class="dbg-divider"></div>
+
+  <!-- 运行状态 -->
+  <div class="dbg-section-title">运行状态</div>
+  <div class="dbg-row">
+    <span class="dbg-label">AI</span>
+    <span class="dbg-val" id="dbgAiBusy">空闲</span>
+  </div>
+  <div class="dbg-row">
+    <span class="dbg-label">表单</span>
+    <span class="dbg-val" id="dbgFormStatus">可编辑</span>
+  </div>
+  <div class="dbg-row">
+    <span class="dbg-label">项目</span>
+    <span class="dbg-val" id="dbgDraft">无</span>
+    <button class="dbg-btn" onclick="dbgEnterFromProject()">进入</button>
+    <button class="dbg-btn" onclick="dbgClearDraft()">清除</button>
+  </div>
+
+  <div class="dbg-row" style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,0,0,0.1)">
+    <button class="dbg-btn danger" onclick="dbgResetAll()">全部重置</button>
   </div>
 </div>
 

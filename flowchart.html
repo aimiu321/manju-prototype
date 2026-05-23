@@ -5,118 +5,129 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>环节1 - 内容创作 流程图</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    background: #f5f0e8;
-    color: #333;
-    font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
-    overflow: auto;
-    min-height: 100vh;
-  }
-  .page-title {
-    text-align: center;
-    font-size: 32px;
-    font-weight: 700;
-    color: #333;
-    padding: 30px 0 10px;
-    letter-spacing: 2px;
-  }
-  .page-subtitle {
-    text-align: center;
-    font-size: 16px;
-    color: #888;
-    padding-bottom: 20px;
-  }
-  .legend {
-    display: flex;
-    justify-content: center;
-    gap: 24px;
-    flex-wrap: wrap;
-    padding: 0 20px 20px;
-  }
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 15px;
-    color: #555;
-  }
-  .legend-dot {
-    width: 16px;
-    height: 16px;
-    border-radius: 4px;
-    flex-shrink: 0;
-  }
-  .chart-wrapper {
-    display: flex;
-    justify-content: center;
-    padding: 0 20px 60px;
-  }
-  svg {
-    max-width: 100%;
-  }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #f5f0e8;
+  color: #333;
+  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+  padding: 30px 20px 60px;
+  min-height: 100vh;
+}
+.page-title { text-align: center; font-size: 28px; font-weight: 700; color: #333; padding-bottom: 6px; }
+.page-subtitle { text-align: center; font-size: 14px; color: #888; padding-bottom: 24px; }
 
-  .node-start { fill: #d4f5e0; stroke: #2a9d5c; stroke-width: 2; rx: 20; }
-  .node-end   { fill: #d4f5e0; stroke: #2a9d5c; stroke-width: 2; rx: 20; }
-  .node-step  { fill: #f8f5ef; stroke: #999; stroke-width: 1.5; rx: 10; }
-  .node-process { fill: #ede5f7; stroke: #8b5cf6; stroke-width: 1.8; rx: 10; }
-  .node-decision { fill: #fef9db; stroke: #d4a017; stroke-width: 1.8; rx: 10; }
-  .node-error  { fill: #fde8e8; stroke: #dc2626; stroke-width: 1.8; rx: 10; }
-  .node-success { fill: #d4f5e0; stroke: #16a34a; stroke-width: 1.8; rx: 10; }
-  .node-login  { fill: #dbeafe; stroke: #3b82f6; stroke-width: 1.8; rx: 10; }
-  .node-member { fill: #fef3c7; stroke: #f59e0b; stroke-width: 1.8; rx: 10; }
+/* Legend */
+.legend { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; padding-bottom: 28px; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 13px; color: #555; }
+.legend-dot { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
 
-  .node-text {
-    fill: #333;
-    font-size: 15px;
-    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-    text-anchor: middle;
-    dominant-baseline: central;
-  }
-  .node-text-sm {
-    fill: #666;
-    font-size: 13px;
-    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-    text-anchor: middle;
-    dominant-baseline: central;
-  }
+/* Section */
+.section { max-width: 1100px; margin: 0 auto 36px; }
+.section-title {
+  font-size: 17px; font-weight: 700; color: #7c3aed;
+  border-bottom: 2px solid #7c3aed; padding-bottom: 6px; margin-bottom: 16px;
+}
 
-  .arrow-line {
-    stroke: #888;
-    stroke-width: 1.5;
-    fill: none;
-    marker-end: url(#arrowhead);
-  }
-  .arrow-label {
-    fill: #666;
-    font-size: 13px;
-    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-    text-anchor: middle;
-    dominant-baseline: central;
-  }
-  .arrow-label-green { fill: #16a34a; }
-  .arrow-label-red   { fill: #dc2626; }
-  .arrow-label-purple { fill: #7c3aed; }
+/* Tree layout */
+.tree { display: flex; flex-direction: column; align-items: center; }
+.tree-row { display: flex; justify-content: center; gap: 16px; position: relative; margin-top: 12px; }
+.tree-row:first-child { margin-top: 0; }
 
-  .section-divider {
-    stroke: #ccc;
-    stroke-width: 1;
-    stroke-dasharray: 6,4;
-  }
-  .section-label {
-    fill: #888;
-    font-size: 14px;
-    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-    font-weight: 600;
-  }
+/* Connector lines */
+.tree-row::before {
+  content: ''; position: absolute; top: -12px; left: 50%; width: 2px; height: 12px;
+  background: #bbb;
+}
+.tree-row:first-child::before { display: none; }
+.tree-branch { display: flex; justify-content: center; gap: 16px; position: relative; }
+.tree-branch::before {
+  content: ''; position: absolute; top: -12px; height: 2px; background: #bbb;
+}
+.tree-branch.single::before { left: 50%; right: 50%; }
+.tree-branch.double::before { left: 25%; right: 25%; }
+.tree-branch.triple::before { left: 16%; right: 16%; }
 
-  .arrow-dashed {
-    stroke: #aaa;
-    stroke-width: 1.2;
-    stroke-dasharray: 5,3;
-    fill: none;
-    marker-end: url(#arrowhead-dim);
-  }
+/* Node */
+.node {
+  border-radius: 10px; padding: 10px 16px; text-align: center;
+  font-size: 13px; line-height: 1.5; position: relative; min-width: 100px; max-width: 280px;
+}
+.node.sm { font-size: 12px; padding: 8px 12px; min-width: 80px; }
+
+.node-start { background: #d4f5e0; border: 2px solid #2a9d5c; }
+.node-end   { background: #d4f5e0; border: 2px solid #2a9d5c; }
+.node-step  { background: #f8f5ef; border: 1.5px solid #999; }
+.node-process { background: #ede5f7; border: 1.8px solid #8b5cf6; }
+.node-decision { background: #fef9db; border: 1.8px solid #d4a017; }
+.node-error  { background: #fde8e8; border: 1.8px solid #dc2626; }
+.node-success { background: #d4f5e0; border: 1.8px solid #16a34a; }
+.node-login  { background: #dbeafe; border: 1.8px solid #3b82f6; }
+.node-member { background: #fef3c7; border: 1.8px solid #f59e0b; }
+
+.node-sub { font-size: 11px; color: #666; margin-top: 2px; }
+.node-bold { font-weight: 600; }
+
+/* Arrow label */
+.arrow-label {
+  font-size: 11px; font-weight: 600; text-align: center; margin: 4px 0;
+  padding: 2px 8px; border-radius: 4px;
+}
+.arrow-label.green { color: #16a34a; background: #d4f5e0; }
+.arrow-label.red   { color: #dc2626; background: #fde8e8; }
+.arrow-label.purple { color: #7c3aed; background: #ede5f7; }
+
+/* Vertical connector */
+.vconn { display: flex; flex-direction: column; align-items: center; }
+.vline { width: 2px; height: 16px; background: #bbb; }
+
+/* Horizontal branch connector */
+.hbranch {
+  display: flex; align-items: flex-start; gap: 20px; position: relative;
+  padding-top: 16px;
+}
+.hbranch::before {
+  content: ''; position: absolute; top: 0; left: 50%; right: 50%; height: 2px; background: #bbb;
+}
+.hbranch::after {
+  content: ''; position: absolute; top: 0; height: 2px; background: #bbb;
+}
+.hbranch.gap2::after { left: 25%; right: 25%; }
+.hbranch.gap3::after { left: 16%; right: 16%; }
+
+/* Branch wrapper */
+.branch-group { display: flex; gap: 24px; margin-top: 8px; }
+.branch-item { display: flex; flex-direction: column; align-items: center; }
+
+/* Table */
+.info-table {
+  width: 100%; border-collapse: collapse; font-size: 13px;
+  background: #fff; border-radius: 10px; overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.info-table th {
+  background: #ede5f7; color: #7c3aed; font-weight: 600;
+  padding: 10px 12px; text-align: left; border-bottom: 1px solid #e0dcd4;
+}
+.info-table td {
+  padding: 8px 12px; border-bottom: 1px solid #f0ece4; color: #444; line-height: 1.6;
+}
+.info-table tr:last-child td { border-bottom: none; }
+.info-table tr:nth-child(even) td { background: #fafaf7; }
+.info-table .pts { color: #7c3aed; font-weight: 600; }
+.info-table .pts-red { color: #dc2626; font-weight: 600; }
+
+/* Explanation block */
+.explain-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.explain-card {
+  background: #fff; border-radius: 10px; padding: 14px 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.explain-card .ec-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+.explain-card .ec-body { font-size: 12px; color: #555; line-height: 1.7; }
+
+/* Flow row with label */
+.flow-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.flow-label { font-size: 11px; font-weight: 600; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -125,522 +136,299 @@
 <div class="page-subtitle">AI漫剧创作大师 MVP - 用户交互与状态流转</div>
 
 <div class="legend">
-  <div class="legend-item"><div class="legend-dot" style="background:#d4f5e0;border:1px solid #2a9d5c;"></div>开始/结束</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#f8f5ef;border:1px solid #999;"></div>用户操作</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#ede5f7;border:1px solid #8b5cf6;"></div>AI/系统处理</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#fef9db;border:1px solid #d4a017;"></div>判断/决策</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#fde8e8;border:1px solid #dc2626;"></div>错误/拒绝</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#d4f5e0;border:1px solid #16a34a;"></div>成功</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#dbeafe;border:1px solid #3b82f6;"></div>登录流程</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#fef3c7;border:1px solid #f59e0b;"></div>会员/充值</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#d4f5e0;border:1px solid #2a9d5c"></div>开始/结束</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#f8f5ef;border:1px solid #999"></div>用户操作</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ede5f7;border:1px solid #8b5cf6"></div>AI/系统处理</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#fef9db;border:1px solid #d4a017"></div>判断/决策</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#fde8e8;border:1px solid #dc2626"></div>错误/拒绝</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#dbeafe;border:1px solid #3b82f6"></div>登录流程</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#fef3c7;border:1px solid #f59e0b"></div>会员/充值</div>
 </div>
 
-<div class="chart-wrapper">
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1560 4400" width="1560" height="4400">
-<defs>
-  <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-    <polygon points="0 0, 8 3, 0 6" fill="#888"/>
-  </marker>
-  <marker id="arrowhead-dim" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-    <polygon points="0 0, 8 3, 0 6" fill="#aaa"/>
-  </marker>
-  <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%">
-    <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.1"/>
-  </filter>
-</defs>
+<!-- ============================================ -->
+<!-- 一、主流程 -->
+<!-- ============================================ -->
+<div class="section">
+  <div class="section-title">一、主流程 - 内容创作</div>
+  <div class="tree">
+    <div class="vconn"><div class="node node-start">进入页面</div><div class="vline"></div></div>
+    <div class="vconn"><div class="node node-step">展示空白表单（或从项目恢复内容）</div><div class="vline"></div></div>
+
+    <!-- 第2集判断 -->
+    <div class="vconn"><div class="node node-decision">是否第2集及以后？</div><div class="vline"></div></div>
+    <div class="branch-group">
+      <div class="branch-item"><div class="arrow-label green">第1集</div><div class="vline"></div></div>
+      <div class="branch-item"><div class="arrow-label purple">第2集+</div>
+        <div class="node node-process">大纲自动沿用（只读）</div>
+      </div>
+    </div>
+
+    <div class="vconn" style="margin-top:12px"><div class="vline"></div><div class="node node-step">填写剧集级字段<div class="node-sub">漫剧名称 | 集数 | 漫剧设定 | 画面风格 | 视频比例(16:9/9:16) | 分辨率(480p/720p/1080p)</div></div><div class="vline"></div></div>
+    <div class="vconn"><div class="node node-step">填写漫剧大纲（第1集可编辑）<div class="node-sub">自行输入 / AI优化(-2) / AI灵感(-2)</div></div><div class="vline"></div></div>
+
+    <!-- 大纲字数判断 -->
+    <div class="vconn"><div class="node node-decision">大纲字数校验</div><div class="vline"></div></div>
+    <div class="branch-group">
+      <div class="branch-item"><div class="arrow-label green">通过</div><div class="vline"></div></div>
+      <div class="branch-item"><div class="arrow-label red">>500字</div><div class="node node-error sm">提示修改</div></div>
+    </div>
+
+    <div class="vconn" style="margin-top:12px"><div class="vline"></div><div class="node node-step">填写漫剧剧本<div class="node-sub">自行输入 / AI优化(-2) / AI灵感(-2)</div></div><div class="vline"></div></div>
+
+    <!-- 剧本字数判断 -->
+    <div class="vconn"><div class="node node-decision">剧本字数校验</div><div class="vline"></div></div>
+    <div class="branch-group">
+      <div class="branch-item"><div class="arrow-label green">通过</div><div class="vline"></div></div>
+      <div class="branch-item"><div class="arrow-label red">>4000字</div><div class="node node-error sm">提示修改</div></div>
+      <div class="branch-item"><div class="arrow-label red">为空</div><div class="node node-error sm">请输入剧本</div></div>
+    </div>
+
+    <div class="vconn" style="margin-top:12px"><div class="vline"></div><div class="node node-step">点击「开始创作」(-2积分)</div></div>
+  </div>
+</div>
 
 <!-- ============================================ -->
-<!-- SECTION 1: 主流程 Main Flow                  -->
+<!-- 二、AI功能触发流程 -->
 <!-- ============================================ -->
+<div class="section">
+  <div class="section-title">二、AI功能触发流程（AI优化/AI灵感/开始创作 共用）</div>
+  <div class="tree">
+    <div class="vconn"><div class="node node-process">触发AI功能</div><div class="vline"></div></div>
+    <div class="vconn"><div class="node node-decision">校验登录状态</div><div class="vline"></div></div>
+    <div class="branch-group">
+      <div class="branch-item"><div class="arrow-label green">已登录</div><div class="vline"></div></div>
+      <div class="branch-item"><div class="arrow-label red">未登录</div>
+        <div class="vconn"><div class="node node-login">弹出登录弹窗</div><div class="vline"></div></div>
+        <div class="vconn"><div class="node node-step">登录成功 → 回到页面</div><div class="vline"></div></div>
+        <div class="node node-step sm" style="background:#f0f0e8">用户自行重新点击</div>
+      </div>
+    </div>
 
-<line x1="40" y1="50" x2="1520" y2="50" class="section-divider"/>
-<text x="780" y="35" class="section-label" text-anchor="middle">一、主流程 - 内容创作</text>
-
-<!-- N1: 进入页面 -->
-<rect x="640" y="70" width="280" height="50" class="node-start" filter="url(#shadow)"/>
-<text x="780" y="95" class="node-text">进入页面</text>
-
-<!-- N2: 展示表单/恢复草稿 -->
-<rect x="570" y="160" width="420" height="50" class="node-step" filter="url(#shadow)"/>
-<text x="780" y="185" class="node-text">展示空白表单（或恢复草稿）</text>
-
-<!-- N2b: 判断是否第2集+ -->
-<rect x="590" y="250" width="380" height="50" class="node-decision" filter="url(#shadow)"/>
-<text x="780" y="275" class="node-text">是否第2集及以后？</text>
-
-<!-- N2c: 第2集+ 大纲只读 -->
-<rect x="1060" y="250" width="340" height="50" class="node-process" filter="url(#shadow)"/>
-<text x="1230" y="275" class="node-text">大纲自动沿用（只读）</text>
-
-<!-- N3: 填写剧集级字段 -->
-<rect x="510" y="340" width="540" height="60" class="node-step" filter="url(#shadow)"/>
-<text x="780" y="363" class="node-text">填写剧集级字段</text>
-<text x="780" y="383" class="node-text-sm">漫剧名称 | 集数选择 | 漫剧设定 | 画面风格 | 视频比例(16:9/9:16) | 分辨率(480p/720p/1080p)</text>
-
-<!-- N4: 填写漫剧大纲 -->
-<rect x="540" y="450" width="480" height="70" class="node-step" filter="url(#shadow)"/>
-<text x="780" y="473" class="node-text">填写漫剧大纲（第1集可编辑）</text>
-<text x="780" y="493" class="node-text-sm">方式1: 自行输入 | 方式2: AI优化（2积分）| 方式3: AI灵感（2积分）</text>
-
-<!-- N5: 字数校验 - 大纲 -->
-<rect x="590" y="570" width="380" height="50" class="node-decision" filter="url(#shadow)"/>
-<text x="780" y="595" class="node-text">大纲字数校验</text>
-
-<!-- N5a: 大纲>500字 -->
-<rect x="1060" y="570" width="280" height="50" class="node-error" filter="url(#shadow)"/>
-<text x="1200" y="595" class="node-text">大纲 &gt; 500字</text>
-
-<!-- N6: 填写漫剧剧本 -->
-<rect x="540" y="670" width="480" height="70" class="node-step" filter="url(#shadow)"/>
-<text x="780" y="693" class="node-text">填写漫剧剧本</text>
-<text x="780" y="713" class="node-text-sm">方式1: 自行输入 | 方式2: AI优化（2积分）| 方式3: AI灵感（2积分）</text>
-
-<!-- N7: 字数校验 - 剧本 -->
-<rect x="590" y="790" width="380" height="50" class="node-decision" filter="url(#shadow)"/>
-<text x="780" y="815" class="node-text">剧本字数校验</text>
-
-<!-- N7a: 剧本>4000字 -->
-<rect x="1060" y="770" width="280" height="50" class="node-error" filter="url(#shadow)"/>
-<text x="1200" y="795" class="node-text">剧本 &gt; 4000字</text>
-
-<!-- N7b: 剧本为空 -->
-<rect x="1060" y="835" width="280" height="50" class="node-error" filter="url(#shadow)"/>
-<text x="1200" y="860" class="node-text">剧本为空</text>
-
-<!-- N8: 点击"开始创作" -->
-<rect x="620" y="890" width="320" height="50" class="node-step" filter="url(#shadow)"/>
-<text x="780" y="915" class="node-text">点击"开始创作"（2积分）</text>
-
-<!-- Arrows Section 1 -->
-<line x1="780" y1="120" x2="780" y2="160" class="arrow-line"/>
-<line x1="780" y1="210" x2="780" y2="250" class="arrow-line"/>
-<!-- N2b -> N2c (第2集+) -->
-<line x1="970" y1="275" x2="1060" y2="275" class="arrow-line"/>
-<text x="1015" y="267" class="arrow-label arrow-label-purple">第2集+</text>
-<!-- N2b -> N3 (第1集) -->
-<line x1="780" y1="300" x2="780" y2="340" class="arrow-line"/>
-<text x="760" y="323" class="arrow-label arrow-label-green">第1集</text>
-<!-- N2c -> N3 -->
-<path d="M1230,300 L1230,315 Q1230,325 1220,325 L800,325 Q780,325 780,340" class="arrow-dashed"/>
-
-<line x1="780" y1="400" x2="780" y2="450" class="arrow-line"/>
-<line x1="780" y1="520" x2="780" y2="570" class="arrow-line"/>
-<!-- N5 -> N5a -->
-<line x1="970" y1="595" x2="1060" y2="595" class="arrow-line"/>
-<text x="1015" y="587" class="arrow-label arrow-label-red">&gt;500字</text>
-<!-- N5 -> N6 -->
-<line x1="780" y1="620" x2="780" y2="670" class="arrow-line"/>
-<text x="760" y="648" class="arrow-label arrow-label-green">通过</text>
-<!-- N5a return -->
-<path d="M1200,620 L1200,635 Q1200,645 1190,645 L800,645 Q780,645 780,655 L780,670" class="arrow-dashed"/>
-
-<line x1="780" y1="740" x2="780" y2="790" class="arrow-line"/>
-<!-- N7 -> N7a -->
-<line x1="970" y1="805" x2="1060" y2="795" class="arrow-line"/>
-<text x="1015" y="793" class="arrow-label arrow-label-red">&gt;4000字</text>
-<!-- N7 -> N7b -->
-<line x1="970" y1="825" x2="1060" y2="860" class="arrow-line"/>
-<text x="1015" y="848" class="arrow-label arrow-label-red">为空</text>
-<!-- N7 -> N8 -->
-<line x1="780" y1="840" x2="780" y2="890" class="arrow-line"/>
-<text x="760" y="868" class="arrow-label arrow-label-green">通过</text>
-<!-- N7a/N7b return -->
-<path d="M1340,795 L1370,795 Q1380,795 1380,785 L1380,730 Q1380,720 1370,720 L800,720 Q780,720 780,730" class="arrow-dashed"/>
-
+    <div class="vconn" style="margin-top:12px"><div class="vline"></div><div class="node node-decision">校验积分余额</div><div class="vline"></div></div>
+    <div class="branch-group">
+      <div class="branch-item">
+        <div class="arrow-label green">充足</div><div class="vline"></div>
+        <div class="vconn"><div class="node node-process">冻结积分</div><div class="vline"></div></div>
+        <div class="vconn"><div class="node node-process">调用AI</div><div class="vline"></div></div>
+        <div class="branch-group">
+          <div class="branch-item"><div class="arrow-label green">成功</div>
+            <div class="node node-success">扣减积分 → 展示结果</div>
+          </div>
+          <div class="branch-item"><div class="arrow-label red">失败/超时</div>
+            <div class="node node-error">解冻退还积分</div>
+          </div>
+        </div>
+      </div>
+      <div class="branch-item">
+        <div class="arrow-label red">不足</div><div class="vline"></div>
+        <div class="vconn"><div class="node node-decision">是否会员？</div><div class="vline"></div></div>
+        <div class="branch-group">
+          <div class="branch-item"><div class="arrow-label purple">非会员</div>
+            <div class="node node-member">会员订阅Tab</div>
+          </div>
+          <div class="branch-item"><div class="arrow-label green">会员</div>
+            <div class="node node-member">积分充值Tab</div>
+          </div>
+        </div>
+        <div class="vconn" style="margin-top:8px"><div class="vline"></div><div class="node node-step sm">支付完成 → 回到页面</div></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ============================================ -->
-<!-- SECTION 2: AI功能触发流程                     -->
+<!-- 三、返回按钮 & AI操作流程 -->
 <!-- ============================================ -->
+<div class="section">
+  <div class="section-title">三、返回按钮 & AI操作流程</div>
+  <div class="tree">
+    <div class="vconn"><div class="node node-step">用户点击左上角 ←</div><div class="vline"></div></div>
+    <div class="vconn"><div class="node node-decision">AI是否生成中？</div><div class="vline"></div></div>
+    <div class="branch-group">
+      <div class="branch-item">
+        <div class="arrow-label red">是</div><div class="vline"></div>
+        <div class="vconn"><div class="node node-decision">「AI正在生成中，确定离开吗？」</div><div class="vline"></div></div>
+        <div class="branch-group">
+          <div class="branch-item"><div class="arrow-label purple">继续创作</div><div class="node node-step sm">留在页面</div></div>
+          <div class="branch-item"><div class="arrow-label red">确定离开</div><div class="node node-step sm">清理状态 → 返回</div></div>
+        </div>
+      </div>
+      <div class="branch-item">
+        <div class="arrow-label green">否</div><div class="vline"></div>
+        <div class="vconn"><div class="node node-decision">有内容？</div><div class="vline"></div></div>
+        <div class="branch-group">
+          <div class="branch-item"><div class="arrow-label purple">有内容</div>
+            <div class="vconn"><div class="node node-decision">「离开创作，记录将丢失，确定离开吗？」</div><div class="vline"></div></div>
+            <div class="branch-group">
+              <div class="branch-item"><div class="arrow-label purple">继续创作</div><div class="node node-step sm">留在页面</div></div>
+              <div class="branch-item"><div class="arrow-label red">确定离开</div><div class="node node-step sm">返回首页</div></div>
+            </div>
+          </div>
+          <div class="branch-item"><div class="arrow-label green">无内容</div><div class="node node-step sm">直接返回首页</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-<line x1="40" y1="985" x2="1520" y2="985" class="section-divider"/>
-<text x="780" y="970" class="section-label" text-anchor="middle">二、AI功能触发流程（AI优化 / AI灵感 / 开始创作 共用）</text>
-
-<!-- N9: 触发AI功能 -->
-<rect x="610" y="1010" width="340" height="50" class="node-process" filter="url(#shadow)"/>
-<text x="780" y="1035" class="node-text">触发AI功能</text>
-
-<!-- N10: 校验登录 -->
-<rect x="610" y="1100" width="340" height="50" class="node-decision" filter="url(#shadow)"/>
-<text x="780" y="1125" class="node-text">校验登录状态</text>
-
-<!-- N11: 未登录弹窗 -->
-<rect x="1060" y="1100" width="300" height="50" class="node-login" filter="url(#shadow)"/>
-<text x="1210" y="1118" class="node-text">未登录 → 弹出登录弹窗</text>
-<text x="1210" y="1138" class="node-text-sm">+ toast"您还未登录"</text>
-
-<!-- N11b: 登录成功回到页面 -->
-<rect x="1060" y="1190" width="300" height="50" class="node-step" filter="url(#shadow)"/>
-<text x="1210" y="1215" class="node-text">登录成功 → 回到页面</text>
-
-<!-- N12: 校验积分 -->
-<rect x="610" y="1280" width="340" height="50" class="node-decision" filter="url(#shadow)"/>
-<text x="780" y="1305" class="node-text">校验积分余额</text>
-
-<!-- N13: 余额不足 → 判断会员 -->
-<rect x="1060" y="1280" width="300" height="50" class="node-decision" filter="url(#shadow)"/>
-<text x="1210" y="1305" class="node-text">余额不足 → 是否会员？</text>
-
-<!-- N14a: 非会员 → 会员订阅页 -->
-<rect x="1060" y="1370" width="300" height="50" class="node-member" filter="url(#shadow)"/>
-<text x="1210" y="1388" class="node-text">非会员 → 会员订阅Tab</text>
-<text x="1210" y="1406" class="node-text-sm">月度¥25/月 | 年度¥228/年</text>
-
-<!-- N14b: 会员 → 积分充值页 -->
-<rect x="1420" y="1280" width="120" height="50" class="node-decision" filter="url(#shadow)"/>
-<text x="1480" y="1295" class="node-text" style="font-size:12px;">会员？</text>
-<rect x="1420" y="1370" width="120" height="50" class="node-member" filter="url(#shadow)"/>
-<text x="1480" y="1388" class="node-text" style="font-size:12px;">积分充值Tab</text>
-<text x="1480" y="1406" class="node-text-sm">体验包~尊享包</text>
-
-<!-- N15: 支付完成 -->
-<rect x="1060" y="1480" width="300" height="50" class="node-success" filter="url(#shadow)"/>
-<text x="1210" y="1505" class="node-text">支付完成 → 回到页面</text>
-
-<!-- N16: 积分充足 - 冻结 -->
-<rect x="590" y="1370" width="380" height="50" class="node-process" filter="url(#shadow)"/>
-<text x="780" y="1395" class="node-text">积分充足 → 冻结积分</text>
-
-<!-- N17: 调用AI -->
-<rect x="610" y="1470" width="340" height="50" class="node-process" filter="url(#shadow)"/>
-<text x="780" y="1495" class="node-text">调用AI</text>
-
-<!-- N18: AI成功 -->
-<rect x="490" y="1570" width="260" height="50" class="node-success" filter="url(#shadow)"/>
-<text x="620" y="1588" class="node-text">AI成功</text>
-<text x="620" y="1606" class="node-text-sm">扣减积分 → 展示结果</text>
-
-<!-- N19: AI失败 -->
-<rect x="810" y="1570" width="260" height="50" class="node-error" filter="url(#shadow)"/>
-<text x="940" y="1588" class="node-text">AI失败/超时</text>
-<text x="940" y="1606" class="node-text-sm">解冻退还积分</text>
-
-<!-- Arrows Section 2 -->
-<line x1="780" y1="940" x2="780" y2="1010" class="arrow-line"/>
-
-<line x1="780" y1="1060" x2="780" y2="1100" class="arrow-line"/>
-<!-- N10 -> N11 -->
-<line x1="950" y1="1125" x2="1060" y2="1125" class="arrow-line"/>
-<text x="1005" y="1117" class="arrow-label arrow-label-red">未登录</text>
-<!-- N11 -> N11b -->
-<line x1="1210" y1="1150" x2="1210" y2="1190" class="arrow-line"/>
-<text x="1240" y="1173" class="arrow-label arrow-label-green">登录成功</text>
-<!-- N11b -> back to page (user clicks again) -->
-<path d="M1060,1215 L380,1215 Q360,1215 360,1195 L360,1035 Q360,1025 370,1025 L610,1035" class="arrow-dashed"/>
-<text x="375" y="1125" class="arrow-label" style="fill:#888;" transform="rotate(-90, 375, 1125)">用户自行重新点击</text>
-<!-- N10 -> N12 -->
-<line x1="780" y1="1150" x2="780" y2="1280" class="arrow-line"/>
-<text x="760" y="1220" class="arrow-label arrow-label-green">已登录</text>
-
-<!-- N12 -> N13 -->
-<line x1="950" y1="1305" x2="1060" y2="1305" class="arrow-line"/>
-<text x="1005" y="1297" class="arrow-label arrow-label-red">余额不足</text>
-<!-- N12 -> N16 -->
-<line x1="780" y1="1330" x2="780" y2="1370" class="arrow-line"/>
-<text x="760" y="1353" class="arrow-label arrow-label-green">积分充足</text>
-<!-- N13 -> N14a (非会员) -->
-<line x1="1210" y1="1330" x2="1210" y2="1370" class="arrow-line"/>
-<text x="1240" y="1353" class="arrow-label arrow-label-red">非会员</text>
-<!-- N13 -> N14b (会员) -->
-<line x1="1360" y1="1305" x2="1420" y2="1305" class="arrow-line"/>
-<text x="1390" y="1297" class="arrow-label arrow-label-green">会员</text>
-<!-- N14b diamond -> N14b recharge -->
-<line x1="1480" y1="1330" x2="1480" y2="1370" class="arrow-line"/>
-<!-- N14 -> N15 -->
-<line x1="1210" y1="1430" x2="1210" y2="1480" class="arrow-line"/>
-<!-- N15 -> back to page -->
-<path d="M1060,1505 L400,1505 Q380,1505 380,1485 L380,185 Q380,175 390,175 L570,185" class="arrow-dashed"/>
-<text x="395" y="845" class="arrow-label" style="fill:#888;" transform="rotate(-90, 395, 845)">积分到账回到页面</text>
-
-<!-- N16 -> N17 -->
-<line x1="780" y1="1420" x2="780" y2="1470" class="arrow-line"/>
-<!-- N17 -> N18 -->
-<line x1="730" y1="1520" x2="620" y2="1570" class="arrow-line"/>
-<text x="660" y="1540" class="arrow-label arrow-label-green">成功</text>
-<!-- N17 -> N19 -->
-<line x1="830" y1="1520" x2="940" y2="1570" class="arrow-line"/>
-<text x="900" y="1540" class="arrow-label arrow-label-red">失败/超时</text>
-
+  <!-- AI操作子流程 -->
+  <div style="display:flex;gap:20px;margin-top:24px;flex-wrap:wrap">
+    <div style="flex:1;min-width:280px">
+      <div style="font-size:13px;font-weight:700;color:#7c3aed;margin-bottom:8px">AI优化流程</div>
+      <div class="tree">
+        <div class="vconn"><div class="node node-process sm">需有内容 → 点击AI优化</div><div class="vline"></div></div>
+        <div class="vconn"><div class="node node-process sm">骨架屏Loading</div><div class="vline"></div></div>
+        <div class="vconn"><div class="node node-process sm">流式输出替换原内容</div></div>
+      </div>
+    </div>
+    <div style="flex:1;min-width:280px">
+      <div style="font-size:13px;font-weight:700;color:#7c3aed;margin-bottom:8px">AI灵感流程</div>
+      <div class="tree">
+        <div class="vconn"><div class="node node-process sm">点击AI灵感（无弹窗直接生成）</div><div class="vline"></div></div>
+        <div class="vconn"><div class="node node-process sm">清空textarea → 骨架屏Loading</div><div class="vline"></div></div>
+        <div class="vconn"><div class="node node-process sm">流式输出AI生成内容</div></div>
+      </div>
+    </div>
+    <div style="flex:1;min-width:280px">
+      <div style="font-size:13px;font-weight:700;color:#7c3aed;margin-bottom:8px">项目保存</div>
+      <div class="tree">
+        <div class="vconn"><div class="node node-process sm">点击「开始创作」提交时保存</div><div class="vline"></div></div>
+        <div class="vconn"><div class="node node-process sm">内容保存至项目，表单锁定只读</div><div class="vline"></div></div>
+        <div class="vconn"><div class="node node-step sm">从项目进入 → 自动加载内容</div></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ============================================ -->
-<!-- SECTION 3: 返回按钮 + AI操作流程               -->
+<!-- 四、拆解结果 & 续写逻辑 -->
 <!-- ============================================ -->
-
-<line x1="40" y1="1670" x2="1520" y2="1670" class="section-divider"/>
-<text x="780" y="1655" class="section-label" text-anchor="middle">三、返回按钮 & AI灵感/优化 详细流程</text>
-
-<!-- B1: 用户点击左上角返回 -->
-<rect x="590" y="1700" width="380" height="50" class="node-step" filter="url(#shadow)"/>
-<text x="780" y="1725" class="node-text">用户点击左上角返回</text>
-
-<!-- B2: AI生成中？ -->
-<rect x="590" y="1790" width="380" height="50" class="node-decision" filter="url(#shadow)"/>
-<text x="780" y="1815" class="node-text">AI是否生成中？</text>
-
-<!-- B3: AI生成中弹窗 -->
-<rect x="1060" y="1790" width="340" height="50" class="node-decision" filter="url(#shadow)"/>
-<text x="1230" y="1815" class="node-text">"AI正在生成中，确定离开吗？"</text>
-
-<!-- B4: 有草稿内容？ -->
-<rect x="590" y="1880" width="380" height="50" class="node-decision" filter="url(#shadow)"/>
-<text x="780" y="1905" class="node-text">有草稿内容？</text>
-
-<!-- B5: 离开确认弹窗 -->
-<rect x="1060" y="1880" width="340" height="50" class="node-decision" filter="url(#shadow)"/>
-<text x="1230" y="1905" class="node-text">"离开创作，记录将丢失，确定离开吗？"</text>
-
-<!-- B6: 确定离开 -->
-<rect x="1060" y="1970" width="340" height="50" class="node-step" filter="url(#shadow)"/>
-<text x="1230" y="1995" class="node-text">确定离开 → 清理状态 → 返回</text>
-
-<!-- B7: 直接返回 -->
-<rect x="590" y="1970" width="380" height="50" class="node-step" filter="url(#shadow)"/>
-<text x="780" y="1995" class="node-text">直接返回首页</text>
-
-<!-- G1: AI优化 -->
-<rect x="120" y="2070" width="380" height="70" class="node-process" filter="url(#shadow)"/>
-<text x="310" y="2093" class="node-text">AI优化</text>
-<text x="310" y="2113" class="node-text-sm">需有内容 → 骨架屏loading → 替换原内容</text>
-
-<!-- G2: AI灵感 -->
-<rect x="590" y="2070" width="380" height="70" class="node-process" filter="url(#shadow)"/>
-<text x="780" y="2093" class="node-text">AI灵感（无弹窗，直接生成）</text>
-<text x="780" y="2113" class="node-text-sm">清空textarea → 骨架屏loading → 输出内容</text>
-
-<!-- G3: 草稿自动保存 -->
-<rect x="1060" y="2070" width="340" height="70" class="node-process" filter="url(#shadow)"/>
-<text x="1230" y="2093" class="node-text">草稿自动保存</text>
-<text x="1230" y="2113" class="node-text-sm">800ms防抖 → localStorage → 提交成功清除</text>
-
-<!-- Arrows Section 3 -->
-<line x1="780" y1="1750" x2="780" y2="1790" class="arrow-line"/>
-<!-- B2 -> B3 (AI生成中) -->
-<line x1="970" y1="1815" x2="1060" y2="1815" class="arrow-line"/>
-<text x="1015" y="1807" class="arrow-label arrow-label-red">是</text>
-<!-- B2 -> B4 (不在生成中) -->
-<line x1="780" y1="1840" x2="780" y2="1880" class="arrow-line"/>
-<text x="760" y="1863" class="arrow-label arrow-label-green">否</text>
-<!-- B4 -> B5 (有内容) -->
-<line x1="970" y1="1905" x2="1060" y2="1905" class="arrow-line"/>
-<text x="1015" y="1897" class="arrow-label arrow-label-purple">有内容</text>
-<!-- B4 -> B7 (无内容) -->
-<line x1="780" y1="1930" x2="780" y2="1970" class="arrow-line"/>
-<text x="760" y="1953" class="arrow-label arrow-label-green">无内容</text>
-<!-- B3 -> B6 (确认) -->
-<path d="M1230,1840 L1230,1850 Q1230,1860 1240,1860 L1390,1860 Q1400,1860 1400,1870 L1400,1995 Q1400,1995 1390,1995 L1400,1995" class="arrow-line"/>
-<text x="1415" y="1930" class="arrow-label arrow-label-red" transform="rotate(-90, 1415, 1930)">确定离开</text>
-<!-- B3 -> 继续生成 (取消) -->
-<path d="M1060,1815 L1040,1815 Q1030,1815 1030,1795 L1030,1735 Q1030,1725 1020,1725 L970,1735" class="arrow-dashed"/>
-<text x="1000" y="1760" class="arrow-label arrow-label-green">继续创作</text>
-<!-- B5 -> B6 (确认) -->
-<line x1="1230" y1="1930" x2="1230" y2="1970" class="arrow-line"/>
-<text x="1260" y="1953" class="arrow-label arrow-label-red">确定离开</text>
-<!-- B5 -> 继续创作 (取消) -->
-<path d="M1060,1905 L1040,1905 Q1030,1905 1030,1885 L1030,1735 Q1030,1725 1020,1725 L970,1735" class="arrow-dashed"/>
-<text x="1000" y="1825" class="arrow-label arrow-label-green">继续创作</text>
-
-
-<g transform="translate(0, 200)">
-<!-- ============================================ -->
-<!-- SECTION 4: 拆解结果                          -->
-<!-- ============================================ -->
-
-<line x1="40" y1="2010" x2="1520" y2="2010" class="section-divider"/>
-<text x="780" y="1995" class="section-label" text-anchor="middle">四、剧本拆解 → 结果展示 → 续写逻辑</text>
-
-<!-- R1: AI拆解剧本 -->
-<rect x="580" y="2040" width="400" height="60" class="node-process" filter="url(#shadow)"/>
-<text x="780" y="2063" class="node-text">AI拆解剧本（2积分）</text>
-<text x="780" y="2083" class="node-text-sm">Doubao-1.5-pro → 角色列表 + 分镜列表</text>
-
-<!-- R2: 角色列表 -->
-<rect x="310" y="2150" width="420" height="90" class="node-success" filter="url(#shadow)"/>
-<text x="520" y="2173" class="node-text">角色列表</text>
-<text x="520" y="2193" class="node-text-sm">角色名 | 定位 | 性别 | 年龄段 | 性格 | 身份背景</text>
-<text x="520" y="2210" class="node-text-sm">外貌描述 | 角色描述(Seedream prompt，可折叠)</text>
-
-<!-- R3: 分镜列表 -->
-<rect x="830" y="2150" width="420" height="110" class="node-success" filter="url(#shadow)"/>
-<text x="1040" y="2173" class="node-text">分镜列表</text>
-<text x="1040" y="2193" class="node-text-sm">序号 | 场景 | 时长 | 主视角角色</text>
-<text x="1040" y="2210" class="node-text-sm">景别 | 镜头运动 | 动作 | 对白 | 音色公式</text>
-<text x="1040" y="2227" class="node-text-sm">氛围音效 | 场景图提示词(可折叠) | 视频提示词(可折叠)</text>
-
-<!-- R4: 判断是否最后一集 -->
-<rect x="590" y="2320" width="380" height="50" class="node-decision" filter="url(#shadow)"/>
-<text x="780" y="2345" class="node-text">是否最后一集？</text>
-
-<!-- R5: 下一集 -->
-<rect x="310" y="2420" width="340" height="60" class="node-step" filter="url(#shadow)"/>
-<text x="480" y="2443" class="node-text">点击"下一集"</text>
-<text x="480" y="2463" class="node-text-sm">大纲沿用只读 → 清空剧本 → 继续创作</text>
-
-<!-- R6: 下一步 -->
-<rect x="910" y="2420" width="340" height="50" class="node-end" filter="url(#shadow)"/>
-<text x="1080" y="2445" class="node-text">点击"下一步" → 环节2</text>
-
-<!-- Arrows Section 4 -->
-<line x1="730" y1="2100" x2="520" y2="2150" class="arrow-line"/>
-<line x1="830" y1="2100" x2="1040" y2="2150" class="arrow-line"/>
-<line x1="520" y1="2240" x2="680" y2="2320" class="arrow-line"/>
-<line x1="1040" y1="2260" x2="880" y2="2320" class="arrow-line"/>
-<!-- R4 -> R5 -->
-<line x1="680" y1="2370" x2="480" y2="2420" class="arrow-line"/>
-<text x="560" y="2390" class="arrow-label arrow-label-purple">还有下一集</text>
-<!-- R4 -> R6 -->
-<line x1="880" y1="2370" x2="1080" y2="2420" class="arrow-line"/>
-<text x="1000" y="2390" class="arrow-label arrow-label-green">最后一集</text>
-<!-- R5 loop back -->
-<path d="M310,2450 L200,2450 Q180,2450 180,2430 L180,275 Q180,265 190,265 L590,275" class="arrow-dashed"/>
-<text x="195" y="1360" class="arrow-label" style="fill:#888;" transform="rotate(-90, 195, 1360)">大纲只读回到主流程</text>
-
+<div class="section">
+  <div class="section-title">四、剧本拆解 → 结果展示 → 续写逻辑</div>
+  <div class="tree">
+    <div class="vconn"><div class="node node-process">AI拆解剧本 (-2积分)<div class="node-sub">Doubao-1.5-pro → 角色列表 + 分镜列表</div></div><div class="vline"></div></div>
+    <div class="branch-group">
+      <div class="branch-item">
+        <div class="node node-success">角色列表<div class="node-sub">角色名 | 定位 | 性别 | 年龄段 | 性格 | 身份背景 | 外貌描述 | 角色描述(Seedream prompt)</div></div>
+      </div>
+      <div class="branch-item">
+        <div class="node node-success">分镜列表<div class="node-sub">序号 | 场景 | 时长 | 主视角角色 | 景别 | 镜头运动 | 动作 | 对白 | 音色公式 | 氛围音效 | 场景图提示词 | 视频提示词</div></div>
+      </div>
+    </div>
+    <div class="vconn" style="margin-top:12px"><div class="vline"></div><div class="node node-decision">是否最后一集？</div><div class="vline"></div></div>
+    <div class="branch-group">
+      <div class="branch-item">
+        <div class="arrow-label purple">还有下一集</div><div class="vline"></div>
+        <div class="vconn"><div class="node node-step">点击「下一集」<div class="node-sub">大纲沿用只读 → 清空剧本 → 继续创作</div></div></div>
+      </div>
+      <div class="branch-item">
+        <div class="arrow-label green">最后一集</div><div class="vline"></div>
+        <div class="node node-end">点击「下一步」→ 环节2</div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ============================================ -->
-<!-- SECTION 5: 会员中心                          -->
+<!-- 五、会员中心 -->
 <!-- ============================================ -->
-
-<line x1="40" y1="2540" x2="1520" y2="2540" class="section-divider"/>
-<text x="780" y="2525" class="section-label" text-anchor="middle">五、会员中心（积分不足时进入）</text>
-
-<!-- M1: 会员中心 -->
-<rect x="590" y="2570" width="380" height="50" class="node-member" filter="url(#shadow)"/>
-<text x="780" y="2595" class="node-text">会员中心（Tab切换）</text>
-
-<!-- M2: 会员订阅 -->
-<rect x="310" y="2670" width="400" height="80" class="node-member" filter="url(#shadow)"/>
-<text x="510" y="2693" class="node-text">Tab1: 会员订阅</text>
-<text x="510" y="2713" class="node-text-sm">月度会员 ¥25/月（55积分/月）</text>
-<text x="510" y="2730" class="node-text-sm">年度会员 ¥228/年（60积分/月 + 专属画风）</text>
-
-<!-- M3: 积分充值 -->
-<rect x="850" y="2670" width="400" height="80" class="node-member" filter="url(#shadow)"/>
-<text x="1050" y="2693" class="node-text">Tab2: 积分充值</text>
-<text x="1050" y="2713" class="node-text-sm">体验包10/¥6 | 基础包30/¥15（热门）</text>
-<text x="1050" y="2730" class="node-text-sm">进阶包100/¥45（最划算）| 尊享包300/¥120</text>
-
-<!-- M4: 支付 -->
-<rect x="590" y="2800" width="380" height="50" class="node-process" filter="url(#shadow)"/>
-<text x="780" y="2825" class="node-text">选择支付方式 → 支付</text>
-
-<!-- Arrows Section 5 -->
-<line x1="690" y1="2620" x2="510" y2="2670" class="arrow-line"/>
-<line x1="870" y1="2620" x2="1050" y2="2670" class="arrow-line"/>
-<line x1="510" y1="2750" x2="690" y2="2800" class="arrow-line"/>
-<line x1="1050" y1="2750" x2="870" y2="2800" class="arrow-line"/>
-
+<div class="section">
+  <div class="section-title">五、会员中心（积分不足时进入）</div>
+  <div class="tree">
+    <div class="vconn"><div class="node node-member">会员中心（Tab切换）</div><div class="vline"></div></div>
+    <div class="branch-group">
+      <div class="branch-item">
+        <div class="arrow-label">Tab1</div>
+        <div class="vconn">
+          <div class="node node-member">会员订阅<div class="node-sub">月度 ¥25/月（55积分/月）<br>年度 ¥228/年（60积分/月+专属画风）</div></div>
+        </div>
+      </div>
+      <div class="branch-item">
+        <div class="arrow-label">Tab2</div>
+        <div class="vconn">
+          <div class="node node-member">积分充值<div class="node-sub">体验包10/¥6 | 基础包30/¥15(热门)<br>进阶包100/¥45(最划算) | 尊享包300/¥120</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="vconn" style="margin-top:12px"><div class="vline"></div><div class="node node-process">选择支付方式 → 支付</div></div>
+  </div>
+</div>
 
 <!-- ============================================ -->
-<!-- SECTION 6: 积分消耗规则                       -->
+<!-- 六、积分消耗规则 -->
 <!-- ============================================ -->
-
-<line x1="40" y1="2920" x2="1520" y2="2920" class="section-divider"/>
-<text x="780" y="2905" class="section-label" text-anchor="middle">六、积分消耗规则</text>
-
-<rect x="430" y="2950" width="700" height="240" rx="12" fill="#fff" stroke="#ddd" stroke-width="1.5" filter="url(#shadow)"/>
-<rect x="430" y="2950" width="700" height="44" rx="12" fill="#ede5f7" stroke="none"/>
-<rect x="430" y="2980" width="700" height="14" fill="#ede5f7" stroke="none"/>
-<text x="580" y="2977" class="node-text" style="font-size:15px;font-weight:600;">AI功能</text>
-<text x="780" y="2977" class="node-text" style="font-size:15px;font-weight:600;">触发方式</text>
-<text x="980" y="2977" class="node-text" style="font-size:15px;font-weight:600;">消耗积分</text>
-
-<line x1="440" y1="3014" x2="1120" y2="3014" stroke="#e0dcd4" stroke-width="0.5"/>
-<text x="580" y="3038" class="node-text" style="font-size:14px;">AI优化（大纲/剧本）</text>
-<text x="780" y="3038" class="node-text" style="font-size:14px;">点击"AI优化"按钮</text>
-<text x="980" y="3038" class="node-text" style="font-size:14px;fill:#7c3aed;">2 积分/次</text>
-
-<line x1="440" y1="3054" x2="1120" y2="3054" stroke="#e0dcd4" stroke-width="0.5"/>
-<text x="580" y="3078" class="node-text" style="font-size:14px;">AI灵感（大纲/剧本）</text>
-<text x="780" y="3078" class="node-text" style="font-size:14px;">点击"AI灵感"按钮（无弹窗直接生成）</text>
-<text x="980" y="3078" class="node-text" style="font-size:14px;fill:#7c3aed;">2 积分/次</text>
-
-<line x1="440" y1="3094" x2="1120" y2="3094" stroke="#e0dcd4" stroke-width="0.5"/>
-<text x="580" y="3118" class="node-text" style="font-size:14px;fill:#b8860b;">剧本拆解</text>
-<text x="780" y="3118" class="node-text" style="font-size:14px;">点击"开始创作"</text>
-<text x="980" y="3118" class="node-text" style="font-size:14px;fill:#b8860b;">2 积分/次</text>
-
-<line x1="440" y1="3154" x2="1120" y2="3154" stroke="#e0dcd4" stroke-width="0.5"/>
-<text x="580" y="3178" class="node-text" style="font-size:14px;">角色图</text>
-<text x="780" y="3178" class="node-text" style="font-size:14px;">环节2 生成角色图</text>
-<text x="980" y="3178" class="node-text" style="font-size:14px;fill:#7c3aed;">10 积分/张</text>
-
-<line x1="440" y1="3194" x2="1120" y2="3194" stroke="#e0dcd4" stroke-width="0.5"/>
-<text x="580" y="3218" class="node-text" style="font-size:14px;">场景图</text>
-<text x="780" y="3218" class="node-text" style="font-size:14px;">环节3 生成场景图</text>
-<text x="980" y="3218" class="node-text" style="font-size:14px;fill:#7c3aed;">10 积分/张</text>
-
-<line x1="440" y1="3234" x2="1120" y2="3234" stroke="#e0dcd4" stroke-width="0.5"/>
-<text x="580" y="3258" class="node-text" style="font-size:14px;fill:#dc2626;">分镜生成</text>
-<text x="780" y="3258" class="node-text" style="font-size:14px;">环节4 生成分镜视频</text>
-<text x="980" y="3258" class="node-text" style="font-size:14px;fill:#dc2626;">50 积分/条</text>
-
+<div class="section">
+  <div class="section-title">六、积分消耗规则</div>
+  <table class="info-table">
+    <tr><th>AI功能</th><th>触发方式</th><th>消耗积分</th></tr>
+    <tr><td>AI优化（大纲/剧本）</td><td>点击「AI优化」按钮</td><td class="pts">2 积分/次</td></tr>
+    <tr><td>AI灵感（大纲/剧本）</td><td>点击「AI灵感」按钮（无弹窗直接生成）</td><td class="pts">2 积分/次</td></tr>
+    <tr><td>剧本拆解</td><td>点击「开始创作」</td><td class="pts">2 积分/次</td></tr>
+    <tr><td>角色图</td><td>环节2 生成角色图</td><td class="pts">10 积分/张</td></tr>
+    <tr><td>场景图</td><td>环节3 生成场景图</td><td class="pts">10 积分/张</td></tr>
+    <tr><td>分镜视频生成</td><td>环节4 生成分镜视频</td><td class="pts-red">50 积分/条</td></tr>
+  </table>
+</div>
 
 <!-- ============================================ -->
-<!-- SECTION 7: 字数校验规则                       -->
+<!-- 七、字数校验规则 -->
 <!-- ============================================ -->
-
-<line x1="40" y1="3320" x2="1520" y2="3320" class="section-divider"/>
-<text x="780" y="3305" class="section-label" text-anchor="middle">七、字数校验规则</text>
-
-<rect x="430" y="3340" width="700" height="160" rx="12" fill="#fff" stroke="#ddd" stroke-width="1.5" filter="url(#shadow)"/>
-<rect x="430" y="3340" width="700" height="44" rx="12" fill="#fde8e8" stroke="none"/>
-<rect x="430" y="3370" width="700" height="14" fill="#fde8e8" stroke="none"/>
-<text x="560" y="3367" class="node-text" style="font-size:15px;font-weight:600;">字段</text>
-<text x="780" y="3367" class="node-text" style="font-size:15px;font-weight:600;">校验条件</text>
-<text x="1000" y="3367" class="node-text" style="font-size:15px;font-weight:600;">提示</text>
-
-<line x1="440" y1="3404" x2="1120" y2="3404" stroke="#e0dcd4" stroke-width="0.5"/>
-<text x="560" y="3428" class="node-text" style="font-size:14px;">漫剧大纲</text>
-<text x="780" y="3428" class="node-text" style="font-size:14px;">字数 &gt; 500</text>
-<text x="1000" y="3428" class="node-text" style="font-size:14px;fill:#dc2626;">大于500字，请修改</text>
-
-<line x1="440" y1="3444" x2="1120" y2="3444" stroke="#e0dcd4" stroke-width="0.5"/>
-<text x="560" y="3468" class="node-text" style="font-size:14px;">漫剧剧本</text>
-<text x="780" y="3468" class="node-text" style="font-size:14px;">字数 &gt; 4000</text>
-<text x="1000" y="3468" class="node-text" style="font-size:14px;fill:#dc2626;">大于4000字，请修改</text>
-
-<line x1="440" y1="3484" x2="1120" y2="3484" stroke="#e0dcd4" stroke-width="0.5"/>
-<text x="560" y="3508" class="node-text" style="font-size:14px;">漫剧剧本</text>
-<text x="780" y="3508" class="node-text" style="font-size:14px;">内容为空</text>
-<text x="1000" y="3508" class="node-text" style="font-size:14px;fill:#dc2626;">请输入漫剧剧本</text>
-
+<div class="section">
+  <div class="section-title">七、字数校验规则</div>
+  <table class="info-table">
+    <tr><th>字段</th><th>校验条件</th><th>提示</th></tr>
+    <tr><td>漫剧大纲</td><td>字数 > 500</td><td style="color:#dc2626">大于500字，请修改</td></tr>
+    <tr><td>漫剧剧本</td><td>字数 > 4000</td><td style="color:#dc2626">大于4000字，请修改</td></tr>
+    <tr><td>漫剧剧本</td><td>内容为空</td><td style="color:#dc2626">请输入漫剧剧本</td></tr>
+  </table>
+</div>
 
 <!-- ============================================ -->
-<!-- SECTION 8: 关键流程说明                       -->
+<!-- 八、关键流程说明 -->
 <!-- ============================================ -->
-
-<line x1="40" y1="3570" x2="1520" y2="3570" class="section-divider"/>
-<text x="780" y="3555" class="section-label" text-anchor="middle">八、关键流程说明</text>
-
-<rect x="200" y="3590" width="1160" height="570" rx="12" fill="#fff" stroke="#ddd" stroke-width="1.5" filter="url(#shadow)"/>
-
-<text x="230" y="3625" class="node-text" style="font-size:15px;font-weight:600;fill:#7c3aed;text-anchor:start;">1. 积分冻结机制</text>
-<text x="250" y="3650" class="node-text-sm" style="text-anchor:start;fill:#555;">调用AI前先冻结积分，AI成功则扣减，AI失败/超时则解冻退还，确保用户积分安全</text>
-
-<text x="230" y="3685" class="node-text" style="font-size:15px;font-weight:600;fill:#b8860b;text-anchor:start;">2. 会员中心（Tab切换）</text>
-<text x="250" y="3710" class="node-text-sm" style="text-anchor:start;fill:#555;">积分不足时：非会员跳转会员订阅Tab，会员跳转积分充值Tab</text>
-
-<text x="230" y="3745" class="node-text" style="font-size:15px;font-weight:600;fill:#2563eb;text-anchor:start;">3. 登录后不自动继续</text>
-<text x="250" y="3770" class="node-text-sm" style="text-anchor:start;fill:#555;">登录成功后回到页面，用户需自行重新点击按钮，不自动执行AI操作</text>
-
-<text x="230" y="3805" class="node-text" style="font-size:15px;font-weight:600;fill:#dc2626;text-anchor:start;">4. AI灵感无弹窗</text>
-<text x="250" y="3830" class="node-text-sm" style="text-anchor:start;fill:#555;">点击"AI灵感"直接生成内容，无需二次弹窗确认；AI优化需先有内容再优化</text>
-
-<text x="230" y="3865" class="node-text" style="font-size:15px;font-weight:600;fill:#16a34a;text-anchor:start;">5. 草稿自动保存</text>
-<text x="250" y="3890" class="node-text-sm" style="text-anchor:start;fill:#555;">所有表单变更800ms防抖自动保存至localStorage，页面刷新自动恢复；提交成功后清除草稿</text>
-
-<text x="230" y="3925" class="node-text" style="font-size:15px;font-weight:600;fill:#8b5cf6;text-anchor:start;">6. 续写下一集</text>
-<text x="250" y="3950" class="node-text-sm" style="text-anchor:start;fill:#555;">第2集起大纲自动沿用（只读），剧本清空待填写；结果页"下一集"按钮进入下一集</text>
-
-<text x="230" y="3985" class="node-text" style="font-size:15px;font-weight:600;fill:#f59e0b;text-anchor:start;">7. AI生成中退出保护</text>
-<text x="250" y="4010" class="node-text-sm" style="text-anchor:start;fill:#555;">AI生成中按返回键弹出确认对话框；确认离开则清理loading状态，取消则继续等待</text>
-
-<text x="230" y="4045" class="node-text" style="font-size:15px;font-weight:600;fill:#0ea5e9;text-anchor:start;">8. 拆解结果字段</text>
-<text x="250" y="4070" class="node-text-sm" style="text-anchor:start;fill:#555;">角色：性格/身份/外貌/角色描述(Seedream prompt)；分镜：主视角/景别/镜头运动/音色公式/氛围音效/场景图提示词/视频提示词</text>
-
-<text x="230" y="4105" class="node-text" style="font-size:15px;font-weight:600;fill:#64748b;text-anchor:start;">9. 视频比例与分辨率</text>
-<text x="250" y="4130" class="node-text-sm" style="text-anchor:start;fill:#555;">比例仅16:9(横屏)/9:16(竖屏)，分辨率480p/720p/1080p，参数携带至环节4分镜生成</text>
-
-</g>
-</svg>
+<div class="section">
+  <div class="section-title">八、关键流程说明</div>
+  <div class="explain-grid">
+    <div class="explain-card">
+      <div class="ec-title" style="color:#7c3aed">1. 积分冻结机制</div>
+      <div class="ec-body">调用AI前先冻结积分，AI成功则扣减，AI失败/超时则解冻退还</div>
+    </div>
+    <div class="explain-card">
+      <div class="ec-title" style="color:#b8860b">2. 会员中心（Tab切换）</div>
+      <div class="ec-body">积分不足时：非会员→会员订阅Tab，会员→积分充值Tab</div>
+    </div>
+    <div class="explain-card">
+      <div class="ec-title" style="color:#2563eb">3. 登录后不自动继续</div>
+      <div class="ec-body">登录成功后回到页面，用户需自行重新点击按钮</div>
+    </div>
+    <div class="explain-card">
+      <div class="ec-title" style="color:#dc2626">4. AI灵感无弹窗</div>
+      <div class="ec-body">点击直接生成内容，无需二次确认；AI优化需先有内容</div>
+    </div>
+    <div class="explain-card">
+      <div class="ec-title" style="color:#16a34a">5. 项目保存</div>
+      <div class="ec-body">提交时保存到项目，提交后表单锁定只读；从项目进入自动恢复内容</div>
+    </div>
+    <div class="explain-card">
+      <div class="ec-title" style="color:#8b5cf6">6. 续写下一集</div>
+      <div class="ec-body">第2集起大纲自动沿用（只读），剧本清空待填写</div>
+    </div>
+    <div class="explain-card">
+      <div class="ec-title" style="color:#f59e0b">7. AI生成中退出保护</div>
+      <div class="ec-body">AI生成中按返回键弹出确认弹窗；确认离开则清理状态</div>
+    </div>
+    <div class="explain-card">
+      <div class="ec-title" style="color:#0ea5e9">8. 拆解结果字段</div>
+      <div class="ec-body">角色：性格/身份/外貌/角色描述(Seedream prompt)；分镜：主视角/景别/镜头运动/音色公式/氛围音效/场景图提示词/视频提示词</div>
+    </div>
+    <div class="explain-card">
+      <div class="ec-title" style="color:#64748b">9. 视频比例与分辨率</div>
+      <div class="ec-body">比例仅16:9/9:16，分辨率480p/720p/1080p，参数携带至环节4</div>
+    </div>
+    <div class="explain-card">
+      <div class="ec-title" style="color:#059669">10. AI输出流式展现</div>
+      <div class="ec-body">AI优化/AI灵感结果以流式方式逐字输出，模拟真实AI响应体验</div>
+    </div>
+  </div>
 </div>
 
 </body>

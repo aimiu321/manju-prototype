@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>环节2 - 创建角色形象 流程图</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #e8e8e8;
+    color: #333;
+    font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+    overflow: auto;
+    min-height: 100vh;
+  }
+  .page-title {
+    text-align: center;
+    font-size: 32px;
+    font-weight: 700;
+    color: #333;
+    padding: 30px 0 10px;
+    letter-spacing: 2px;
+  }
+  .page-subtitle {
+    text-align: center;
+    font-size: 16px;
+    color: #888;
+    padding-bottom: 20px;
+  }
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    padding: 0 20px 20px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 15px;
+    color: #555;
+  }
+  .legend-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .chart-wrapper {
+    display: flex;
+    justify-content: center;
+    padding: 0 20px 60px;
+  }
+  svg { max-width: 100%; }
+
+  .node-start { fill: #d4f5e0; stroke: #2a9d5c; stroke-width: 2; rx: 20; }
+  .node-end   { fill: #d4f5e0; stroke: #2a9d5c; stroke-width: 2; rx: 20; }
+  .node-step  { fill: #f8f5ef; stroke: #999; stroke-width: 1.5; rx: 10; }
+  .node-process { fill: #ede5f7; stroke: #8b5cf6; stroke-width: 1.8; rx: 10; }
+  .node-decision { fill: #fef9db; stroke: #d4a017; stroke-width: 1.8; rx: 10; }
+  .node-error  { fill: #fde8e8; stroke: #dc2626; stroke-width: 1.8; rx: 10; }
+  .node-success { fill: #d4f5e0; stroke: #16a34a; stroke-width: 1.8; rx: 10; }
+  .node-login  { fill: #dbeafe; stroke: #3b82f6; stroke-width: 1.8; rx: 10; }
+  .node-autofill { fill: #e0f2fe; stroke: #0284c7; stroke-width: 1.8; rx: 10; }
+
+  .node-text {
+    fill: #333;
+    font-size: 15px;
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    text-anchor: middle;
+    dominant-baseline: central;
+  }
+  .node-text-sm {
+    fill: #666;
+    font-size: 13px;
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    text-anchor: middle;
+    dominant-baseline: central;
+  }
+
+  .arrow-line {
+    stroke: #888;
+    stroke-width: 1.5;
+    fill: none;
+    marker-end: url(#arrowhead);
+  }
+  .arrow-label {
+    fill: #666;
+    font-size: 13px;
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    text-anchor: middle;
+    dominant-baseline: central;
+  }
+  .arrow-label-green { fill: #16a34a; }
+  .arrow-label-red   { fill: #dc2626; }
+  .arrow-label-purple { fill: #7c3aed; }
+  .arrow-label-blue { fill: #0284c7; }
+
+  .section-divider {
+    stroke: #ccc;
+    stroke-width: 1;
+    stroke-dasharray: 6,4;
+  }
+  .section-label {
+    fill: #888;
+    font-size: 14px;
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-weight: 600;
+  }
+
+  .arrow-dashed {
+    stroke: #aaa;
+    stroke-width: 1.2;
+    stroke-dasharray: 5,3;
+    fill: none;
+    marker-end: url(#arrowhead-dim);
+  }
+</style>
+</head>
+<body>
+
+<div class="page-title">环节2 - 创建角色形象 流程图</div>
+<div class="page-subtitle">AI漫剧创作大师 MVP - 用户交互与状态流转</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#d4f5e0;border:1px solid #2a9d5c;"></div>开始/结束</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#f8f5ef;border:1px solid #999;"></div>用户操作</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ede5f7;border:1px solid #8b5cf6;"></div>AI/系统处理</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#fef9db;border:1px solid #d4a017;"></div>判断/决策</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#e0f2fe;border:1px solid #0284c7;"></div>自动填充</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#fde8e8;border:1px solid #dc2626;"></div>错误/拒绝</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#dbeafe;border:1px solid #3b82f6;"></div>登录流程</div>
+</div>
+
+<div class="chart-wrapper">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1560 6150" width="1560" height="6150">
+<defs>
+  <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+    <polygon points="0 0, 8 3, 0 6" fill="#888"/>
+  </marker>
+  <marker id="arrowhead-dim" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+    <polygon points="0 0, 8 3, 0 6" fill="#aaa"/>
+  </marker>
+  <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%">
+    <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.1"/>
+  </filter>
+</defs>
+
+<!-- ============================================ -->
+<!-- SECTION 1: 主流程 + 自动填充                  -->
+<!-- ============================================ -->
+
+<line x1="40" y1="50" x2="1520" y2="50" class="section-divider"/>
+<text y="35" class="section-label" text-anchor="middle">一、主流程 - 进入角色页</text>
+
+<!-- N1: 进入页面 -->
+<rect x="640" y="70" width="280" height="50" class="node-start" filter="url(#shadow)"/>
+<text x="780" y="95" class="node-text">进入角色列表页</text>
+
+<!-- N2: 是否第一集 -->
+<rect x="590" y="170" width="380" height="50" class="node-decision" filter="url(#shadow)"/>
+<text x="780" y="195" class="node-text">是否第一集？</text>
+
+<!-- N3: 第一集 → 直接展示AI拆解结果 -->
+<rect x="540" y="280" width="480" height="60" class="node-step" filter="url(#shadow)"/>
+<text x="780" y="303" class="node-text">展示AI拆解角色列表</text>
+<text x="780" y="323" class="node-text-sm">所有角色均为"待生成"</text>
+
+<!-- N4: 非第一集 → 自动填充 -->
+<rect x="1060" y="170" width="340" height="60" class="node-autofill" filter="url(#shadow)"/>
+<text x="1230" y="193" class="node-text">自动填充</text>
+<text x="1230" y="213" class="node-text-sm">从本剧角色库提取已有角色</text>
+
+<!-- N5: 合并去重 -->
+<rect x="1020" y="290" width="420" height="70" class="node-autofill" filter="url(#shadow)"/>
+<text x="1230" y="313" class="node-text">与AI拆解结果去重合并</text>
+<text x="1230" y="333" class="node-text-sm">库中角色：带图+描述+外貌（已生成）</text>
+<text x="1230" y="348" class="node-text-sm">AI新角色：描述+外貌（待生成）</text>
+
+<!-- N6: 展示合并后列表 -->
+<rect x="540" y="410" width="480" height="60" class="node-step" filter="url(#shadow)"/>
+<text x="780" y="433" class="node-text">展示角色卡片列表</text>
+<text x="780" y="453" class="node-text-sm">角色图+名称+定位+描述+状态+生成按钮</text>
+
+<!-- Arrows -->
+<line x1="780" y1="120" x2="780" y2="170" class="arrow-line"/>
+<line x1="780" y1="220" x2="780" y2="280" class="arrow-line"/>
+<text x="760" y="255" class="arrow-label arrow-label-green">是</text>
+<line x1="970" y1="195" x2="1060" y2="195" class="arrow-line"/>
+<text x="1015" y="187" class="arrow-label arrow-label-blue">否</text>
+<line x1="1230" y1="230" x2="1230" y2="290" class="arrow-line"/>
+<line x1="1020" y1="340" x2="780" y2="340" class="arrow-dashed"/>
+<text x="780" y="332" class="arrow-label" style="fill:#888;">合并</text>
+<line x1="780" y1="340" x2="780" y2="410" class="arrow-line"/>
+
+
+<!-- ============================================ -->
+<!-- SECTION 2: 用户操作分支                       -->
+<!-- ============================================ -->
+
+<line x1="40" y1="520" x2="1520" y2="520" class="section-divider"/>
+<text x="780" y="505" class="section-label" text-anchor="middle">二、用户操作分支</text>
+
+<!-- U1: 用户操作 -->
+<rect x="540" y="550" width="480" height="50" class="node-decision" filter="url(#shadow)"/>
+<text x="780" y="575" class="node-text">用户操作</text>
+
+<!-- 第一行操作节点 y=660 (5个节点，均匀分布) -->
+<!-- U2: 点击卡片 -->
+<rect x="20" y="660" width="260" height="50" class="node-step" filter="url(#shadow)"/>
+<text x="150" y="685" class="node-text">点击卡片</text>
+
+<!-- U3: 点击生成 -->
+<rect x="335" y="660" width="260" height="50" class="node-step" filter="url(#shadow)"/>
+<text x="465" y="685" class="node-text">点击"生成形象"</text>
+
+<!-- U4: 点击一键生成 -->
+<rect x="650" y="660" width="260" height="50" class="node-step" filter="url(#shadow)"/>
+<text x="780" y="685" class="node-text">点击"一键生成"</text>
+
+<!-- U5: 点击重新分析 -->
+<rect x="965" y="660" width="260" height="50" class="node-step" filter="url(#shadow)"/>
+<text x="1095" y="685" class="node-text">点击"重新分析"</text>
+
+<!-- U7: 点击返回 -->
+<rect x="1280" y="660" width="260" height="50" class="node-step" filter="url(#shadow)"/>
+<text x="1410" y="685" class="node-text">点击←返回</text>
+
+<!-- 第二行操作节点 y=770 -->
+<!-- U6: 点击角色库 -->
+<rect x="220" y="770" width="260" height="50" class="node-step" filter="url(#shadow)"/>
+<text x="350" y="795" class="node-text">点击"角色库"</text>
+
+<!-- U8: 上传参考图 -->
+<rect x="1080" y="770" width="260" height="50" class="node-step" filter="url(#shadow)"/>
+<text x="1210" y="795" class="node-text">上传参考图</text>
+
+<!-- 树形箭头：主干 + 水平分支 -->
+<!-- 入口箭头 -->
+<line x1="780" y1="470" x2="780" y2="550" class="arrow-line"/>
+<!-- 主干：U1底部 → 第一行分支高度 -->
+<line x1="780" y1="600" x2="780" y2="630" class="arrow-line"/>
+<!-- 第一行水平分支线 -->
+<line x1="150" y1="630" x2="1410" y2="630" class="arrow-line" style="stroke:#aaa;stroke-dasharray:4,3"/>
+<!-- 第一行垂直下落 -->
+<line x1="150" y1="630" x2="150" y2="660" class="arrow-line"/>
+<text x="115" y="648" class="arrow-label">编辑</text>
+<line x1="465" y1="630" x2="465" y2="660" class="arrow-line"/>
+<text x="430" y="648" class="arrow-label">生成</text>
+<line x1="780" y1="630" x2="780" y2="660" class="arrow-line"/>
+<text x="745" y="648" class="arrow-label">一键</text>
+<line x1="1095" y1="630" x2="1095" y2="660" class="arrow-line"/>
+<text x="1053" y="648" class="arrow-label">重分析</text>
+<line x1="1410" y1="630" x2="1410" y2="660" class="arrow-line"/>
+<text x="1375" y="648" class="arrow-label">返回</text>
+
+<!-- 主干继续向下：第一行分支 → 第二行分支 -->
+<line x1="780" y1="630" x2="780" y2="740" class="arrow-line" style="stroke:#aaa;stroke-dasharray:4,3"/>
+<!-- 第二行水平分支线 -->
+<line x1="350" y1="740" x2="1210" y2="740" class="arrow-line" style="stroke:#aaa;stroke-dasharray:4,3"/>
+<!-- 第二行垂直下落 -->
+<line x1="350" y1="740" x2="350" y2="770" class="arrow-line"/>
+<text x="320" y="758" class="arrow-label">库</text>
+<line x1="1210" y1="740" x2="1210" y2="770" class="arrow-line"/>
+<text x="1170" y="758" class="arrow-label">上传</text>
+
+
+<!-- ============================================ -->
+<!-- SECTION 3: 生成校验流程                       -->
+<!-- ============================================ -->
+
+<line x1="40" y1="840" x2="1520" y2="840" class="section-divider"/>
+<text x="780" y="825" class="section-label" text-anchor="middle">三、生成操作校验流程 — checkAndRun（生成/重新生成/一键生成/重新分析 共用）</text>
+
+<!-- C1 -->
+<rect x="590" y="870" width="380" height="50" class="node-process" filter="url(#shadow)"/>
+<text x="780" y="895" class="node-text">触发生成操作</text>
+
+<!-- C2 -->
+<rect x="590" y="960" width="380" height="50" class="node-decision" filter="url(#shadow)"/>
+<text x="780" y="985" class="node-text">校验登录状态</text>
+
+<!-- C3 -->
+<rect x="1060" y="960" width="300" height="50" class="node-login" filter="url(#shadow)"/>
+<text x="1210" y="985" class="node-text">弹出登录弹窗</text>
+
+<!-- C4 -->
+<rect x="590" y="1070" width="380" height="50" class="node-decision" filter="url(#shadow)"/>
+<text x="780" y="1095" class="node-text">校验积分余额</text>
+
+<!-- C5 -->
+<rect x="1060" y="1070" width="300" height="50" class="node-decision" filter="url(#shadow)"/>
+<text x="1210" y="1085" class="node-text">积分不足</text>
+<text x="1210" y="1103" class="node-text-sm">弹出积分不足半屏</text>
+
+<!-- C6 -->
+<rect x="1060" y="1170" width="300" height="50" class="node-error" filter="url(#shadow)"/>
+<text x="1210" y="1195" class="node-text">非会员 → 开通会员</text>
+
+<!-- C7 -->
+<rect x="1060" y="1260" width="300" height="50" class="node-error" filter="url(#shadow)"/>
+<text x="1210" y="1285" class="node-text">会员 → 购买积分包</text>
+
+<!-- C8 -->
+<rect x="1060" y="1350" width="300" height="50" class="node-step" filter="url(#shadow)"/>
+<text x="1210" y="1375" class="node-text">支付 → 返回当前页</text>
+
+<!-- C9 -->
+<rect x="590" y="1170" width="380" height="50" class="node-process" filter="url(#shadow)"/>
+<text x="780" y="1195" class="node-text">积分充足 → 冻结积分</text>
+
+<!-- C10 -->
+<rect x="590" y="1270" width="380" height="60" class="node-process" filter="url(#shadow)"/>
+<text x="780" y="1293" class="node-text">调用AI中台</text>
+<text x="780" y="1313" class="node-text-sm">Seedream 4.5 / Doubao</text>
+
+<!-- C11 -->
+<rect x="470" y="1390" width="260" height="50" class="node-success" filter="url(#shadow)"/>
+<text x="600" y="1408" class="node-text">生成成功</text>
+<text x="600" y="1428" class="node-text-sm">扣减积分 → 存入本剧角色库</text>
+
+<!-- C12 -->
+<rect x="830" y="1390" width="260" height="50" class="node-error" filter="url(#shadow)"/>
+<text x="960" y="1408" class="node-text">生成失败/超时</text>
+<text x="960" y="1428" class="node-text-sm">解冻退还积分</text>
+
+<!-- Arrows: 从生成/一键/重新分析节点 → Section 3 生成校验 -->
+<line x1="465" y1="710" x2="465" y2="780" class="arrow-line" style="stroke:#aaa;stroke-dasharray:4,3"/>
+<line x1="780" y1="710" x2="780" y2="780" class="arrow-line" style="stroke:#aaa;stroke-dasharray:4,3"/>
+<line x1="1095" y1="710" x2="1095" y2="780" class="arrow-line" style="stroke:#aaa;stroke-dasharray:4,3"/>
+<path d="M465,780 L780,780 L780,870" class="arrow-line"/>
+<path d="M1095,780 L780,780" class="arrow-line" style="stroke:#aaa;stroke-dasharray:4,3"/>
+<line x1="780" y1="920" x2="780" y2="960" class="arrow-line"/>
+<line x1="970" y1="985" x2="1060" y2="985" class="arrow-line"/>
+<text x="1015" y="977" class="arrow-label arrow-label-red">未登录</text>
+<path d="M1210,1010 L1210,1030 Q1210,1040 1190,1040 L800,1040 Q780,1040 780,1050 L780,1070" class="arrow-dashed"/>
+<text x="1000" y="1033" class="arrow-label arrow-label-green">登录成功</text>
+<line x1="780" y1="1010" x2="780" y2="1070" class="arrow-line"/>
+<text x="760" y="1043" class="arrow-label arrow-label-green">已登录</text>
+<line x1="970" y1="1095" x2="1060" y2="1095" class="arrow-line"/>
+<text x="1015" y="1087" class="arrow-label arrow-label-red">不足</text>
+<line x1="780" y1="1120" x2="780" y2="1170" class="arrow-line"/>
+<text x="760" y="1148" class="arrow-label arrow-label-green">充足</text>
+<line x1="1210" y1="1120" x2="1210" y2="1170" class="arrow-line"/>
+<text x="1240" y="1148" class="arrow-label arrow-label-red">无会员</text>
+<path d="M1360,1095 L1380,1095 Q1390,1095 1390,1115 L1390,1285 Q1390,1285 1370,1285 L1360,1285" class="arrow-line"/>
+<text x="1410" y="1190" class="arrow-label arrow-label-red">有会员</text>
+<line x1="1210" y1="1220" x2="1210" y2="1350" class="arrow-line"/>
+<path d="M1060,1285 L1040,1285 Q1030,1285 1030,1305 L1030,1375 Q1030,1375 1040,1375 L1060,1375" class="arrow-line"/>
+<path d="M1060,1375 L400,1375 Q380,1375 380,1355 L380,920 Q380,910 390,910 L590,910" class="arrow-dashed"/>
+<text x="395" y="1140" class="arrow-label" style="fill:#888;" transform="rotate(-90, 395, 1140)">返回重新校验</text>
+<line x1="780" y1="1220" x2="780" y2="1270" class="arrow-line"/>
+<line x1="720" y1="1330" x2="600" y2="1390" class="arrow-line"/>
+<text x="640" y="1355" class="arrow-label arrow-label-green">成功</text>
+<line x1="840" y1="1330" x2="960" y2="1390" class="arrow-line"/>
+<text x="920" y="1355" class="arrow-label arrow-label-red">失败</text>
+
+
+<!-- ============================================ -->
+<!-- SECTION 4: 生成结果状态                       -->
+<!-- ============================================ -->
+
+<line x1="40" y1="1500" x2="1520" y2="1500" class="section-divider"/>
+<text x="780" y="1485" class="section-label" text-anchor="middle">四、生成结果 → 状态更新</text>
+
+<!-- R1 -->
+<rect x="160" y="1530" width="340" height="60" class="node-process" filter="url(#shadow)"/>
+<text x="330" y="1553" class="node-text">生成中</text>
+<text x="330" y="1573" class="node-text-sm">骨架屏动画 + 按钮隐藏</text>
+
+<!-- R2 -->
+<rect x="560" y="1530" width="340" height="60" class="node-success" filter="url(#shadow)"/>
+<text x="730" y="1553" class="node-text">生成成功</text>
+<text x="730" y="1573" class="node-text-sm">展示角色图 + "重新生成" + "已生成"/"已选择"</text>
+
+<!-- R3 -->
+<rect x="960" y="1530" width="340" height="60" class="node-error" filter="url(#shadow)"/>
+<text x="1130" y="1553" class="node-text">生成失败</text>
+<text x="1130" y="1573" class="node-text-sm">错误图标 + "重新生成" + toast + 退积分</text>
+
+<!-- R4 -->
+<rect x="540" y="1650" width="480" height="50" class="node-decision" filter="url(#shadow)"/>
+<text x="780" y="1675" class="node-text">是否全部角色已生成？</text>
+
+<!-- R5 -->
+<rect x="300" y="1750" width="360" height="50" class="node-step" filter="url(#shadow)"/>
+<text x="480" y="1775" class="node-text">底部：重新分析 | 一键生成</text>
+
+<!-- R6 -->
+<rect x="720" y="1750" width="360" height="50" class="node-success" filter="url(#shadow)"/>
+<text x="780" y="1775" class="node-text">底部：重新分析 | 下一步</text>
+
+<!-- R7 -->
+<rect x="720" y="1850" width="360" height="50" class="node-end" filter="url(#shadow)"/>
+<text x="780" y="1875" class="node-text">点击"下一步" → 环节3</text>
+
+<!-- Arrows -->
+<line x1="600" y1="1440" x2="330" y2="1530" class="arrow-line" style="stroke:#aaa;stroke-dasharray:4,3"/>
+<line x1="600" y1="1440" x2="730" y2="1530" class="arrow-line"/>
+<line x1="960" y1="1440" x2="1130" y2="1530" class="arrow-line"/>
+<line x1="780" y1="1700" x2="480" y2="1750" class="arrow-line"/>
+<text x="610" y="1720" class="arrow-label arrow-label-red">否</text>
+<line x1="780" y1="1700" x2="900" y2="1750" class="arrow-line"/>
+<text x="860" y="1720" class="arrow-label arrow-label-green">是</text>
+<line x1="900" y1="1800" x2="900" y2="1850" class="arrow-line"/>
+
+
+<!-- ============================================ -->
+<!-- SECTION 5: 重新分析                           -->
+<!-- ============================================ -->
+
+<line x1="40" y1="1960" x2="1520" y2="1960" class="section-divider"/>
+<text x="780" y="1945" class="section-label" text-anchor="middle">五、重新分析</text>
+
+<rect x="590" y="1990" width="380" height="50" class="node-step" filter="url(#shadow)"/>
+<text x="780" y="2015" class="node-text">点击"重新分析"</text>
+
+<rect x="560" y="2080" width="440" height="50" class="node-decision" filter="url(#shadow)"/>
+<text x="780" y="2105" class="node-text">确认"消耗2积分，角色列表将更新"</text>
+
+<rect x="540" y="2170" width="480" height="50" class="node-process" filter="url(#shadow)"/>
+<text x="780" y="2195" class="node-text">校验登录 + 积分（同流程三）</text>
+
+<rect x="560" y="2270" width="440" height="50" class="node-process" filter="url(#shadow)"/>
+<text x="780" y="2295" class="node-text">AI重新拆解剧本（2积分）</text>
+
+<rect x="540" y="2370" width="480" height="50" class="node-success" filter="url(#shadow)"/>
+<text x="780" y="2395" class="node-text">更新角色列表 + 分镜列表</text>
+
+<rect x="590" y="2470" width="380" height="50" class="node-step" filter="url(#shadow)"/>
+<text x="780" y="2495" class="node-text">刷新角色卡片列表</text>
+
+<line x1="780" y1="2040" x2="780" y2="2080" class="arrow-line"/>
+<line x1="780" y1="2130" x2="780" y2="2170" class="arrow-line"/>
+<text x="760" y="2155" class="arrow-label arrow-label-green">确认</text>
+<line x1="780" y1="2220" x2="780" y2="2270" class="arrow-line"/>
+<line x1="780" y1="2320" x2="780" y2="2370" class="arrow-line"/>
+<line x1="780" y1="2420" x2="780" y2="2470" class="arrow-line"/>
+
+
+<!-- ============================================ -->
+<!-- SECTION 6: 角色库（本剧独立）+ 选择 + 自动填充 -->
+<!-- ============================================ -->
+
+<line x1="40" y1="2590" x2="1520" y2="2590" class="section-divider"/>
+<text x="780" y="2575" class="section-label" text-anchor="middle">六、角色库（本剧独立）→ 选择 / 自动填充</text>
+
+<!-- L1 -->
+<rect x="540" y="2630" width="480" height="60" class="node-autofill" filter="url(#shadow)"/>
+<text x="780" y="2653" class="node-text">本剧角色库（按剧隔离）</text>
+<text x="780" y="2673" class="node-text-sm">角色图生成后自动存入，库中角色仅本剧可见</text>
+
+<!-- L2: 自动填充 -->
+<rect x="540" y="2750" width="480" height="70" class="node-autofill" filter="url(#shadow)"/>
+<text x="780" y="2773" class="node-text">自动填充（非第一集进入时）</text>
+<text x="780" y="2793" class="node-text-sm">从本剧库提取已有角色 → 带入角色图+描述+外貌（状态"已选择"）</text>
+<text x="780" y="2808" class="node-text-sm">与AI拆解结果同名去重，合并后展示</text>
+
+<!-- L3: 去重规则 -->
+<rect x="180" y="2870" width="520" height="70" class="node-autofill" filter="url(#shadow)"/>
+<text x="440" y="2893" class="node-text">去重规则</text>
+<text x="440" y="2913" class="node-text-sm">库中已有角色 → 使用库中数据（已生成，状态"已选择"，带图）</text>
+<text x="440" y="2928" class="node-text-sm">AI拆解新增角色 → 使用拆解数据（待生成，无图）</text>
+
+<!-- L4: 手动引入 -->
+<rect x="780" y="2870" width="480" height="70" class="node-step" filter="url(#shadow)"/>
+<text x="1020" y="2893" class="node-text">手动引入（点击"角色库"）</text>
+<text x="1020" y="2913" class="node-text-sm">底部半屏弹出本剧角色库 → 点击"引入"</text>
+<text x="1020" y="2928" class="node-text-sm">带入角色图+描述+外貌（已生成，状态"已选择"），同名不可重复</text>
+
+<!-- Arrows -->
+<line x1="780" y1="2690" x2="780" y2="2750" class="arrow-line"/>
+<line x1="780" y1="2820" x2="440" y2="2870" class="arrow-line"/>
+<text x="580" y="2845" class="arrow-label arrow-label-blue">自动</text>
+<line x1="780" y1="2820" x2="1020" y2="2870" class="arrow-line"/>
+<text x="920" y="2845" class="arrow-label">手动</text>
+
+
+<!-- ============================================ -->
+<!-- SECTION 7: 后台生成                           -->
+<!-- ============================================ -->
+
+<line x1="40" y1="3010" x2="1520" y2="3010" class="section-divider"/>
+<text x="780" y="2995" class="section-label" text-anchor="middle">七、后台生成（用户在二级页面时）</text>
+
+<rect x="540" y="3040" width="480" height="60" class="node-step" filter="url(#shadow)"/>
+<text x="780" y="3063" class="node-text">A角色生成中 → 用户切到B角色编辑</text>
+<text x="780" y="3083" class="node-text-sm">A角色后台继续生成</text>
+
+<rect x="540" y="3150" width="480" height="50" class="node-success" filter="url(#shadow)"/>
+<text x="780" y="3175" class="node-text">A角色生成完成 → toast"XX形象已生成"</text>
+
+<rect x="540" y="3240" width="480" height="50" class="node-error" filter="url(#shadow)"/>
+<text x="780" y="3265" class="node-text">A角色生成失败 → toast"XX生成失败，请重试"</text>
+
+<rect x="540" y="3330" width="480" height="50" class="node-step" filter="url(#shadow)"/>
+<text x="780" y="3355" class="node-text">返回一级页面 → 状态实时更新</text>
+
+<line x1="780" y1="3100" x2="780" y2="3150" class="arrow-line"/>
+<line x1="780" y1="3200" x2="780" y2="3240" class="arrow-line" style="stroke:#aaa;stroke-dasharray:4,3"/>
+<text x="810" y="3225" class="arrow-label" style="fill:#888;">或</text>
+<line x1="780" y1="3290" x2="780" y2="3330" class="arrow-line"/>
+
+
+<!-- ============================================ -->
+<!-- SECTION 8: 积分消耗规则                       -->
+<!-- ============================================ -->
+
+<line x1="40" y1="3460" x2="1520" y2="3460" class="section-divider"/>
+<text x="780" y="3445" class="section-label" text-anchor="middle">八、积分消耗规则</text>
+
+<rect x="430" y="3490" width="700" height="180" rx="12" fill="#fff" stroke="#ddd" stroke-width="1.5" filter="url(#shadow)"/>
+<rect x="430" y="3490" width="700" height="44" rx="12" fill="#ede5f7" stroke="none"/>
+<rect x="430" y="3520" width="700" height="14" fill="#ede5f7" stroke="none"/>
+<text x="580" y="3517" class="node-text" style="font-size:15px;font-weight:600;">AI功能</text>
+<text x="780" y="3517" class="node-text" style="font-size:15px;font-weight:600;">触发方式</text>
+<text x="980" y="3517" class="node-text" style="font-size:15px;font-weight:600;">消耗积分</text>
+
+<line x1="440" y1="3554" x2="1120" y2="3554" stroke="#e0dcd4" stroke-width="0.5"/>
+<text x="580" y="3578" class="node-text" style="font-size:14px;fill:#b8860b;">重新分析（剧本拆解）</text>
+<text x="780" y="3578" class="node-text" style="font-size:14px;">点击"重新分析"</text>
+<text x="980" y="3578" class="node-text" style="font-size:14px;fill:#b8860b;">2 积分/次</text>
+
+<line x1="440" y1="3594" x2="1120" y2="3594" stroke="#e0dcd4" stroke-width="0.5"/>
+<text x="580" y="3618" class="node-text" style="font-size:14px;">角色图生成</text>
+<text x="780" y="3618" class="node-text" style="font-size:14px;">生成形象 / 重新生成</text>
+<text x="980" y="3618" class="node-text" style="font-size:14px;fill:#7c3aed;">10 积分/张</text>
+
+<line x1="440" y1="3634" x2="1120" y2="3634" stroke="#e0dcd4" stroke-width="0.5"/>
+<text x="580" y="3658" class="node-text" style="font-size:14px;">一键生成</text>
+<text x="780" y="3658" class="node-text" style="font-size:14px;">10积分 × 待生成角色数</text>
+<text x="980" y="3658" class="node-text" style="font-size:14px;fill:#7c3aed;">10 积分/张</text>
+
+
+<!-- ============================================ -->
+<!-- SECTION 9: 关键流程说明                       -->
+<!-- ============================================ -->
+
+<line x1="40" y1="3740" x2="1520" y2="3740" class="section-divider"/>
+<text x="780" y="3725" class="section-label" text-anchor="middle">九、关键流程说明</text>
+
+<rect x="200" y="3770" width="1160" height="260" rx="12" fill="#fff" stroke="#ddd" stroke-width="1.5" filter="url(#shadow)"/>
+
+<text x="230" y="3805" class="node-text" style="font-size:15px;font-weight:600;fill:#0284c7;text-anchor:start;">1. 角色库按剧隔离</text>
+<text x="250" y="3830" class="node-text-sm" style="text-anchor:start;fill:#555;">角色库按series隔离，不同剧集互不可见；非第一集自动填充已有角色（带图+描述+外貌，状态"已选择"）</text>
+
+<text x="230" y="3865" class="node-text" style="font-size:15px;font-weight:600;fill:#7c3aed;text-anchor:start;">2. 积分冻结机制</text>
+<text x="250" y="3890" class="node-text-sm" style="text-anchor:start;fill:#555;">调用AI前先冻结积分，成功扣减，失败/超时解冻退还</text>
+
+<text x="230" y="3925" class="node-text" style="font-size:15px;font-weight:600;fill:#b8860b;text-anchor:start;">3. 会员与积分关系</text>
+<text x="250" y="3950" class="node-text-sm" style="text-anchor:start;fill:#555;">积分不足→弹出积分不足半屏；非会员→开通会员；会员→购买积分包</text>
+
+<text x="230" y="3985" class="node-text" style="font-size:15px;font-weight:600;fill:#2563eb;text-anchor:start;">4. 登录校验时机</text>
+<text x="250" y="4010" class="node-text-sm" style="text-anchor:start;fill:#555;">仅在触发生成操作时校验登录，编辑操作无需登录</text>
+
+
+<!-- ============================================ -->
+<!-- SECTION 10: 返回按钮流程                      -->
+<!-- ============================================ -->
+
+<line x1="40" y1="4100" x2="1520" y2="4100" class="section-divider"/>
+<text x="780" y="4085" class="section-label" text-anchor="middle">十、返回按钮流程</text>
+
+<!-- B1 -->
+<rect x="590" y="4140" width="380" height="50" class="node-step" filter="url(#shadow)"/>
+<text x="780" y="4165" class="node-text">点击左上角←返回</text>
+
+<!-- B2 -->
+<rect x="520" y="4240" width="520" height="60" class="node-decision" filter="url(#shadow)"/>
+<text x="780" y="4263" class="node-text">弹出确认弹窗</text>
+<text x="780" y="4283" class="node-text-sm">"返回后剧本将重新拆解，确认返回吗？"</text>
+
+<!-- B3 -->
+<rect x="340" y="4360" width="280" height="50" class="node-end" filter="url(#shadow)"/>
+<text x="480" y="4385" class="node-text">确认 → 返回环节1</text>
+
+<!-- B4 -->
+<rect x="940" y="4360" width="280" height="50" class="node-step" filter="url(#shadow)"/>
+<text x="1080" y="4385" class="node-text">取消 → 留在当前页</text>
+
+<!-- Arrows -->
+<line x1="780" y1="4190" x2="780" y2="4240" class="arrow-line"/>
+<line x1="640" y1="4300" x2="480" y2="4360" class="arrow-line"/>
+<text x="540" y="4325" class="arrow-label arrow-label-green">确认</text>
+<line x1="920" y1="4300" x2="1080" y2="4360" class="arrow-line"/>
+<text x="1020" y="4325" class="arrow-label arrow-label-red">取消</text>
+
+
+<!-- ============================================ -->
+<!-- SECTION 11: 相册权限校验流程                   -->
+<!-- ============================================ -->
+
+<line x1="40" y1="4500" x2="1520" y2="4500" class="section-divider"/>
+<text x="780" y="4485" class="section-label" text-anchor="middle">十一、相册权限校验流程（上传参考图时）</text>
+
+<!-- P1 -->
+<rect x="540" y="4540" width="480" height="50" class="node-step" filter="url(#shadow)"/>
+<text x="780" y="4565" class="node-text">点击上传参考图</text>
+
+<!-- P2 -->
+<rect x="540" y="4640" width="480" height="50" class="node-decision" filter="url(#shadow)"/>
+<text x="780" y="4665" class="node-text">检查相册权限状态</text>
+
+<!-- P3: 未请求 -->
+<rect x="80" y="4750" width="280" height="60" class="node-process" filter="url(#shadow)"/>
+<text x="220" y="4773" class="node-text">未请求</text>
+<text x="220" y="4793" class="node-text-sm">调用系统API请求权限</text>
+
+<!-- P4: 已授权/有限授权 -->
+<rect x="440" y="4750" width="340" height="60" class="node-success" filter="url(#shadow)"/>
+<text x="610" y="4773" class="node-text">已授权 / 有限授权</text>
+<text x="610" y="4793" class="node-text-sm">直接打开相册选择器</text>
+
+<!-- P5: 拒绝 -->
+<rect x="860" y="4750" width="280" height="60" class="node-error" filter="url(#shadow)"/>
+<text x="1000" y="4773" class="node-text">拒绝(denied)</text>
+<text x="1000" y="4793" class="node-text-sm">弹出引导弹窗</text>
+
+<!-- P6: 受限 -->
+<rect x="1220" y="4750" width="260" height="60" class="node-error" filter="url(#shadow)"/>
+<text x="1350" y="4773" class="node-text">受限(restricted)</text>
+<text x="1350" y="4793" class="node-text-sm">Toast提示</text>
+
+<!-- P7: 系统权限弹窗 -->
+<rect x="40" y="4860" width="360" height="60" class="node-process" filter="url(#shadow)"/>
+<text x="220" y="4883" class="node-text">系统权限弹窗</text>
+<text x="220" y="4903" class="node-text-sm">用户选择后进入对应状态</text>
+
+<!-- P8: 引导弹窗 -->
+<rect x="860" y="4860" width="280" height="70" class="node-decision" filter="url(#shadow)"/>
+<text x="1000" y="4883" class="node-text">引导弹窗</text>
+<text x="1000" y="4903" class="node-text-sm">"无法访问相册，请去系统设置开启"</text>
+<text x="1000" y="4918" class="node-text-sm">[去设置] [取消]</text>
+
+<!-- P9: 去设置 -->
+<rect x="860" y="4980" width="280" height="50" class="node-process" filter="url(#shadow)"/>
+<text x="1000" y="5005" class="node-text">跳转系统设置</text>
+
+<!-- P10: 返回后重检 -->
+<rect x="860" y="5070" width="280" height="50" class="node-decision" filter="url(#shadow)"/>
+<text x="1000" y="5095" class="node-text">返回App → 重检权限</text>
+
+<!-- P11: 已授权 -->
+<rect x="860" y="5170" width="280" height="50" class="node-success" filter="url(#shadow)"/>
+<text x="1000" y="5195" class="node-text">已授权 → 打开选择器</text>
+
+<!-- P12: 仍拒绝 -->
+<rect x="1220" y="5070" width="260" height="50" class="node-step" filter="url(#shadow)"/>
+<text x="1350" y="5095" class="node-text">仍拒绝 → 不再弹窗</text>
+
+<!-- Arrows -->
+<line x1="780" y1="4590" x2="780" y2="4640" class="arrow-line"/>
+<line x1="590" y1="4690" x2="220" y2="4750" class="arrow-line"/>
+<text x="370" y="4710" class="arrow-label">未请求</text>
+<line x1="700" y1="4690" x2="610" y2="4750" class="arrow-line"/>
+<text x="620" y="4710" class="arrow-label arrow-label-green">已授权</text>
+<line x1="860" y1="4690" x2="1000" y2="4750" class="arrow-line"/>
+<text x="960" y="4710" class="arrow-label arrow-label-red">拒绝</text>
+<line x1="970" y1="4690" x2="1350" y2="4750" class="arrow-line"/>
+<text x="1210" y="4710" class="arrow-label">受限</text>
+<line x1="220" y1="4810" x2="220" y2="4860" class="arrow-line"/>
+<line x1="1000" y1="4810" x2="1000" y2="4860" class="arrow-line"/>
+<line x1="1000" y1="4930" x2="1000" y2="4980" class="arrow-line"/>
+<text x="1020" y="4960" class="arrow-label arrow-label-green">去设置</text>
+<line x1="1000" y1="5030" x2="1000" y2="5070" class="arrow-line"/>
+<line x1="1000" y1="5120" x2="1000" y2="5170" class="arrow-line"/>
+<text x="980" y="5148" class="arrow-label arrow-label-green">已授权</text>
+<line x1="1140" y1="5095" x2="1220" y2="5095" class="arrow-line"/>
+<text x="1195" y="5087" class="arrow-label arrow-label-red">仍拒绝</text>
+
+
+<!-- ============================================ -->
+<!-- SECTION 12: 参考图替换/删除                   -->
+<!-- ============================================ -->
+
+<line x1="40" y1="5280" x2="1520" y2="5280" class="section-divider"/>
+<text x="780" y="5265" class="section-label" text-anchor="middle">十二、参考图替换/删除</text>
+
+<!-- D1 -->
+<rect x="540" y="5320" width="480" height="50" class="node-step" filter="url(#shadow)"/>
+<text x="780" y="5345" class="node-text">点击已上传的参考图</text>
+
+<!-- D2 -->
+<rect x="540" y="5420" width="480" height="60" class="node-decision" filter="url(#shadow)"/>
+<text x="780" y="5443" class="node-text">弹出操作选项</text>
+<text x="780" y="5463" class="node-text-sm">[替换参考图] [删除参考图]</text>
+
+<!-- D3: 替换 -->
+<rect x="200" y="5540" width="320" height="50" class="node-step" filter="url(#shadow)"/>
+<text x="360" y="5565" class="node-text">替换 → 相册权限校验</text>
+
+<!-- D4: 选择新照片 -->
+<rect x="200" y="5640" width="320" height="50" class="node-success" filter="url(#shadow)"/>
+<text x="360" y="5665" class="node-text">选择新照片 → 替换预览</text>
+
+<!-- D5: 删除 -->
+<rect x="1040" y="5540" width="320" height="50" class="node-step" filter="url(#shadow)"/>
+<text x="1200" y="5565" class="node-text">删除 → 移除参考图</text>
+
+<!-- D6: 自动切回Mode1 -->
+<rect x="1040" y="5640" width="320" height="60" class="node-process" filter="url(#shadow)"/>
+<text x="1200" y="5663" class="node-text">自动切换回模式1</text>
+<text x="1200" y="5683" class="node-text-sm">生成模式→文生图，角色描述移除参考图文字</text>
+
+<!-- Arrows -->
+<line x1="780" y1="5370" x2="780" y2="5420" class="arrow-line"/>
+<line x1="640" y1="5480" x2="360" y2="5540" class="arrow-line"/>
+<text x="470" y="5505" class="arrow-label">替换</text>
+<line x1="920" y1="5480" x2="1200" y2="5540" class="arrow-line"/>
+<text x="1090" y="5505" class="arrow-label arrow-label-red">删除</text>
+<line x1="360" y1="5590" x2="360" y2="5640" class="arrow-line"/>
+<line x1="1200" y1="5590" x2="1200" y2="5640" class="arrow-line"/>
+
+
+<!-- ============================================ -->
+<!-- SECTION 13: 画风变更联动                      -->
+<!-- ============================================ -->
+
+<line x1="40" y1="5780" x2="1520" y2="5780" class="section-divider"/>
+<text x="780" y="5765" class="section-label" text-anchor="middle">十三、画风变更联动</text>
+
+<!-- S1 -->
+<rect x="540" y="5820" width="480" height="50" class="node-process" filter="url(#shadow)"/>
+<text x="780" y="5845" class="node-text">从环节1返回且画风变更</text>
+
+<!-- S2 -->
+<rect x="540" y="5920" width="480" height="60" class="node-process" filter="url(#shadow)"/>
+<text x="780" y="5943" class="node-text">所有已生成角色标记为"待重新生成"</text>
+<text x="780" y="5963" class="node-text-sm">imageGenerated=true → false</text>
+
+<!-- S3 -->
+<rect x="540" y="6030" width="480" height="50" class="node-step" filter="url(#shadow)"/>
+<text x="780" y="6055" class="node-text">Toast提示"画风已变更，请重新生成角色"</text>
+
+<!-- Arrows -->
+<line x1="780" y1="5870" x2="780" y2="5920" class="arrow-line"/>
+<line x1="780" y1="5980" x2="780" y2="6030" class="arrow-line"/>
+
+</svg>
+</div>
+
+</body>
+</html>

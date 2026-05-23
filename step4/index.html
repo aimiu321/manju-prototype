@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI漫剧创作大师 — 环节4 分镜生成</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;background:#111;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
+
+.phone-frame{width:390px;height:844px;background:#0d0d0d;border-radius:44px;border:3px solid #222;overflow:hidden;position:relative;box-shadow:0 0 40px rgba(0,0,0,0.5)}
+.phone-notch{width:126px;height:30px;background:#0d0d0d;border-radius:0 0 18px 18px;margin:0 auto;position:relative;z-index:100}
+.phone-notch::before{content:'';width:8px;height:8px;background:#1a1a1a;border-radius:50%;position:absolute;right:26px;top:10px}
+.status-bar{display:flex;justify-content:space-between;align-items:center;padding:0 28px;height:18px;color:#ccc;font-size:11px;font-weight:600}
+.app-content{height:calc(844px - 30px - 18px);display:flex;flex-direction:column;background:#0d0d0d}
+
+/* Nav */
+.nav-bar{display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid #1a1a1a;flex-shrink:0}
+.nav-bar .back{color:#8b7bf7;font-size:18px;cursor:pointer;padding:4px}
+.nav-bar .title{font-size:16px;font-weight:700;color:#fff;margin-left:8px;flex:1}
+.nav-bar .points-badge{font-size:11px;color:#8b7bf7;background:rgba(139,123,247,0.1);padding:3px 8px;border-radius:10px;margin-left:auto;cursor:pointer}
+
+.scroll{flex:1;overflow-y:auto;padding:12px 16px 80px;-webkit-overflow-scrolling:touch}
+.scroll::-webkit-scrollbar{width:0}
+
+/* === Shot Card === */
+.shot-card{background:#161616;border-radius:14px;padding:12px;margin-bottom:14px;border:1px solid #1f1f1f}
+
+.shot-top{display:flex;gap:10px;margin-bottom:10px}
+.shot-thumb{width:100px;height:56px;flex-shrink:0;border-radius:8px;overflow:hidden;background:#1a1a1a;border:1px solid #252525;position:relative;display:flex;align-items:center;justify-content:center}
+.shot-thumb .ph{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#333}
+.shot-thumb .ph-icon{font-size:18px}
+.shot-thumb .skel{position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,255,255,0.02) 25%,rgba(255,255,255,0.06) 50%,rgba(255,255,255,0.02) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;display:none}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.shot-thumb .gimg{width:100%;height:100%;object-fit:cover;display:none}
+.shot-thumb .fail{display:none;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#ef4444}
+.shot-thumb .fail-icon{font-size:16px}
+.shot-thumb .play-icon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);display:none}
+.shot-thumb .play-icon::after{content:'▶';font-size:14px;color:rgba(255,255,255,0.8)}
+.shot-thumb .dur-tag{position:absolute;bottom:3px;right:3px;padding:1px 5px;border-radius:3px;background:rgba(0,0,0,0.7);color:#aaa;font-size:8px;display:none}
+
+.shot-info{flex:1;display:flex;flex-direction:column;min-width:0}
+.shot-name{font-size:13px;font-weight:700;color:#fff;margin-bottom:2px}
+.shot-status{font-size:10px;margin-bottom:6px}
+.shot-status.pending{color:#555}
+.shot-status.done{color:#4ade80}
+.shot-status.error{color:#f87171}
+.shot-status.generating{color:#8b7bf7}
+.shot-status.modified{color:#fbbf24}
+
+.shot-btn{align-self:flex-start;padding:5px 14px;border-radius:7px;font-size:11px;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:all .15s}
+.shot-btn.pri{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff}
+.shot-btn.pri:active{transform:scale(.97)}
+.shot-btn.out{background:transparent;border:1px solid #7c3aed;color:#8b7bf7}
+.shot-btn.dis{background:#1a1a1a;color:#333;cursor:not-allowed}
+
+/* Prompt Area */
+.shot-prompt-label{font-size:10px;color:#444;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center}
+.shot-prompt-count{font-size:9px;color:#333}
+.shot-prompt-count.warn{color:#ef4444}
+.shot-prompt{font-size:10px;color:#777;line-height:1.5;background:#1a1a1a;border-radius:8px;padding:8px;word-break:break-all;transition:background .15s;cursor:pointer;max-height:60px;overflow-y:auto}
+.shot-prompt::-webkit-scrollbar{width:0}
+.shot-prompt:hover{background:#1e1e1e}
+.shot-prompt.editing{outline:1px solid rgba(139,123,247,0.4);background:#1e1e1e}
+.shot-prompt.error{outline:1px solid #ef4444}
+
+/* === Bottom Bar === */
+.bottom-bar{position:absolute;bottom:0;left:0;right:0;padding:12px 16px 24px;background:linear-gradient(transparent,#0d0d0d 20%);display:flex;gap:10px}
+.bar-btn{flex:1;padding:12px;border-radius:12px;font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:inherit}
+.bar-btn.ghost{background:#1a1a1a;color:#8b7bf7}
+.bar-btn.solid{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff}
+.bar-btn.solid:disabled{background:#1a1a1a;color:#333;cursor:not-allowed}
+
+/* Login Popup */
+.login-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:500;opacity:0;pointer-events:none;transition:opacity .2s}
+.login-overlay.show{opacity:1;pointer-events:all}
+.login-box{width:300px;background:#1a1a1a;border-radius:16px;padding:24px;text-align:center}
+.login-title{font-size:17px;font-weight:700;color:#fff;margin-bottom:20px}
+.login-field{display:flex;align-items:center;background:#111;border-radius:10px;padding:0 12px;margin-bottom:12px;border:1px solid #252525}
+.login-field input{flex:1;background:none;border:none;color:#fff;font-size:14px;padding:12px 0;outline:none;font-family:inherit}
+.login-field input::placeholder{color:#444}
+.login-field .code-btn{font-size:12px;color:#8b7bf7;cursor:pointer;white-space:nowrap}
+.login-submit{width:100%;padding:13px;border-radius:10px;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;margin-top:4px}
+.login-submit:active{transform:scale(.98)}
+.login-close{margin-top:12px;font-size:13px;color:#555;cursor:pointer}
+
+/* Points Insufficient Sheet */
+.points-sheet{position:absolute;inset:0;background:rgba(0,0,0,0.6);z-index:500;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .2s}
+.points-sheet.show{opacity:1;pointer-events:all}
+.points-sheet-body{width:100%;background:#161616;border-radius:20px 20px 0 0;padding:24px 16px 28px;transform:translateY(100%);transition:transform .3s ease}
+.points-sheet.show .points-sheet-body{transform:translateY(0)}
+.points-sheet-handle{width:32px;height:3px;background:#333;border-radius:2px;margin:0 auto 16px}
+.points-sheet-icon{font-size:36px;margin-bottom:8px}
+.points-sheet-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:6px;text-align:center}
+.points-sheet-desc{font-size:12px;color:#666;text-align:center;margin-bottom:20px;line-height:1.5}
+.points-sheet-info{background:#1a1a1a;border-radius:10px;padding:12px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+.points-sheet-info .psi-label{font-size:12px;color:#888}
+.points-sheet-info .psi-val{font-size:16px;font-weight:700;color:#ef4444}
+.points-sheet-btns{display:flex;gap:10px}
+.points-sheet-btns .psb{flex:1;padding:13px;border-radius:10px;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:inherit}
+.psb.cancel{background:#222;color:#666}
+.psb.ok{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff}
+
+/* Dialog */
+.dlg-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:400;opacity:0;pointer-events:none;transition:opacity .2s}
+.dlg-overlay.show{opacity:1;pointer-events:all}
+.dlg-box{width:280px;background:#1a1a1a;border-radius:14px;padding:20px;text-align:center}
+.dlg-title{font-size:15px;font-weight:700;color:#fff;margin-bottom:8px}
+.dlg-msg{font-size:12px;color:#666;line-height:1.5;margin-bottom:16px}
+.dlg-btns{display:flex;gap:8px}
+.dlg-btn{flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;border:none;cursor:pointer;font-family:inherit}
+.dlg-btn.cancel{background:#222;color:#666}
+.dlg-btn.ok{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff}
+
+.toast{position:absolute;top:56px;left:50%;transform:translateX(-50%);padding:8px 16px;background:rgba(124,58,237,0.9);color:#fff;border-radius:8px;font-size:12px;z-index:600;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+
+/* === Merge Sheet === */
+.sheet-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.6);z-index:300;opacity:0;pointer-events:none;transition:opacity .25s}
+.sheet-overlay.show{opacity:1;pointer-events:all}
+.sheet{position:absolute;bottom:0;left:0;right:0;background:#151515;border-radius:20px 20px 0 0;padding:20px 16px 28px;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1)}
+.sheet-overlay.show .sheet{transform:translateY(0)}
+.sheet-handle{width:36px;height:4px;background:#333;border-radius:2px;margin:0 auto 16px}
+.sheet-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:4px}
+.sheet-sub{font-size:11px;color:#555;margin-bottom:14px}
+.merge-list{max-height:320px;overflow-y:auto;margin-bottom:16px}
+.merge-list::-webkit-scrollbar{width:0}
+.merge-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1e1e1e}
+.merge-item:last-child{border-bottom:none}
+.merge-ck{width:20px;height:20px;border-radius:6px;border:2px solid #333;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+.merge-ck.on{background:#7c3aed;border-color:#7c3aed}
+.merge-ck.on::after{content:'✓';color:#fff;font-size:12px;font-weight:700}
+.merge-ck.off{opacity:.3;cursor:not-allowed}
+.merge-thumb{width:54px;height:30px;border-radius:5px;overflow:hidden;background:#1a1a1a;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.merge-thumb .mt-done{width:100%;height:100%;background:linear-gradient(135deg,#1e1236,#2a1a3c)}
+.merge-thumb .mt-nd{color:#2a2a2a;font-size:10px}
+.merge-info{flex:1;min-width:0}
+.merge-name{font-size:13px;font-weight:600;color:#fff}
+.merge-meta{font-size:10px;color:#555;margin-top:2px}
+.merge-stag{font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600;flex-shrink:0}
+.merge-stag.done{background:rgba(74,222,128,0.12);color:#4ade80}
+.merge-stag.nd{background:rgba(255,255,255,0.04);color:#444}
+.sheet-footer{display:flex;align-items:center;justify-content:space-between}
+.sheet-count{font-size:11px;color:#666}
+.sheet-count b{color:#8b7bf7}
+.merge-btn{padding:10px 28px;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;transition:all .15s}
+.merge-btn:disabled{background:#1a1a1a;color:#333;cursor:not-allowed}
+</style>
+</head>
+<body>
+<div class="phone-frame">
+  <div class="phone-notch"></div>
+  <div class="status-bar"><span>9:41</span><span>&#9679;&#9679;&#9679;&#9679;</span></div>
+
+  <!-- ===== 一级页面 ===== -->
+  <div class="app-content" id="mainPage">
+    <div class="nav-bar">
+      <div class="back">&larr;</div>
+      <div class="title">分镜生成</div>
+      <div class="points-badge" id="pointsBadge" onclick="openPointsSheet()">60积分</div>
+      <div style="font-size:11px;color:#555;margin-left:10px">4/5</div>
+    </div>
+    <div class="scroll" id="cardList"></div>
+    <div class="bottom-bar">
+      <button class="bar-btn ghost" onclick="onGenAll()">生成全部</button>
+      <button class="bar-btn solid" id="nextBtn" disabled onclick="goNext()">合成视频</button>
+    </div>
+  </div>
+
+  <!-- Login Popup -->
+  <div class="login-overlay" id="loginPopup">
+    <div class="login-box">
+      <div class="login-title">手机号登录</div>
+      <div class="login-field">
+        <input id="phoneInput" type="tel" placeholder="请输入手机号" maxlength="11">
+      </div>
+      <div class="login-field">
+        <input id="codeInput" type="text" placeholder="验证码" maxlength="6">
+        <div class="code-btn" onclick="sendCode()">获取验证码</div>
+      </div>
+      <button class="login-submit" onclick="doLogin()">登录</button>
+      <div class="login-close" onclick="closeLogin()">暂不登录</div>
+    </div>
+  </div>
+
+  <!-- Points Insufficient Sheet -->
+  <div class="points-sheet" id="pointsSheet">
+    <div class="points-sheet-body">
+      <div class="points-sheet-handle"></div>
+      <div class="points-sheet-icon">&#128176;</div>
+      <div class="points-sheet-title">积分不足</div>
+      <div class="points-sheet-desc">当前积分余额不足以完成此操作，请充值后继续</div>
+      <div class="points-sheet-info">
+        <span class="psi-label">当前积分</span>
+        <span class="psi-val" id="psiVal">0</span>
+      </div>
+      <div class="points-sheet-btns">
+        <button class="psb cancel" onclick="closePointsSheet()">取消</button>
+        <button class="psb ok" id="psiOkBtn" onclick="goRecharge()">去充值</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dialog -->
+  <div class="dlg-overlay" id="dlg">
+    <div class="dlg-box">
+      <div class="dlg-title" id="dlgT"></div>
+      <div class="dlg-msg" id="dlgM"></div>
+      <div class="dlg-btns">
+        <button class="dlg-btn cancel" onclick="closeDlg()">取消</button>
+        <button class="dlg-btn ok" id="dlgOk">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Merge Sheet -->
+  <div class="sheet-overlay" id="mergeSheet" onclick="if(event.target===this)closeMerge()">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">合成视频</div>
+      <div class="sheet-sub">选择要合成的分镜视频，至少选择2个</div>
+      <div class="merge-list" id="mergeList"></div>
+      <div class="sheet-footer">
+        <div class="sheet-count">已选 <b id="selCount">0</b> 个分镜</div>
+        <button class="merge-btn" id="mergeBtn" disabled onclick="doMerge()">合成</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== 全局状态 =====
+let isLoggedIn=false;
+let userPoints=60;
+let isMember=false;
+const VIDEO_COST=50;
+let pendingGenCallback=null;
+
+const shots=[
+  {id:1,mainChar:'陆沉',duration:6,status:'pending',statusText:'待生成',
+   videoPrompt:'水墨晕染底色与精致3D渲染结合的古风仙侠画面，青绿金赤色调，柔和立体光影，镜头从庭院全景缓缓推向画面中央，画面中央低头看着手中泛黄书卷微微叹气，男 青年 中低音 缓慢 低落 中文，「三年了，连入门功法都学不会...」，秋风落叶沙沙声，保持角色人脸与首帧图一致，保持画面风格色调光影与首帧图一致'},
+  {id:2,mainChar:'陆沉',duration:5,status:'pending',statusText:'待生成',
+   videoPrompt:'水墨晕染底色与精致3D渲染结合的古风仙侠画面，青绿金赤色调，柔和立体光影，镜头从画面中央缓缓摇向院门方向，画面中回头目光警觉，身穿白色儒裙长发及腰眉目温婉的年轻女子推门而入微微一笑，男 青年 中低音 急促 警觉 中文，「谁？！」，女 青年 清亮音色 中速 温婉 中文，「师兄让我把这个交给你。」，门轴吱呀声，保持角色人脸与首帧图一致，保持画面风格色调光影与首帧图一致'},
+  {id:3,mainChar:'白芷',duration:5,status:'pending',statusText:'待生成',
+   videoPrompt:'水墨晕染底色与精致3D渲染结合的古风仙侠画面，青绿金赤色调，柔和立体光影，镜头缓缓推近白芷面部，画面中将一枚玉符放在石桌上轻声开口，身穿灰色粗布道袍黑发披散面容清瘦的青年男子目光落在玉符上，女 青年 清亮音色 轻柔 关切 中文，「这是师兄让我转交的，他说你用得上。」，远处晚钟声，保持角色人脸与首帧图一致，保持画面风格色调光影与首帧图一致'},
+  {id:4,mainChar:'陆沉',duration:6,status:'pending',statusText:'待生成',
+   videoPrompt:'水墨晕染底色与精致3D渲染结合的古风仙侠画面，青绿金赤色调，柔和立体光影，镜头从面部缓缓下移至手中玉符，画面中双手握住玉符闭上眼睛玉符散发微弱青光，男 青年 中低音 颤抖 震惊 中文，「这...是引气入体的法门？」，石室回响低鸣，保持角色人脸与首帧图一致，保持画面风格色调光影与首帧图一致'},
+];
+
+const PROMPT_MAX=500;
+
+function updatePointsUI(){
+  const b=document.getElementById('pointsBadge');if(b)b.textContent=userPoints+'积分';
+}
+
+// ===== 校验流程（登录→积分→执行） =====
+function checkAndRun(callback,cost){
+  if(!isLoggedIn){pendingGenCallback=callback;openLogin();return;}
+  if(userPoints<cost){openPointsSheet();return;}
+  callback();
+}
+
+// ===== Login =====
+function openLogin(){document.getElementById('loginPopup').classList.add('show');}
+function closeLogin(){
+  document.getElementById('loginPopup').classList.remove('show');
+  document.getElementById('phoneInput').value='';
+  document.getElementById('codeInput').value='';
+  pendingGenCallback=null;
+}
+function sendCode(){showToast('验证码已发送');}
+function doLogin(){
+  const phone=document.getElementById('phoneInput').value.trim();
+  if(phone.length<11){showToast('请输入正确的手机号');return;}
+  isLoggedIn=true;
+  closeLogin();
+  showToast('登录成功');
+  if(pendingGenCallback){pendingGenCallback();pendingGenCallback=null;}
+}
+
+// ===== Points Insufficient =====
+function openPointsSheet(){
+  document.getElementById('psiVal').textContent=userPoints;
+  document.getElementById('psiOkBtn').textContent=isMember?'购买积分包':'开通会员';
+  document.getElementById('pointsSheet').classList.add('show');
+}
+function closePointsSheet(){document.getElementById('pointsSheet').classList.remove('show');}
+function goRecharge(){
+  closePointsSheet();
+  showToast(isMember?'跳转积分包充值页':'跳转会员开通页');
+}
+
+// ===== Render =====
+function render(){
+  document.getElementById('cardList').innerHTML=shots.map(s=>`
+  <div class="shot-card">
+    <div class="shot-top">
+      <div class="shot-thumb" id="vbox-${s.id}">
+        ${s.status==='done'
+          ?`<div class="gimg" style="display:block;background:linear-gradient(135deg,#1e1236,#2a1a3c)"></div>
+            <div class="play-icon" style="display:flex" onclick="playVideo(${s.id})"></div>
+            <div class="dur-tag" style="display:block">${s.duration}s</div>`
+          :s.status==='generating'
+          ?`<div class="skel" style="display:block"></div>`
+          :s.status==='error'
+          ?`<div class="fail" style="display:flex"><div class="fail-icon">&#10060;</div></div>`
+          :`<div class="ph"><div class="ph-icon">&#127909;</div></div>`
+        }
+      </div>
+      <div class="shot-info">
+        <div class="shot-name">分镜${s.id}</div>
+        <div class="shot-status ${s.status}">${s.statusText}</div>
+        ${s.status==='done'
+          ?`<button class="shot-btn out" onclick="onRegen(${s.id})">重新生成</button>`
+          :s.status==='generating'
+          ?`<button class="shot-btn dis">生成中...</button>`
+          :s.status==='error'
+          ?`<button class="shot-btn out" onclick="onGenOne(${s.id})">重新生成</button>`
+          :s.status==='modified'
+          ?`<button class="shot-btn pri" onclick="onGenOne(${s.id})">重新生成</button>`
+          :`<button class="shot-btn pri" onclick="onGenOne(${s.id})">生成分镜</button>`
+        }
+      </div>
+    </div>
+    <div class="shot-prompt-label">视频提示词 <span class="shot-prompt-count" id="vc-${s.id}">${s.videoPrompt.length}/${PROMPT_MAX}</span></div>
+    <div class="shot-prompt" id="vp-${s.id}" onclick="editPrompt(${s.id})">${s.videoPrompt}</div>
+  </div>`).join('');
+  updateBtn();
+}
+
+function updateBtn(){
+  const doneCount=shots.filter(s=>s.status==='done').length;
+  document.getElementById('nextBtn').disabled=doneCount<2;
+}
+
+// ===== Edit Prompt =====
+function editPrompt(id){
+  const el=document.getElementById('vp-'+id);
+  if(el.contentEditable==='true')return;
+  el.contentEditable='true';
+  el.classList.add('editing');
+  el.focus();
+  const rng=document.createRange();
+  rng.selectNodeContents(el);
+  window.getSelection().removeAllRanges();
+  window.getSelection().addRange(rng);
+  const countEl=document.getElementById('vc-'+id);
+  const updateCount=()=>{
+    const len=el.textContent.trim().length;
+    if(countEl){countEl.textContent=len+'/'+PROMPT_MAX;countEl.className='shot-prompt-count'+(len>PROMPT_MAX?' warn':'');}
+  };
+  el.oninput=updateCount;
+  const done=()=>{
+    el.contentEditable='false';
+    el.classList.remove('editing');
+    const s=shots.find(x=>x.id===id);
+    const newPrompt=el.textContent.trim();
+    if(!newPrompt){
+      el.textContent=s.videoPrompt;
+      el.classList.add('error');
+      setTimeout(()=>el.classList.remove('error'),2000);
+    }else if(s.videoPrompt!==newPrompt){
+      s.videoPrompt=newPrompt;
+      if(s.status==='done'){s.status='modified';s.statusText='提示词已修改，需重新生成';}
+    }
+    render();
+  };
+  el.onblur=done;
+  el.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();el.blur();}};
+}
+
+// ===== 生成入口（带校验） =====
+function onGenOne(id){
+  checkAndRun(()=>genOne(id),VIDEO_COST);
+}
+function onRegen(id){
+  // 环节4重新生成需确认弹窗（50积分较贵）
+  checkAndRun(()=>{
+    showDlg('重新生成','重新生成将消耗50积分，继续？',()=>genOne(id));
+  },VIDEO_COST);
+}
+function onGenAll(){
+  const pendingCount=shots.filter(s=>s.status!=='done'&&s.status!=='generating').length;
+  checkAndRun(genAll,VIDEO_COST*pendingCount);
+}
+
+// ===== Generation =====
+function genOne(id){
+  const s=shots.find(x=>x.id===id);
+  s.status='generating';
+  s.statusText='正在生成视频...';
+  // 冻结积分
+  userPoints-=VIDEO_COST;
+  updatePointsUI();
+  render();
+
+  setTimeout(()=>{
+    s.status='done';
+    s.statusText='已生成';
+    render();
+    showToast('分镜'+s.id+'视频已生成');
+  },3000);
+}
+
+function genAll(){
+  shots.forEach((s,i)=>{
+    if(s.status!=='done'&&s.status!=='generating')
+      setTimeout(()=>checkAndRun(()=>genOne(s.id),VIDEO_COST),i*1200);
+  });
+}
+
+function playVideo(id){showToast('播放分镜'+id+' 视频');}
+function goNext(){openMerge();}
+
+// ===== Merge Sheet =====
+let selIds=new Set();
+function openMerge(){
+  selIds.clear();
+  shots.forEach(s=>{if(s.status==='done')selIds.add(s.id);});
+  renderMerge();
+  document.getElementById('mergeSheet').classList.add('show');
+}
+function closeMerge(){document.getElementById('mergeSheet').classList.remove('show');}
+function toggleSel(id){
+  const s=shots.find(x=>x.id===id);
+  if(s.status!=='done')return;
+  selIds.has(id)?selIds.delete(id):selIds.add(id);
+  renderMerge();
+}
+function renderMerge(){
+  const list=document.getElementById('mergeList');
+  list.innerHTML=shots.map(s=>{
+    const done=s.status==='done';
+    const sel=selIds.has(s.id);
+    return `<div class="merge-item">
+      <div class="merge-ck ${done?(sel?'on':''):'off'}" onclick="toggleSel(${s.id})"></div>
+      <div class="merge-thumb">${done?'<div class="mt-done"></div>':'<div class="mt-nd">&#127909;</div>'}</div>
+      <div class="merge-info">
+        <div class="merge-name">分镜${s.id}</div>
+        <div class="merge-meta">${done?s.duration+'s · '+s.mainChar:s.statusText}</div>
+      </div>
+      <div class="merge-stag ${done?'done':'nd'}">${done?'已生成':'未生成'}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('selCount').textContent=selIds.size;
+  document.getElementById('mergeBtn').disabled=selIds.size<2;
+}
+function doMerge(){
+  const ids=[...selIds].sort((a,b)=>a-b);
+  closeMerge();
+  showToast('合成分镜 '+ids.join('、')+' 的视频');
+}
+
+// ===== Dialog =====
+let dlgCb=null;
+function showDlg(t,m,cb){
+  document.getElementById('dlgT').textContent=t;
+  document.getElementById('dlgM').textContent=m;
+  dlgCb=cb;
+  document.getElementById('dlgOk').onclick=()=>{closeDlg();if(dlgCb)dlgCb();};
+  document.getElementById('dlg').classList.add('show');
+}
+function closeDlg(){document.getElementById('dlg').classList.remove('show');}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+// 初始化
+updatePointsUI();
+render();
+</script>
+</body>
+</html>
