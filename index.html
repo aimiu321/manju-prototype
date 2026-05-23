@@ -509,6 +509,9 @@ body {
 
 .char-count.warning { color: #f59e0b; }
 .char-count.error { color: #ef4444; }
+.outline-readonly-badge { font-size: 11px; color: #6b6b8d; padding: 4px 0; display: flex; align-items: center; gap: 4px; }
+.prompt-template { background: rgba(255,255,255,0.03); border-radius: 10px; padding: 12px 14px; margin-top: 8px; }
+.prompt-template-title { font-size: 11px; color: #6b6b8d; margin-bottom: 6px; }
 
 /* Textarea with Mode */
 .textarea-wrapper {
@@ -532,15 +535,6 @@ body {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
-
-.skeleton-text {
-  height: 16px;
-  margin-bottom: 8px;
-  width: 80%;
-}
-
-.skeleton-text:nth-child(2) { width: 60%; }
-.skeleton-text:nth-child(3) { width: 70%; }
 
 /* Bottom Action */
 .bottom-action {
@@ -1323,7 +1317,7 @@ body {
       <!-- 漫剧名称 -->
       <div class="section">
         <div class="section-label">漫剧名称<span class="required">*</span></div>
-        <input class="input-field" type="text" placeholder="请输入漫剧名称" maxlength="20" id="seriesName" oninput="updateCharCount()">
+        <input class="input-field" type="text" placeholder="请输入漫剧名称" maxlength="20" id="seriesName" oninput="updateCharCount();scheduleSave()">
       </div>
 
       <!-- 集数选择 -->
@@ -1427,7 +1421,7 @@ body {
             <div class="skeleton-line"></div><div class="skeleton-line"></div><div class="skeleton-line"></div>
             <div class="ai-loading-text">AI正在生成…</div>
           </div>
-          <textarea class="input-field textarea-field" id="outlineInput" placeholder="请输入漫剧大纲，描述整体故事走向…" oninput="updateOutlineCharCount()"></textarea>
+          <textarea class="input-field textarea-field" id="outlineInput" placeholder="请输入漫剧大纲，描述整体故事走向…" oninput="updateOutlineCharCount();scheduleSave()"></textarea>
         </div>
         <div class="outline-readonly-badge" id="outlineReadonlyBadge" style="display:none">
           <span>&#128274;</span> 第1集已填写，大纲自动沿用
@@ -1453,7 +1447,7 @@ body {
             <div class="skeleton-line"></div><div class="skeleton-line"></div><div class="skeleton-line"></div>
             <div class="ai-loading-text">AI正在生成…</div>
           </div>
-          <textarea class="input-field textarea-field tall" id="scriptInput" placeholder="请输入漫剧剧本，或使用AI生成…" oninput="updateCharCount()"></textarea>
+          <textarea class="input-field textarea-field tall" id="scriptInput" placeholder="请输入漫剧剧本，或使用AI生成…" oninput="updateCharCount();scheduleSave()"></textarea>
         </div>
         <div class="char-count" id="charCount">0 / 4000</div>
       </div>
@@ -1552,6 +1546,19 @@ body {
     </div>
   </div>
 
+  <!-- First-time Generate Confirm Modal -->
+  <div class="pts-overlay" id="confirmGenOverlay">
+    <div class="pts-box">
+      <div class="pts-icon" style="font-size:28px">&#127916;</div>
+      <div class="pts-title" id="confirmGenTitle">确认生成</div>
+      <div class="pts-msg" id="confirmGenMsg">本次生成将消耗 2 积分</div>
+      <div class="pts-btns">
+        <button class="pts-btn cancel" onclick="closeConfirmGen()">取消</button>
+        <button class="pts-btn ok" onclick="confirmGenOk()">确认生成</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -1589,6 +1596,10 @@ function saveDraft() {
     formLocked: formLocked,
   };
   localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+  // Show save indicator
+  const indicator = document.getElementById('saveIndicator');
+  indicator.classList.add('show');
+  setTimeout(() => indicator.classList.remove('show'), 1500);
 }
 
 function scheduleSave() {
@@ -1605,9 +1616,9 @@ function restoreDraft() {
     if (data.genre) { state.genre = data.genre; document.querySelectorAll('#genreGroup .tag').forEach(t => { t.classList.toggle('selected', t.dataset.value === data.genre); }); }
     if (data.episodeCount) { state.episodeCount = data.episodeCount; document.querySelectorAll('#episodeGroup .tag').forEach(t => { t.classList.toggle('selected', parseInt(t.dataset.value) === data.episodeCount); }); }
     if (data.currentEpisode) state.currentEpisode = data.currentEpisode;
-    if (data.artStyle) { state.artStyle = data.artStyle; document.querySelectorAll('#styleGroup .style-card').forEach(c => { c.classList.toggle('selected', c.dataset.value === data.artStyle); }); }
-    if (data.ratio) { state.ratio = data.ratio; document.querySelectorAll('#ratioGroup .tag').forEach(t => { t.classList.toggle('selected', t.dataset.value === data.ratio); }); }
-    if (data.resolution) { state.resolution = data.resolution; document.querySelectorAll('#resGroup .tag').forEach(t => { t.classList.toggle('selected', t.dataset.value === data.resolution); }); }
+    if (data.artStyle) { state.artStyle = data.artStyle; document.querySelectorAll('#artStyleGroup .style-card').forEach(c => { c.classList.toggle('selected', c.dataset.value === data.artStyle); }); }
+    if (data.ratio) { state.ratio = data.ratio; document.querySelectorAll('#ratioGroup .ratio-btn').forEach(t => { t.classList.toggle('selected', t.dataset.value === data.ratio); }); }
+    if (data.resolution) { state.resolution = data.resolution; document.querySelectorAll('#resGroup .ratio-btn').forEach(t => { t.classList.toggle('selected', t.dataset.value === data.resolution); }); }
     if (data.outline) document.getElementById('outlineInput').value = data.outline;
     if (data.script) document.getElementById('scriptInput').value = data.script;
     state.outlineMode = data.outlineMode || 'self';
@@ -1836,9 +1847,9 @@ User: 请优化以下漫剧剧本，不改变原有设定：
   wrapper.classList.add('ai-loading');
   textarea.disabled = true;
   aiBusy = true;
+  freezePoints(2); // AI优化 冻结2积分
 
   setTimeout(() => {
-    deductPoints(2); // AI优化 2积分
     const result = field === 'outline'
       ? '少年陆沉出身落魄修仙家族旁支，修炼天赋极低，在宗门中备受欺凌。一日偶然发现祖传玉佩中封印着上古修仙者的记忆传承，从此命运改写。他历经三世轮回，第一世受尽屈辱后含恨而终，第二世带着记忆重生却遭至信之人背叛，第三世终于觉醒，以超凡智慧与坚定意志打破轮回宿命，踏上修仙巅峰。'
       : '【古朴庭院 黄昏】秋风萧瑟，落叶铺满青石板路。陆沉独自站在庭院中央，手握泛黄书卷，眉头紧锁。\n\n陆沉（低声）：三年了……连入门功法都学不会。\n\n他握紧拳头，指节发白。院门口传来脚步声，白芷推门而入，手捧一枚泛着青光的玉佩。\n\n白芷（微笑）：师兄让我把这个交给你，说是你父亲的遗物。\n\n陆沉伸手接过，指尖触碰玉面的瞬间，温热涌来，玉佩上的文字骤然亮起……';
@@ -1846,13 +1857,14 @@ User: 请优化以下漫剧剧本，不改变原有设定：
     wrapper.classList.remove('ai-loading');
     streamText(textarea, result, field, () => {
       aiBusy = false;
+      deductPoints(2); // AI优化成功，确认扣减
     });
   }, 2000);
 }
 
 // AI Generate (灵感)
 function handleGenerate(field) {
-  deductPoints(2); // AI灵感 2积分
+  freezePoints(2); // AI灵感 冻结2积分
   aiBusy = true;
   const textareaId = field === 'outline' ? 'outlineInput' : 'scriptInput';
   const wrapperId = field === 'outline' ? 'outlineWrapper' : 'scriptWrapper';
@@ -1873,6 +1885,7 @@ function handleGenerate(field) {
     wrapper.classList.remove('ai-loading');
     streamText(textarea, result, field, () => {
       aiBusy = false;
+      deductPoints(2); // AI灵感成功，确认扣减
     });
   }, 2000);
 }
@@ -1959,6 +1972,7 @@ function handleSubmit() {
   // 提交时保存到项目
   saveDraft();
 
+  freezePoints(2); // 剧本拆解 冻结2积分
   aiBusy = true;
   const overlay = document.getElementById('loadingOverlay');
   document.getElementById('loadingEpNum').textContent = state.currentEpisode;
@@ -1966,7 +1980,7 @@ function handleSubmit() {
 
   setTimeout(() => {
     overlay.classList.remove('show');
-    deductPoints(2);
+    deductPoints(2); // 拆解成功，确认扣减
     aiBusy = false;
     showResult();
   }, 2500);
@@ -2208,13 +2222,11 @@ updateOutlineReadonly();
 let userPoints = 2;
 let isLoggedIn = false;
 let hasMembership = false;
-let memberPlan = 'monthly';
 let codeTimer = null;
-let pendingAction = null;
 let aiBusy = false;
 
 function showMemberNav() {
-  showValidationToast('前往会员中心（全局模块）');
+  showToast('前往会员中心（全局模块）');
 }
 
 function goBack() {
@@ -2258,18 +2270,6 @@ function updatePtsDisplay() {
 // Login
 function closeLogin(){document.getElementById('loginModal').classList.remove('show');}
 
-function checkLogin() {
-  if (!isLoggedIn) {
-    document.getElementById('loginPhone').value = '';
-    document.getElementById('loginCode').value = '';
-    document.getElementById('loginPhone').style.borderColor = '';
-    document.getElementById('loginCode').parentElement.style.borderColor = '';
-    document.getElementById('loginModal').classList.add('show');
-    showValidationToast('您还未登录');
-    return false;
-  }
-  return true;
-}
 
 function sendCode() {
   const phone = document.getElementById('loginPhone').value;
@@ -2305,14 +2305,12 @@ function doLogin() {
     document.getElementById('phoneFrame').appendChild(t);
     setTimeout(() => t.style.opacity = '1', 10);
     setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 200); }, 1500);
-    pendingAction = null;
   }, 800);
 }
 
 // Points check — 根据是否有会员跳转不同页面
 function checkPoints(cost, action) {
   if (!isLoggedIn) {
-    pendingAction = action || null;
     document.getElementById('loginPhone').value = '';
     document.getElementById('loginCode').value = '';
     document.getElementById('loginPhone').style.borderColor = '';
@@ -2341,10 +2339,52 @@ function closePtsModal() {
   document.getElementById('ptsModal').classList.remove('show');
 }
 
-function deductPoints(cost) {
+// First-time generation confirm
+let firstGenActions = {}; // track which action types have been confirmed
+let pendingGenCallback = null;
+
+function checkFirstGen(cost, actionName, callback) {
+  if (firstGenActions[actionName]) {
+    callback();
+    return;
+  }
+  document.getElementById('confirmGenTitle').textContent = '确认生成';
+  document.getElementById('confirmGenMsg').textContent = '本次生成将消耗 ' + cost + ' 积分';
+  pendingGenCallback = () => {
+    firstGenActions[actionName] = true;
+    callback();
+  };
+  document.getElementById('confirmGenOverlay').classList.add('show');
+}
+
+function closeConfirmGen() {
+  document.getElementById('confirmGenOverlay').classList.remove('show');
+  pendingGenCallback = null;
+}
+
+function confirmGenOk() {
+  document.getElementById('confirmGenOverlay').classList.remove('show');
+  if (pendingGenCallback) pendingGenCallback();
+  pendingGenCallback = null;
+}
+
+// Points freeze & deduct
+function freezePoints(cost) {
   userPoints -= cost;
   updatePtsDisplay();
 }
+
+function refundPoints(cost) {
+  userPoints += cost;
+  updatePtsDisplay();
+  showToast('积分已退还');
+}
+
+function deductPoints(cost) {
+  // Points already frozen, just update display
+  updatePtsDisplay();
+}
+
 
 // ===== Debug Panel =====
 function updateDebugPanel() {
@@ -2375,6 +2415,12 @@ function dbgSetMember(val) {
   hasMembership = val === '1';
   updateDebugPanel();
   showToast(hasMembership ? '调试：设为会员' : '调试：取消会员');
+}
+
+function dbgSetPoints(val) {
+  userPoints = parseInt(val) || 0;
+  updatePtsDisplay();
+  updateDebugPanel();
 }
 
 function dbgSetEpisode(val) {
@@ -2590,8 +2636,8 @@ setTimeout(updateDebugPanel, 100);
       <div class="guide-flow-steps">
         <div class="guide-step">1. 右侧调试面板设「已登录」+ 积分0</div>
         <div class="guide-step">2. 点击AI按钮 → 弹出「积分不足」半弹窗</div>
-        <div class="guide-step">3a. 非会员 → 按钮「开通会员」→ 跳转会员订阅Tab</div>
-        <div class="guide-step">3b. 会员 → 按钮「去充值」→ 跳转积分充值Tab</div>
+        <div class="guide-step">3a. 非会员 → 按钮「开通会员」→ 跳转会员中心（全局模块）</div>
+        <div class="guide-step">3b. 会员 → 按钮「去充值」→ 跳转会员中心（全局模块）</div>
         <div class="guide-step">4. 选择套餐 → 支付 → 积分到账 → 回到创作页</div>
       </div>
     </div>
@@ -2638,8 +2684,8 @@ setTimeout(updateDebugPanel, 100);
       <tr><td>大纲输入框</td><td>第2集+</td><td>半透明+禁用，显示🔒只读标记</td></tr>
       <tr><td>AI生成中</td><td>Loading态</td><td>骨架屏动画→流式输出文字</td></tr>
       <tr><td>导航栏标题</td><td>第2集+</td><td>变为「内容创作 · 第N集」</td></tr>
-      <tr><td>积分不足弹窗</td><td>非会员</td><td>按钮「开通会员」→跳转订阅Tab</td></tr>
-      <tr><td>积分不足弹窗</td><td>会员</td><td>按钮「去充值」→跳转充值Tab</td></tr>
+      <tr><td>积分不足弹窗</td><td>非会员</td><td>按钮「开通会员」→跳转全局模块</td></tr>
+      <tr><td>积分不足弹窗</td><td>会员</td><td>按钮「去充值」→跳转全局模块</td></tr>
     </table>
   </div>
 
