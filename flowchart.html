@@ -134,7 +134,7 @@
 </div>
 
 <div class="chart-wrapper">
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1560 5600" width="1560" height="5600">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1560 5700" width="1560" height="5700">
 <defs>
   <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
     <polygon points="0 0, 8 3, 0 6" fill="#888"/>
@@ -175,7 +175,7 @@
 <!-- N5: 填写剧集字段 -->
 <rect x="390" y="380" width="780" height="60" class="node-step" filter="url(#shadow)"/>
 <text x="780" y="403" class="node-text">填写剧集级字段</text>
-<text x="780" y="423" class="node-text-sm">漫剧名称 | 集数(5/10/20/自定义) | 漫剧设定 | 画面风格 | 视频比例(16:9/9:16) | 分辨率(480p/720p/1080p)</text>
+<text x="780" y="423" class="node-text-sm">漫剧名称(必填*) | 集数(5/10/20/自定义) | 漫剧设定 | 画面风格 | 视频比例(16:9/9:16) | 分辨率(480p/720p/1080p)</text>
 
 <!-- N6: 填写大纲 -->
 <rect x="440" y="490" width="680" height="60" class="node-step" filter="url(#shadow)"/>
@@ -197,8 +197,8 @@
 
 <!-- N10: 剧本字数判断 -->
 <rect x="540" y="820" width="480" height="60" class="node-decision" filter="url(#shadow)"/>
-<text x="780" y="843" class="node-text">剧本校验</text>
-<text x="780" y="863" class="node-text-sm">为空？ | >4000字？ | 有内容？</text>
+<text x="780" y="843" class="node-text">提交校验</text>
+<text x="780" y="863" class="node-text-sm">名称为空？ | 剧本为空？ | >4000字？</text>
 
 <!-- N11: 超限 -->
 <rect x="1060" y="810" width="280" height="40" class="node-error" filter="url(#shadow)"/>
@@ -206,7 +206,7 @@
 
 <!-- N12: 为空 -->
 <rect x="1060" y="870" width="280" height="40" class="node-error" filter="url(#shadow)"/>
-<text x="1200" y="890" class="node-text">为空 → 按钮置灰</text>
+<text x="1200" y="890" class="node-text">名称/剧本为空 → 按钮置灰</text>
 
 <!-- N13: 点击开始创作 -->
 <rect x="540" y="940" width="480" height="50" class="node-process" filter="url(#shadow)"/>
@@ -555,7 +555,7 @@
 <line x1="40" y1="3820" x2="1520" y2="3820" class="section-divider"/>
 <text x="780" y="3805" class="section-label" text-anchor="middle">八、字数校验规则</text>
 
-<rect x="430" y="3850" width="700" height="150" rx="12" fill="#fff" stroke="#ddd" stroke-width="1.5" filter="url(#shadow)"/>
+<rect x="430" y="3850" width="700" height="190" rx="12" fill="#fff" stroke="#ddd" stroke-width="1.5" filter="url(#shadow)"/>
 <rect x="430" y="3850" width="700" height="44" rx="12" fill="#fde8e8" stroke="none"/>
 <rect x="430" y="3880" width="700" height="14" fill="#fde8e8" stroke="none"/>
 <text x="530" y="3877" class="node-text" style="font-size:15px;font-weight:600;">字段</text>
@@ -563,54 +563,62 @@
 <text x="980" y="3877" class="node-text" style="font-size:15px;font-weight:600;">提示</text>
 
 <line x1="440" y1="3914" x2="1120" y2="3914" stroke="#e0dcd4" stroke-width="0.5"/>
-<text x="530" y="3938" class="node-text" style="font-size:14px;">漫剧大纲</text>
-<text x="730" y="3938" class="node-text" style="font-size:14px;">字数 > 500</text>
-<text x="980" y="3938" class="node-text" style="font-size:14px;fill:#dc2626;">大于500字，请修改</text>
+<text x="530" y="3938" class="node-text" style="font-size:14px;">漫剧名称</text>
+<text x="730" y="3938" class="node-text" style="font-size:14px;">内容为空（必填）</text>
+<text x="980" y="3938" class="node-text" style="font-size:14px;fill:#dc2626;">请输入漫剧名称</text>
 
 <line x1="440" y1="3954" x2="1120" y2="3954" stroke="#e0dcd4" stroke-width="0.5"/>
-<text x="530" y="3978" class="node-text" style="font-size:14px;">漫剧剧本</text>
-<text x="730" y="3978" class="node-text" style="font-size:14px;">字数 > 4000</text>
-<text x="980" y="3978" class="node-text" style="font-size:14px;fill:#dc2626;">大于4000字，请修改</text>
+<text x="530" y="3978" class="node-text" style="font-size:14px;">漫剧大纲</text>
+<text x="730" y="3978" class="node-text" style="font-size:14px;">字数 > 500</text>
+<text x="980" y="3978" class="node-text" style="font-size:14px;fill:#dc2626;">大于500字，请修改</text>
+
+<line x1="440" y1="3994" x2="1120" y2="3994" stroke="#e0dcd4" stroke-width="0.5"/>
+<text x="530" y="4018" class="node-text" style="font-size:14px;">漫剧剧本</text>
+<text x="730" y="4018" class="node-text" style="font-size:14px;">字数 > 4000 / 为空</text>
+<text x="980" y="4018" class="node-text" style="font-size:14px;fill:#dc2626;">大于4000字/请输入剧本</text>
 
 
 <!-- ============================================ -->
 <!-- SECTION 9: 关键流程说明                       -->
 <!-- ============================================ -->
 
-<line x1="40" y1="4070" x2="1520" y2="4070" class="section-divider"/>
-<text x="780" y="4055" class="section-label" text-anchor="middle">九、关键流程说明</text>
+<line x1="40" y1="4110" x2="1520" y2="4110" class="section-divider"/>
+<text x="780" y="4095" class="section-label" text-anchor="middle">九、关键流程说明</text>
 
-<rect x="200" y="4100" width="1160" height="440" rx="12" fill="#fff" stroke="#ddd" stroke-width="1.5" filter="url(#shadow)"/>
+<rect x="200" y="4140" width="1160" height="440" rx="12" fill="#fff" stroke="#ddd" stroke-width="1.5" filter="url(#shadow)"/>
 
-<text x="230" y="4135" class="node-text" style="font-size:15px;font-weight:600;fill:#7c3aed;text-anchor:start;">1. 积分冻结机制</text>
-<text x="250" y="4160" class="node-text-sm" style="text-anchor:start;fill:#555;">调用AI前先冻结积分，AI成功则扣减，AI失败/超时则解冻退还</text>
+<text x="230" y="4175" class="node-text" style="font-size:15px;font-weight:600;fill:#7c3aed;text-anchor:start;">1. 积分冻结机制</text>
+<text x="250" y="4200" class="node-text-sm" style="text-anchor:start;fill:#555;">调用AI前先冻结积分，AI成功则扣减，AI失败/超时则解冻退还</text>
 
-<text x="230" y="4195" class="node-text" style="font-size:15px;font-weight:600;fill:#b8860b;text-anchor:start;">2. 会员中心（Tab切换）</text>
-<text x="250" y="4220" class="node-text-sm" style="text-anchor:start;fill:#555;">积分不足时：非会员→会员订阅Tab，会员→积分充值Tab</text>
+<text x="230" y="4235" class="node-text" style="font-size:15px;font-weight:600;fill:#b8860b;text-anchor:start;">2. 会员中心（Tab切换）</text>
+<text x="250" y="4260" class="node-text-sm" style="text-anchor:start;fill:#555;">积分不足时：非会员→会员订阅Tab，会员→积分充值Tab</text>
 
-<text x="230" y="4255" class="node-text" style="font-size:15px;font-weight:600;fill:#2563eb;text-anchor:start;">3. 登录后不自动继续</text>
-<text x="250" y="4280" class="node-text-sm" style="text-anchor:start;fill:#555;">登录成功后回到页面，用户需自行重新点击按钮</text>
+<text x="230" y="4295" class="node-text" style="font-size:15px;font-weight:600;fill:#2563eb;text-anchor:start;">3. 登录后不自动继续</text>
+<text x="250" y="4320" class="node-text-sm" style="text-anchor:start;fill:#555;">登录成功后回到页面，用户需自行重新点击按钮</text>
 
-<text x="230" y="4315" class="node-text" style="font-size:15px;font-weight:600;fill:#dc2626;text-anchor:start;">4. AI灵感无弹窗</text>
-<text x="250" y="4340" class="node-text-sm" style="text-anchor:start;fill:#555;">点击直接生成内容，无需二次确认；AI优化需先有内容</text>
+<text x="230" y="4355" class="node-text" style="font-size:15px;font-weight:600;fill:#dc2626;text-anchor:start;">4. AI灵感无弹窗</text>
+<text x="250" y="4380" class="node-text-sm" style="text-anchor:start;fill:#555;">点击直接生成内容，无需二次确认；AI优化需先有内容</text>
 
-<text x="230" y="4375" class="node-text" style="font-size:15px;font-weight:600;fill:#16a34a;text-anchor:start;">5. 项目保存</text>
-<text x="250" y="4400" class="node-text-sm" style="text-anchor:start;fill:#555;">提交时保存到项目，提交后表单锁定只读；从项目进入自动恢复内容</text>
+<text x="230" y="4415" class="node-text" style="font-size:15px;font-weight:600;fill:#16a34a;text-anchor:start;">5. 项目保存</text>
+<text x="250" y="4440" class="node-text-sm" style="text-anchor:start;fill:#555;">提交时保存到项目，提交后表单锁定只读；从项目进入自动恢复内容</text>
 
-<text x="230" y="4435" class="node-text" style="font-size:15px;font-weight:600;fill:#8b5cf6;text-anchor:start;">6. 续写下一集</text>
-<text x="250" y="4460" class="node-text-sm" style="text-anchor:start;fill:#555;">第2集起大纲自动沿用（只读🔒），剧本清空待填写，标题变为「内容创作 · 第N集」</text>
+<text x="230" y="4475" class="node-text" style="font-size:15px;font-weight:600;fill:#8b5cf6;text-anchor:start;">6. 续写下一集</text>
+<text x="250" y="4500" class="node-text-sm" style="text-anchor:start;fill:#555;">第2集起大纲自动沿用（只读🔒），剧本清空待填写，标题变为「内容创作 · 第N集」</text>
 
-<text x="230" y="4495" class="node-text" style="font-size:15px;font-weight:600;fill:#f59e0b;text-anchor:start;">7. AI生成中退出保护</text>
-<text x="250" y="4520" class="node-text-sm" style="text-anchor:start;fill:#555;">AI生成中按返回键弹出确认弹窗；确认离开则清理状态</text>
+<text x="230" y="4535" class="node-text" style="font-size:15px;font-weight:600;fill:#f59e0b;text-anchor:start;">7. AI生成中退出保护</text>
+<text x="250" y="4560" class="node-text-sm" style="text-anchor:start;fill:#555;">AI生成中按返回键弹出确认弹窗；确认离开则清理状态</text>
 
-<text x="230" y="4555" class="node-text" style="font-size:15px;font-weight:600;fill:#0ea5e9;text-anchor:start;">8. 拆解结果字段</text>
-<text x="250" y="4580" class="node-text-sm" style="text-anchor:start;fill:#555;">角色：性格/身份/外貌/角色描述(Seedream prompt)；分镜：主视角/景别/镜头运动/音色公式/氛围音效/场景图提示词/视频提示词</text>
+<text x="230" y="4595" class="node-text" style="font-size:15px;font-weight:600;fill:#0ea5e9;text-anchor:start;">8. 拆解结果字段</text>
+<text x="250" y="4620" class="node-text-sm" style="text-anchor:start;fill:#555;">角色：性格/身份/外貌/角色描述(Seedream prompt)；分镜：主视角/景别/镜头运动/音色公式/氛围音效/场景图提示词/视频提示词</text>
 
-<text x="230" y="4615" class="node-text" style="font-size:15px;font-weight:600;fill:#64748b;text-anchor:start;">9. 视频比例与分辨率</text>
-<text x="250" y="4640" class="node-text-sm" style="text-anchor:start;fill:#555;">比例仅16:9/9:16，分辨率480p/720p/1080p，参数携带至环节4</text>
+<text x="230" y="4655" class="node-text" style="font-size:15px;font-weight:600;fill:#64748b;text-anchor:start;">9. 视频比例与分辨率</text>
+<text x="250" y="4680" class="node-text-sm" style="text-anchor:start;fill:#555;">比例仅16:9/9:16，分辨率480p/720p/1080p，参数携带至环节4</text>
 
-<text x="230" y="4675" class="node-text" style="font-size:15px;font-weight:600;fill:#059669;text-anchor:start;">10. AI输出流式展现</text>
-<text x="250" y="4700" class="node-text-sm" style="text-anchor:start;fill:#555;">AI优化/AI灵感结果以流式方式逐字输出，模拟真实AI响应体验</text>
+<text x="230" y="4715" class="node-text" style="font-size:15px;font-weight:600;fill:#059669;text-anchor:start;">10. AI输出流式展现</text>
+<text x="250" y="4740" class="node-text-sm" style="text-anchor:start;fill:#555;">AI优化/AI灵感结果以流式方式逐字输出，模拟真实AI响应体验</text>
+
+<text x="230" y="4775" class="node-text" style="font-size:15px;font-weight:600;fill:#dc2626;text-anchor:start;">11. 漫剧名称必填</text>
+<text x="250" y="4800" class="node-text-sm" style="text-anchor:start;fill:#555;">漫剧名称为必填项，名称为空时「开始创作」按钮置灰</text>
 
 </svg>
 </div>

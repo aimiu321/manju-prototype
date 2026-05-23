@@ -1389,8 +1389,8 @@ body {
 
       <!-- 漫剧名称 -->
       <div class="section">
-        <div class="section-label">漫剧名称</div>
-        <input class="input-field" type="text" placeholder="请输入漫剧名称（选填）" maxlength="20" id="seriesName" oninput="">
+        <div class="section-label">漫剧名称<span class="required">*</span></div>
+        <input class="input-field" type="text" placeholder="请输入漫剧名称" maxlength="20" id="seriesName" oninput="updateCharCount()">
       </div>
 
       <!-- 集数选择 -->
@@ -2084,6 +2084,7 @@ function updateCharCount() {
   textarea.classList.remove('over-limit');
   countEl.classList.remove('warning', 'error');
 
+  const nameOk = document.getElementById('seriesName').value.trim().length > 0;
   if (count > 4000) {
     countEl.textContent = `${count} / 4000（漫剧剧本大于4000字，请修改）`;
     countEl.classList.add('error');
@@ -2092,10 +2093,10 @@ function updateCharCount() {
   } else if (count > 3500) {
     countEl.textContent = `${count} / 4000（接近上限）`;
     countEl.classList.add('warning');
-    btn.className = count > 0 ? 'submit-btn active' : 'submit-btn disabled';
+    btn.className = (count > 0 && nameOk) ? 'submit-btn active' : 'submit-btn disabled';
   } else {
     countEl.textContent = `${count} / 4000`;
-    btn.className = count > 0 ? 'submit-btn active' : 'submit-btn disabled';
+    btn.className = (count > 0 && nameOk) ? 'submit-btn active' : 'submit-btn disabled';
   }
 }
 
@@ -2104,6 +2105,13 @@ function handleSubmit() {
   const textarea = document.getElementById('scriptInput');
   const count = textarea.value.length;
 
+  // 空名称
+  const nameInput = document.getElementById('seriesName');
+  if (!nameInput.value.trim()) {
+    showValidationToast('请输入漫剧名称');
+    nameInput.focus();
+    return;
+  }
   // 空剧本
   if (!textarea.value.trim()) {
     showValidationToast('请输入漫剧剧本');
