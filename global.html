@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>全局模块 - 登录与积分与会员 交互原型</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a1a2e;
+    color: #fff;
+    font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 30px 20px;
+    gap: 24px;
+    min-height: 100vh;
+  }
+  /* Phone Frame */
+  .phone-frame {
+    width: 390px; height: 844px;
+    background: #0f0f1a;
+    border-radius: 44px;
+    border: 6px solid #2a2a4a;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .phone-inner {
+    width: 100%; height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .phone-inner::-webkit-scrollbar { width: 0; }
+
+  /* Pages */
+  .page { display: none; flex-direction: column; min-height: 100%; }
+  .page.active { display: flex; }
+  .page-nav {
+    display: flex; align-items: center;
+    padding: 12px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+  }
+  .page-nav .back-btn {
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    color: #a78bfa; font-size: 20px; cursor: pointer;
+  }
+  .page-nav .title { flex: 1; text-align: center; font-size: 17px; font-weight: 600; }
+  .page-nav .right-link { font-size: 12px; color: #a78bfa; cursor: pointer; }
+  .page-scroll { flex: 1; overflow-y: auto; padding: 16px 20px; }
+  .page-scroll::-webkit-scrollbar { width: 0; }
+
+  /* Status Bar */
+  .status-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 24px 8px;
+    font-size: 12px; color: #fff;
+  }
+
+  /* Simulated Page (创作页模拟) */
+  .sim-page { padding: 20px; }
+  .sim-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: #a78bfa; }
+  .sim-desc { font-size: 12px; color: #6b6b8d; margin-bottom: 20px; line-height: 1.6; }
+  .sim-btn {
+    display: block; width: 100%; padding: 14px; border-radius: 12px;
+    border: none; font-size: 14px; font-weight: 600; cursor: pointer;
+    font-family: inherit; margin-bottom: 10px; transition: all .15s;
+  }
+  .sim-btn:active { transform: scale(.98); }
+  .sim-btn.purple { background: linear-gradient(135deg, #7c3aed, #6d28d9); color: #fff; }
+  .sim-btn.outline { background: transparent; border: 1px solid rgba(124,58,237,0.3); color: #a78bfa; }
+  .sim-btn:disabled { background: #333; color: #666; cursor: not-allowed; transform: none; border: none; }
+  .sim-pts-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; background: rgba(255,255,255,0.04);
+    border-radius: 10px; margin-bottom: 16px;
+  }
+  .sim-pts-label { font-size: 12px; color: #6b6b8d; }
+  .sim-pts-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    padding: 4px 10px; border-radius: 12px; font-size: 12px;
+    font-weight: 700; cursor: pointer;
+  }
+
+  /* Balance Card */
+  .balance-card {
+    background: linear-gradient(135deg, #7c3aed, #5b21b6);
+    border-radius: 16px; padding: 24px;
+    margin-bottom: 16px; text-align: center;
+  }
+  .bal-label { font-size: 12px; color: rgba(255,255,255,0.6); }
+  .bal-num { font-size: 40px; font-weight: 800; color: #fff; margin: 6px 0; }
+  .bal-row { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+  .bal-sub { font-size: 11px; color: rgba(255,255,255,0.5); }
+  .bal-link { font-size: 12px; color: #c4b5fd; cursor: pointer; }
+
+  /* Member Status Banner */
+  .member-banner {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    border-radius: 12px; padding: 12px 16px; margin-bottom: 12px;
+  }
+  .status-row { display: flex; align-items: center; gap: 10px; }
+  .status-icon { font-size: 22px; }
+  .status-info { flex: 1; }
+  .status-type { font-size: 14px; font-weight: 700; color: #fff; }
+  .status-expire { font-size: 11px; color: rgba(255,255,255,0.7); }
+  .status-auto { font-size: 10px; color: #fff; background: rgba(255,255,255,0.2); padding: 3px 8px; border-radius: 10px; }
+
+  /* Tabs */
+  .tabs { display: flex; background: rgba(255,255,255,0.04); border-radius: 10px; padding: 3px; margin-bottom: 16px; }
+  .tab-btn { flex: 1; text-align: center; padding: 8px 0; font-size: 13px; font-weight: 600; color: #6b6b8d; border-radius: 8px; cursor: pointer; transition: all .2s; }
+  .tab-btn.active { background: rgba(124,58,237,0.2); color: #a78bfa; }
+  .tab-btn.active-amber { background: rgba(245,158,11,0.2); color: #fbbf24; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Sub Cards */
+  .sub-cards { display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px; }
+  .sub-card {
+    background: rgba(255,255,255,0.04);
+    border: 2px solid rgba(255,255,255,0.08);
+    border-radius: 14px; padding: 16px;
+    cursor: pointer; transition: all .15s;
+    display: flex; justify-content: space-between; align-items: center;
+    position: relative;
+  }
+  .sub-card:active { transform: scale(.98); }
+  .sub-card.selected { border-color: #7c3aed; background: rgba(124,58,237,0.08); }
+  .sub-badge { position: absolute; top: -1px; right: 12px; font-size: 9px; color: #fff; background: #ef4444; padding: 2px 8px; border-radius: 0 0 6px 6px; }
+  .sub-badge.purple { background: #7c3aed; }
+  .sub-badge.gold { background: #f59e0b; }
+  .sub-name { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+  .sub-desc { font-size: 12px; color: #a78bfa; }
+  .sub-benefits { font-size: 11px; color: #6b6b8d; margin-top: 2px; }
+  .sub-price { font-size: 24px; font-weight: 800; color: #fff; }
+  .sub-period { font-size: 12px; font-weight: 400; color: #999; }
+  .sub-note { font-size: 10px; color: #6b6b8d; line-height: 1.5; margin-bottom: 12px; }
+
+  /* Benefits */
+  .benefits-section { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 12px 16px; margin-bottom: 12px; }
+  .benefits-title { font-size: 12px; font-weight: 700; color: #a78bfa; margin-bottom: 8px; }
+  .benefits-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .benefit-item { font-size: 11px; color: #c4c4e0; display: flex; align-items: center; gap: 4px; }
+
+  /* Pkg Cards */
+  .pkg-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .pkg-card {
+    background: rgba(255,255,255,0.04);
+    border: 2px solid rgba(255,255,255,0.08);
+    border-radius: 14px; padding: 16px 12px;
+    cursor: pointer; transition: all .15s;
+    text-align: center; position: relative;
+  }
+  .pkg-card:active { transform: scale(.97); }
+  .pkg-card.selected { border-color: #f59e0b; background: rgba(245,158,11,0.08); }
+  .pkg-pts { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 2px; }
+  .pkg-price { font-size: 16px; font-weight: 700; color: #fbbf24; margin-bottom: 2px; }
+  .pkg-unit { font-size: 10px; color: #6b6b8d; }
+  .pkg-tag { position: absolute; top: -1px; left: 50%; transform: translateX(-50%); font-size: 9px; color: #fff; background: #f59e0b; padding: 2px 8px; border-radius: 0 0 6px 6px; }
+
+  /* Validity Compare */
+  .validity-compare { background: rgba(255,255,255,0.03); border-radius: 10px; padding: 10px 14px; margin-bottom: 10px; }
+  .vc-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+  .vc-label { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+  .vc-member { background: rgba(124,58,237,0.15); color: #a78bfa; }
+  .vc-recharge { background: rgba(245,158,11,0.15); color: #fbbf24; }
+  .vc-val { font-size: 11px; color: #999; }
+
+  /* Pay Button */
+  .pay-btn {
+    width: 100%; padding: 14px; border-radius: 14px;
+    font-size: 16px; font-weight: 700; border: none; cursor: pointer;
+    font-family: inherit;
+    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    color: #fff; margin-top: 6px; transition: all .15s;
+  }
+  .pay-btn.amber { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #1a1a2e; }
+  .pay-btn:active { transform: scale(.98); }
+  .pay-btn:disabled { background: #333; color: #666; cursor: not-allowed; transform: none; }
+  .pay-apple { font-family: -apple-system, sans-serif; font-size: 18px; vertical-align: middle; margin-right: 2px; }
+  .pay-note { font-size: 10px; color: #6b6b8d; text-align: center; margin-top: 6px; }
+  .cancel-sub { font-size: 11px; color: #6b6b8d; text-align: center; margin-top: 10px; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+  .cancel-sub:active { color: #a78bfa; }
+
+  /* Overlays (shared) */
+  .overlay {
+    position: absolute; inset: 0; background: rgba(0,0,0,0.6);
+    display: none; align-items: flex-end; justify-content: center;
+    z-index: 500;
+  }
+  .overlay.center { align-items: center; }
+  .overlay.show { display: flex; }
+
+  /* Login Sheet */
+  .login-sheet {
+    width: 100%; background: #1a1a2e; border-radius: 20px 20px 0 0;
+    padding: 24px 20px 30px;
+  }
+  .login-title { font-size: 18px; font-weight: 700; text-align: center; margin-bottom: 20px; }
+  .login-input {
+    width: 100%; padding: 12px 16px; border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05); color: #fff;
+    font-size: 14px; margin-bottom: 12px; font-family: inherit;
+    outline: none;
+  }
+  .login-input:focus { border-color: #7c3aed; }
+  .login-btn {
+    width: 100%; padding: 14px; border-radius: 14px;
+    font-size: 16px; font-weight: 700; border: none; cursor: pointer;
+    background: linear-gradient(135deg, #7c3aed, #6d28d9); color: #fff;
+    font-family: inherit;
+  }
+  .login-btn:active { transform: scale(.98); }
+
+  /* Points Insufficient Half Modal */
+  .pts-sheet {
+    width: 100%; background: #1a1a2e; border-radius: 20px 20px 0 0;
+    padding: 24px 20px 30px; text-align: center;
+  }
+  .pts-sheet-icon { font-size: 36px; margin-bottom: 8px; }
+  .pts-sheet-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .pts-sheet-msg { font-size: 13px; color: #8b8ba7; margin-bottom: 20px; line-height: 1.5; }
+  .pts-sheet-btns { display: flex; gap: 12px; }
+  .pts-sheet-btns .btn {
+    flex: 1; padding: 14px; border-radius: 12px;
+    font-size: 15px; font-weight: 700; border: none; cursor: pointer;
+    font-family: inherit; transition: all .15s;
+  }
+  .pts-sheet-btns .btn:active { transform: scale(.98); }
+  .pts-sheet-btns .btn-cancel { background: rgba(255,255,255,0.06); color: #8b8ba7; }
+  .pts-sheet-btns .btn-primary { background: linear-gradient(135deg, #7c3aed, #6d28d9); color: #fff; }
+  .pts-sheet-btns .btn-amber { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #1a1a2e; }
+
+  /* Confirm Modal (first-time generation) */
+  .confirm-box {
+    width: 85%; background: #1a1a2e; border-radius: 20px;
+    padding: 24px 20px; text-align: center;
+  }
+  .confirm-icon { font-size: 32px; margin-bottom: 8px; }
+  .confirm-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .confirm-msg { font-size: 13px; color: #8b8ba7; margin-bottom: 20px; line-height: 1.5; }
+  .confirm-btns { display: flex; gap: 12px; }
+  .confirm-btns .btn {
+    flex: 1; padding: 14px; border-radius: 12px;
+    font-size: 15px; font-weight: 700; border: none; cursor: pointer;
+    font-family: inherit; transition: all .15s;
+  }
+  .confirm-btns .btn:active { transform: scale(.98); }
+  .confirm-btns .btn-cancel { background: rgba(255,255,255,0.06); color: #8b8ba7; }
+  .confirm-btns .btn-ok { background: linear-gradient(135deg, #7c3aed, #6d28d9); color: #fff; }
+
+  /* Points Detail */
+  .detail-list { display: flex; flex-direction: column; gap: 0; }
+  .detail-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .di-left {}
+  .di-desc { font-size: 13px; color: #c4c4e0; margin-bottom: 2px; }
+  .di-time { font-size: 10px; color: #6b6b8d; }
+  .di-amount { font-size: 16px; font-weight: 700; }
+  .di-amount.plus { color: #4ade80; }
+  .di-amount.minus { color: #ef4444; }
+
+  /* Toast */
+  .toast {
+    position: absolute; top: 56px; left: 50%; transform: translateX(-50%);
+    padding: 8px 18px; background: rgba(74,222,128,0.9); color: #fff;
+    border-radius: 8px; font-size: 12px; z-index: 600;
+    opacity: 0; transition: opacity .2s; pointer-events: none; white-space: nowrap;
+  }
+  .toast.warn { background: rgba(245,158,11,0.9); }
+
+  /* Debug Panel */
+  .debug-panel {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: rgba(15,15,26,0.95); border-top: 1px solid rgba(255,255,255,0.1);
+    padding: 10px 16px; z-index: 400;
+    transform: translateY(calc(100% - 32px)); transition: transform .3s;
+  }
+  .debug-panel.open { transform: translateY(0); }
+  .debug-toggle {
+    font-size: 11px; color: #6b6b8d; cursor: pointer; text-align: center;
+    padding: 4px 0; margin-bottom: 8px;
+  }
+  .debug-panel.open .debug-toggle { margin-bottom: 10px; }
+  .dbg-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 11px; }
+  .dbg-label { color: #6b6b8d; width: 48px; flex-shrink: 0; }
+  .dbg-val { color: #4ade80; font-weight: 600; }
+  .dbg-btn {
+    padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.04); color: #c4c4e0; font-size: 10px;
+    cursor: pointer; font-family: inherit;
+  }
+  .dbg-btn:active { background: rgba(124,58,237,0.2); }
+  .dbg-input {
+    width: 50px; padding: 3px 6px; border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.04); color: #fff;
+    font-size: 11px; text-align: center; font-family: inherit;
+  }
+
+  /* Guide Panel */
+  .guide-panel {
+    width: 420px; position: sticky; top: 30px;
+    max-height: 90vh; overflow-y: auto;
+    background: #fff; border-radius: 16px; padding: 24px;
+    color: #333; font-size: 14px;
+  }
+  .guide-panel h2 { font-size: 18px; margin-bottom: 16px; color: #1a1a2e; }
+  .guide-panel h3 { font-size: 15px; margin: 16px 0 8px; color: #7c3aed; }
+  .guide-panel h4 { font-size: 13px; margin: 12px 0 6px; color: #555; }
+  .guide-panel table { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 13px; }
+  .guide-panel th, .guide-panel td { padding: 6px 8px; border: 1px solid #e5e7eb; text-align: left; }
+  .guide-panel th { background: #f3f0ff; color: #7c3aed; font-size: 12px; }
+  .guide-step { font-size: 13px; color: #555; padding: 3px 0 3px 16px; position: relative; }
+  .guide-step::before { content: ""; position: absolute; left: 0; top: 10px; width: 6px; height: 6px; border-radius: 50%; background: #7c3aed; }
+  .guide-note { font-size: 12px; color: #888; background: #f9f9f9; padding: 8px 12px; border-radius: 8px; margin: 8px 0; }
+</style>
+</head>
+<body>
+
+<!-- Phone Frame -->
+<div class="phone-frame" id="phoneFrame">
+  <div class="phone-inner">
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <span>9:41</span>
+      <span>📶 🔋</span>
+    </div>
+
+    <!-- ========== 创作页模拟（触发入口） ========== -->
+    <div class="page active" id="simPage">
+      <div class="page-nav">
+        <div class="back-btn">←</div>
+        <div class="title">内容创作</div>
+        <div class="sim-pts-badge" onclick="showPage('memberPage')">💎 <span id="simPts">100</span></div>
+      </div>
+      <div class="page-scroll">
+        <div class="sim-page">
+          <div class="sim-title">全局模块触发模拟</div>
+          <div class="sim-desc">此页面模拟各环节创作页，点击下方按钮体验全局模块交互流程。</div>
+
+          <div class="sim-pts-row">
+            <div class="sim-pts-label">当前积分</div>
+            <div style="font-size:18px;font-weight:800;color:#a78bfa" id="simPtsBig">100</div>
+          </div>
+
+          <button class="sim-btn purple" onclick="checkAndRun(2, 'AI优化')">AI优化 (-2积分)</button>
+          <button class="sim-btn purple" onclick="checkAndRun(10, '角色图生成')">角色图生成 (-10积分)</button>
+          <button class="sim-btn purple" onclick="checkAndRun(50, '分镜视频生成')">分镜视频生成 (-50积分)</button>
+          <button class="sim-btn purple" onclick="checkAndRun(10, '一键生成', 3)">一键生成 3张 (-30积分)</button>
+          <hr style="border-color:rgba(255,255,255,0.06);margin:16px 0">
+          <button class="sim-btn outline" onclick="showPage('memberPage')">进入会员中心</button>
+          <button class="sim-btn outline" onclick="showPage('detailPage')">查看积分明细</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== 会员中心主页 ========== -->
+    <div class="page" id="memberPage">
+      <div class="page-nav">
+        <div class="back-btn" onclick="showPage('simPage')">←</div>
+        <div class="title">会员中心</div>
+        <div class="right-link" onclick="showPage('detailPage')">积分明细</div>
+      </div>
+      <div class="page-scroll">
+
+        <!-- 会员状态横幅 -->
+        <div class="member-banner" id="memberBanner">
+          <div class="status-row">
+            <div class="status-icon">👑</div>
+            <div class="status-info">
+              <div class="status-type" id="memberType">月会员</div>
+              <div class="status-expire" id="memberExpire">到期：2026-06-23</div>
+            </div>
+            <div class="status-auto" id="memberAuto">自动续费</div>
+          </div>
+        </div>
+
+        <!-- 积分余额 -->
+        <div class="balance-card">
+          <div class="bal-label">可用积分</div>
+          <div class="bal-num" id="ptsDisplay">100</div>
+          <div class="bal-row">
+            <div class="bal-sub">会员积分当期有效 · 充值积分永久有效</div>
+            <div class="bal-link" onclick="showPage('detailPage')">明细 ›</div>
+          </div>
+        </div>
+
+        <!-- Tab切换 -->
+        <div class="tabs">
+          <div class="tab-btn active" onclick="switchTab('sub')">会员订阅</div>
+          <div class="tab-btn" onclick="switchTab('recharge')">积分充值</div>
+        </div>
+
+        <!-- Tab1：会员订阅 -->
+        <div class="tab-content active" id="subTab">
+          <div class="sub-cards" id="subCards">
+            <div class="sub-card" onclick="selectSub(this,'weekly')">
+              <div class="sub-left">
+                <div class="sub-name">周会员</div>
+                <div class="sub-desc">500积分 · 首周¥38</div>
+                <div class="sub-benefits">¥0.136/积分 · 可拍0.5集</div>
+              </div>
+              <div class="sub-right">
+                <div class="sub-price">¥68<span class="sub-period">/周</span></div>
+              </div>
+            </div>
+            <div class="sub-card selected" onclick="selectSub(this,'monthly')">
+              <div class="sub-badge">热门</div>
+              <div class="sub-left">
+                <div class="sub-name">月会员</div>
+                <div class="sub-desc">1000积分 · ¥0.098/积分</div>
+                <div class="sub-benefits">可拍1.1集(720p)</div>
+              </div>
+              <div class="sub-right">
+                <div class="sub-price">¥98<span class="sub-period">/月</span></div>
+              </div>
+            </div>
+            <div class="sub-card" onclick="selectSub(this,'yearly')">
+              <div class="sub-badge purple">推荐</div>
+              <div class="sub-left">
+                <div class="sub-name">年会员</div>
+                <div class="sub-desc">2000积分 · ¥0.099/积分</div>
+                <div class="sub-benefits">可拍2.1集(720p)</div>
+              </div>
+              <div class="sub-right">
+                <div class="sub-price">¥198<span class="sub-period">/年</span></div>
+              </div>
+            </div>
+            <div class="sub-card" onclick="selectSub(this,'lifetime')">
+              <div class="sub-badge gold">超值</div>
+              <div class="sub-left">
+                <div class="sub-name">终身大会员</div>
+                <div class="sub-desc">3000积分 · 一次性购买</div>
+                <div class="sub-benefits">可拍3.2集(720p) · 积分永久有效</div>
+              </div>
+              <div class="sub-right">
+                <div class="sub-price">¥298</div>
+              </div>
+            </div>
+          </div>
+          <div class="sub-note">周/月/年会员自动续费，可随时取消 · 会员积分当期有效</div>
+          <div class="benefits-section">
+            <div class="benefits-title">会员权益</div>
+            <div class="benefits-grid">
+              <div class="benefit-item"><span>💰</span>赠送积分立即到账</div>
+              <div class="benefit-item"><span>🎬</span>AI创作全部功能</div>
+              <div class="benefit-item"><span>🎨</span>多种画风任选</div>
+              <div class="benefit-item"><span>⭐</span>优先体验新功能</div>
+            </div>
+          </div>
+          <button class="pay-btn" id="payBtn" onclick="doPay()"><span class="pay-apple">􀘲</span> 立即开通 ¥98/月</button>
+          <div class="pay-note">通过 App Store 订阅，自动续费</div>
+          <div class="cancel-sub" id="cancelSub" onclick="cancelSub()">管理订阅 / 取消续费</div>
+        </div>
+
+        <!-- Tab2：积分充值 -->
+        <div class="tab-content" id="rechargeTab">
+          <div class="pkg-grid">
+            <div class="pkg-card" onclick="selectPkg(this,600,68)">
+              <div class="pkg-pts">600积分</div>
+              <div class="pkg-price">¥68</div>
+              <div class="pkg-unit">¥0.113/积分</div>
+            </div>
+            <div class="pkg-card selected" onclick="selectPkg(this,1000,128)">
+              <div class="pkg-pts">1000积分</div>
+              <div class="pkg-price">¥128</div>
+              <div class="pkg-unit">¥0.128/积分</div>
+              <div class="pkg-tag">热门</div>
+            </div>
+            <div class="pkg-card" onclick="selectPkg(this,2000,228)">
+              <div class="pkg-pts">2000积分</div>
+              <div class="pkg-price">¥228</div>
+              <div class="pkg-unit">¥0.114/积分</div>
+              <div class="pkg-tag">最划算</div>
+            </div>
+          </div>
+          <div class="sub-note">积分包购买的积分永久有效，不过期</div>
+          <div class="validity-compare">
+            <div class="vc-row"><span class="vc-label vc-member">会员积分</span><span class="vc-val">当期有效，过期清零</span></div>
+            <div class="vc-row"><span class="vc-label vc-recharge">充值积分</span><span class="vc-val">永久有效，不过期</span></div>
+          </div>
+          <button class="pay-btn amber" id="rechargeBtn" onclick="doRecharge()"><span class="pay-apple">􀘲</span> 立即充值 ¥128</button>
+          <div class="pay-note">通过 App Store 内购</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ========== 积分明细页 ========== -->
+    <div class="page" id="detailPage">
+      <div class="page-nav">
+        <div class="back-btn" onclick="showPage('memberPage')">←</div>
+        <div class="title">积分明细</div>
+        <div></div>
+      </div>
+      <div class="page-scroll">
+        <div class="detail-list" id="detailList">
+          <div class="detail-item"><div class="di-left"><div class="di-desc">充值 · 积分包2</div><div class="di-time">2026-05-23 14:30</div></div><div class="di-amount plus">+1000</div></div>
+          <div class="detail-item"><div class="di-left"><div class="di-desc">冻结 · 分镜视频生成</div><div class="di-time">2026-05-23 14:25</div></div><div class="di-amount minus">-50</div></div>
+          <div class="detail-item"><div class="di-left"><div class="di-desc">扣减 · 分镜视频生成</div><div class="di-time">2026-05-23 14:26</div></div><div class="di-amount minus">-50</div></div>
+          <div class="detail-item"><div class="di-left"><div class="di-desc">退还 · 场景图生成失败</div><div class="di-time">2026-05-23 14:20</div></div><div class="di-amount plus">+10</div></div>
+          <div class="detail-item"><div class="di-left"><div class="di-desc">扣减 · 角色图生成</div><div class="di-time">2026-05-23 14:15</div></div><div class="di-amount minus">-10</div></div>
+          <div class="detail-item"><div class="di-left"><div class="di-desc">扣减 · 剧本拆解</div><div class="di-time">2026-05-23 14:10</div></div><div class="di-amount minus">-2</div></div>
+          <div class="detail-item"><div class="di-left"><div class="di-desc">赠送 · 月会员赠送</div><div class="di-time">2026-05-01 00:00</div></div><div class="di-amount plus">+1000</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Login Modal -->
+  <div class="overlay" id="loginOverlay">
+    <div class="login-sheet">
+      <div class="login-title">登录账号</div>
+      <div style="font-size:12px;color:#6b6b8d;text-align:center;margin-bottom:16px">积分绑定手机号，登录后可使用AI功能</div>
+      <input class="login-input" id="phoneInput" type="tel" placeholder="请输入手机号" maxlength="11">
+      <input class="login-input" id="codeInput" type="tel" placeholder="请输入验证码" maxlength="6">
+      <button class="login-btn" onclick="doLogin()">登录</button>
+    </div>
+  </div>
+
+  <!-- Points Insufficient Half Modal -->
+  <div class="overlay" id="ptsInsuffOverlay">
+    <div class="pts-sheet">
+      <div class="pts-sheet-icon">💎</div>
+      <div class="pts-sheet-title">积分不足</div>
+      <div class="pts-sheet-msg" id="ptsInsuffMsg">当前可用积分 0，本次操作需要 2 积分</div>
+      <div class="pts-sheet-btns">
+        <button class="btn btn-cancel" onclick="closeOverlay('ptsInsuffOverlay')">取消</button>
+        <button class="btn btn-primary" id="ptsInsuffOk" onclick="goToMember()">开通会员</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- First-time Generation Confirm Modal -->
+  <div class="overlay center" id="confirmOverlay">
+    <div class="confirm-box">
+      <div class="confirm-icon">🎬</div>
+      <div class="confirm-title" id="confirmTitle">确认生成</div>
+      <div class="confirm-msg" id="confirmMsg">本次生成将消耗 2 积分</div>
+      <div class="confirm-btns">
+        <button class="btn btn-cancel" onclick="closeOverlay('confirmOverlay')">取消</button>
+        <button class="btn btn-ok" id="confirmOk" onclick="confirmGenerate()">确认生成</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Debug Panel -->
+  <div class="debug-panel open" id="debugPanel">
+    <div class="debug-toggle" onclick="this.parentElement.classList.toggle('open')">▼ 调试面板</div>
+    <div class="dbg-row"><span class="dbg-label">登录</span><span class="dbg-val" id="dbgLogin">已登录</span><button class="dbg-btn" onclick="toggleLogin()">切换</button></div>
+    <div class="dbg-row"><span class="dbg-label">会员</span><span class="dbg-val" id="dbgMember">月会员</span><button class="dbg-btn" onclick="toggleMember()">切换</button></div>
+    <div class="dbg-row"><span class="dbg-label">积分</span><input class="dbg-input" id="dbgPtsInput" value="100" onchange="setPts(this.value)"><button class="dbg-btn" onclick="setPts(0)">0</button><button class="dbg-btn" onclick="setPts(2)">2</button><button class="dbg-btn" onclick="setPts(100)">100</button></div>
+    <div class="dbg-row"><span class="dbg-label">首次</span><span class="dbg-val" id="dbgFirst">是</span><button class="dbg-btn" onclick="toggleFirst()">切换</button></div>
+    <div class="dbg-row"><button class="dbg-btn" style="color:#ef4444" onclick="resetAll()">全部重置</button></div>
+  </div>
+</div>
+
+<!-- Guide Panel -->
+<div class="guide-panel">
+  <h2>全局模块 · 登录与积分与会员 交互说明</h2>
+
+  <h3>一、登录</h3>
+  <table>
+    <tr><th>项目</th><th>说明</th></tr>
+    <tr><td>登录方式</td><td>手机号 + 短信验证码（11位手机号 + 4位以上验证码）</td></tr>
+    <tr><td>触发时机</td><td>仅在触发需积分的AI操作时校验登录</td></tr>
+    <tr><td>未登录流程</td><td>弹出登录弹窗 → toast「您还未登录」→ 登录成功 → 关闭弹窗 → 不自动继续操作</td></tr>
+  </table>
+
+  <h3>二、积分体系</h3>
+  <h4>积分来源</h4>
+  <table>
+    <tr><th>类型</th><th>说明</th><th>有效期</th></tr>
+    <tr><td>充值积分</td><td>购买积分包或会员订阅获得</td><td>永久有效</td></tr>
+    <tr><td>赠送积分</td><td>活动赠送、新人注册、会员额外赠送</td><td>当期有效，过期清零</td></tr>
+    <tr><td>系统补偿</td><td>AI生成失败/异常补偿</td><td>有有效期，过期清零</td></tr>
+  </table>
+  <div class="guide-note">消费优先级：赠送积分 > 系统补偿积分 > 充值积分（优先消耗即将过期的积分）</div>
+
+  <h4>积分消耗标准</h4>
+  <table>
+    <tr><th>环节</th><th>操作</th><th>积分</th><th>冻结时机</th><th>扣减/解冻</th></tr>
+    <tr><td>环节1</td><td>AI优化/灵感/拆解/重新分析</td><td>2</td><td>点击时冻结</td><td>成功扣减；失败退还</td></tr>
+    <tr><td>环节2</td><td>角色图生成/重新生成</td><td>10/张</td><td>点击时冻结</td><td>成功扣减；失败退还</td></tr>
+    <tr><td>环节3</td><td>场景图生成/重新生成</td><td>10/张</td><td>点击时冻结</td><td>成功扣减；失败退还</td></tr>
+    <tr><td>环节4</td><td>分镜视频生成/重新生成</td><td>50/条</td><td>点击时冻结</td><td>成功扣减；失败退还</td></tr>
+  </table>
+
+  <h4>一键生成批量冻结</h4>
+  <div class="guide-note">一键生成时，按「待生成数量 × 单价」一次性冻结总额。每张/条独立生成，成功扣减对应积分，失败退还对应积分，互不影响。</div>
+
+  <h3>三、积分不足半弹窗</h3>
+  <table>
+    <tr><th>项目</th><th>说明</th></tr>
+    <tr><td>触发条件</td><td>积分余额 < 操作所需积分</td></tr>
+    <tr><td>样式</td><td>底部半屏弹窗，显示当前积分/所需积分</td></tr>
+    <tr><td>非会员按钮</td><td>「开通会员」→ 会员订阅Tab</td></tr>
+    <tr><td>会员按钮</td><td>「去充值」→ 积分充值Tab</td></tr>
+    <tr><td>充值后行为</td><td>回到当前页面，不自动继续操作</td></tr>
+  </table>
+
+  <h3>四、首次生成确认弹窗</h3>
+  <table>
+    <tr><th>场景</th><th>是否弹窗</th><th>内容</th></tr>
+    <tr><td>首次生成</td><td>弹出确认弹窗</td><td>「本次生成将消耗 N 积分」</td></tr>
+    <tr><td>重新生成</td><td>无弹窗，直接执行</td><td>—</td></tr>
+    <tr><td>一键生成</td><td>弹出确认弹窗</td><td>「本次将生成 N 张/条，共消耗 N 积分」</td></tr>
+  </table>
+
+  <h3>五、会员中心</h3>
+  <h4>会员订阅</h4>
+  <table>
+    <tr><th>套餐</th><th>售价</th><th>积分</th><th>单价</th><th>可拍集数</th></tr>
+    <tr><td>周会员</td><td>¥68/周</td><td>500</td><td>¥0.136</td><td>0.5集</td></tr>
+    <tr><td>月会员</td><td>¥98/月</td><td>1000</td><td>¥0.098</td><td>1.1集</td></tr>
+    <tr><td>年会员</td><td>¥198/年</td><td>2000</td><td>¥0.099</td><td>2.1集</td></tr>
+    <tr><td>终身大会员</td><td>¥298</td><td>3000</td><td>¥0.099</td><td>3.2集</td></tr>
+  </table>
+  <h4>积分包充值</h4>
+  <table>
+    <tr><th>套餐</th><th>售价</th><th>积分</th><th>单价</th></tr>
+    <tr><td>积分包1</td><td>¥68</td><td>600</td><td>¥0.113</td></tr>
+    <tr><td>积分包2</td><td>¥128</td><td>1000</td><td>¥0.128</td></tr>
+    <tr><td>积分包3</td><td>¥228</td><td>2000</td><td>¥0.114</td></tr>
+  </table>
+
+  <h3>六、Apple支付说明</h3>
+  <div class="guide-step">会员订阅使用 Apple In-App Purchase 自动续费订阅</div>
+  <div class="guide-step">积分包使用 Apple In-App Purchase 消耗型项目</div>
+  <div class="guide-step">支付验证由服务端通过 App Store Server API 完成</div>
+  <div class="guide-step">取消续费在 App Store 订阅管理中操作，不在App内</div>
+
+  <h3>七、统一入口</h3>
+  <table>
+    <tr><th>入口</th><th>说明</th></tr>
+    <tr><td>checkLogin()</td><td>检查登录状态，未登录弹出登录弹窗</td></tr>
+    <tr><td>checkAndRun(callback, cost)</td><td>checkLogin → checkPoints → freezePoints → callback</td></tr>
+    <tr><td>showPointsInsufficient(required)</td><td>弹出积分不足半弹窗</td></tr>
+    <tr><td>showToast(msg)</td><td>顶部居中toast通知</td></tr>
+  </table>
+
+  <h3>八、调试面板说明</h3>
+  <table>
+    <tr><th>调试项</th><th>操作</th><th>用途</th></tr>
+    <tr><td>登录</td><td>点击「切换」</td><td>验证未登录→登录弹窗流程</td></tr>
+    <tr><td>会员</td><td>点击「切换」</td><td>验证积分不足时跳转会员/充值</td></tr>
+    <tr><td>积分</td><td>输入或快捷按钮</td><td>验证积分充足/不足场景</td></tr>
+    <tr><td>首次</td><td>点击「切换」</td><td>验证首次生成确认弹窗</td></tr>
+    <tr><td>全部重置</td><td>红色按钮</td><td>恢复初始值</td></tr>
+  </table>
+</div>
+
+<script>
+// ===== State =====
+let isLoggedIn = true;
+let hasMembership = true;
+let memberPlan = 'monthly';
+let userPoints = 100;
+let isFirstTime = true;
+let selectedSubType = 'monthly';
+let selectedPkg = {pts:1000, price:128};
+let pendingAction = null;
+
+const subPlans = {
+  weekly:  {pts:500, price:68, period: '/周'},
+  monthly: {pts:1000, price:98, period: '/月'},
+  yearly:  {pts:2000, price:198, period: '/年'},
+  lifetime:{pts:3000, price:298, period: ''},
+};
+
+// ===== Page Navigation =====
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'memberPage') updateDisplay();
+}
+
+// ===== checkAndRun (unified entry) =====
+function checkAndRun(cost, actionName, batchCount) {
+  const totalCost = batchCount ? cost * batchCount : cost;
+
+  // Step 1: Check login
+  if (!isLoggedIn) {
+    document.getElementById('loginOverlay').classList.add('show');
+    showToast('您还未登录');
+    return;
+  }
+
+  // Step 2: Check points
+  if (userPoints < totalCost) {
+    document.getElementById('ptsInsuffMsg').textContent =
+      '当前可用积分 ' + userPoints + '，本次操作需要 ' + totalCost + ' 积分';
+    const okBtn = document.getElementById('ptsInsuffOk');
+    if (hasMembership) {
+      okBtn.textContent = '去充值';
+      okBtn.className = 'btn btn-amber';
+    } else {
+      okBtn.textContent = '开通会员';
+      okBtn.className = 'btn btn-primary';
+    }
+    document.getElementById('ptsInsuffOverlay').classList.add('show');
+    return;
+  }
+
+  // Step 3: First-time confirm
+  if (isFirstTime) {
+    if (batchCount) {
+      document.getElementById('confirmTitle').textContent = '确认一键生成';
+      document.getElementById('confirmMsg').textContent = '本次将生成 ' + batchCount + ' 张，共消耗 ' + totalCost + ' 积分';
+    } else {
+      document.getElementById('confirmTitle').textContent = '确认生成';
+      document.getElementById('confirmMsg').textContent = '本次生成将消耗 ' + cost + ' 积分';
+    }
+    pendingAction = () => executeAction(totalCost, actionName);
+    document.getElementById('confirmOverlay').classList.add('show');
+    return;
+  }
+
+  // Step 4: Execute directly
+  executeAction(totalCost, actionName);
+}
+
+function confirmGenerate() {
+  closeOverlay('confirmOverlay');
+  if (pendingAction) pendingAction();
+  pendingAction = null;
+}
+
+function executeAction(cost, actionName) {
+  // Freeze points
+  userPoints -= cost;
+  updatePtsDisplay();
+  showToast('冻结 ' + cost + ' 积分 · ' + actionName);
+
+  // Simulate AI operation
+  setTimeout(() => {
+    if (Math.random() > 0.2) {
+      // Success - deduct
+      showToast(actionName + '完成，积分已扣减');
+    } else {
+      // Failure - refund
+      userPoints += cost;
+      updatePtsDisplay();
+      showToast(actionName + '失败，积分已退还');
+    }
+  }, 2000);
+}
+
+function goToMember() {
+  closeOverlay('ptsInsuffOverlay');
+  showPage('memberPage');
+  if (hasMembership) {
+    switchTab('recharge');
+  } else {
+    switchTab('sub');
+  }
+}
+
+// ===== Overlay Control =====
+function closeOverlay(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+// ===== Member Center =====
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(t => { t.classList.remove('active','active-amber'); });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  if (tab === 'sub') {
+    document.querySelectorAll('.tab-btn')[0].classList.add('active');
+    document.getElementById('subTab').classList.add('active');
+  } else {
+    document.querySelectorAll('.tab-btn')[1].classList.add('active-amber');
+    document.getElementById('rechargeTab').classList.add('active');
+  }
+}
+
+function selectSub(el, type) {
+  document.querySelectorAll('.sub-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedSubType = type;
+  const plan = subPlans[type];
+  document.getElementById('payBtn').innerHTML = '<span class="pay-apple">􀘲</span> 立即开通 ¥' + plan.price + plan.period;
+}
+
+function selectPkg(el, pts, price) {
+  document.querySelectorAll('.pkg-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedPkg = {pts, price};
+  document.getElementById('rechargeBtn').innerHTML = '<span class="pay-apple">􀘲</span> 立即充值 ¥' + price;
+}
+
+function doPay() {
+  const btn = document.getElementById('payBtn');
+  btn.disabled = true;
+  btn.textContent = '验证中...';
+  const plan = subPlans[selectedSubType];
+  setTimeout(() => {
+    userPoints += plan.pts;
+    hasMembership = true;
+    memberPlan = selectedSubType;
+    updateDisplay();
+    btn.disabled = false;
+    btn.innerHTML = '<span class="pay-apple">􀘲</span> 立即开通 ¥' + plan.price + plan.period;
+    showToast('开通成功！+' + plan.pts + '积分');
+  }, 1500);
+}
+
+function doRecharge() {
+  const btn = document.getElementById('rechargeBtn');
+  btn.disabled = true;
+  btn.textContent = '验证中...';
+  setTimeout(() => {
+    userPoints += selectedPkg.pts;
+    updateDisplay();
+    btn.disabled = false;
+    btn.innerHTML = '<span class="pay-apple">􀘲</span> 立即充值 ¥' + selectedPkg.price;
+    showToast('充值成功！+' + selectedPkg.pts + '积分');
+  }, 1500);
+}
+
+function cancelSub() {
+  showToast('请在 App Store 中管理订阅');
+}
+
+// ===== Login =====
+function doLogin() {
+  isLoggedIn = true;
+  document.getElementById('loginOverlay').classList.remove('show');
+  showToast('登录成功');
+  updateDebugPanel();
+}
+
+// ===== Display Update =====
+function updateDisplay() {
+  updatePtsDisplay();
+  const banner = document.getElementById('memberBanner');
+  const cancelEl = document.getElementById('cancelSub');
+  if (hasMembership) {
+    banner.style.display = '';
+    cancelEl.style.display = '';
+    const typeMap = {weekly:'周会员',monthly:'月会员',yearly:'年会员',lifetime:'终身大会员'};
+    document.getElementById('memberType').textContent = typeMap[memberPlan] || '会员';
+    const autoEl = document.getElementById('memberAuto');
+    if (memberPlan === 'lifetime') {
+      autoEl.textContent = '永久有效';
+      cancelEl.style.display = 'none';
+    } else {
+      autoEl.textContent = '自动续费';
+    }
+  } else {
+    banner.style.display = 'none';
+    cancelEl.style.display = 'none';
+  }
+}
+
+function updatePtsDisplay() {
+  document.getElementById('ptsDisplay').textContent = userPoints;
+  document.getElementById('simPts').textContent = userPoints;
+  document.getElementById('simPtsBig').textContent = userPoints;
+}
+
+// ===== Toast =====
+function showToast(msg, warn) {
+  const t = document.createElement('div');
+  t.className = 'toast' + (warn ? ' warn' : '');
+  t.textContent = msg;
+  document.getElementById('phoneFrame').appendChild(t);
+  setTimeout(() => t.style.opacity = '1', 10);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 200); }, 2000);
+}
+
+// ===== Debug Panel =====
+function toggleLogin() {
+  isLoggedIn = !isLoggedIn;
+  if (!isLoggedIn) hasMembership = false;
+  updateDebugPanel();
+  showToast(isLoggedIn ? '已登录' : '已登出');
+}
+
+function toggleMember() {
+  if (!isLoggedIn) { showToast('请先登录', true); return; }
+  const states = [false, 'monthly', 'yearly', 'lifetime'];
+  const idx = states.indexOf(hasMembership ? memberPlan : false);
+  const next = states[(idx + 1) % states.length];
+  if (next) {
+    hasMembership = true;
+    memberPlan = next;
+  } else {
+    hasMembership = false;
+  }
+  updateDisplay();
+  updateDebugPanel();
+}
+
+function setPts(val) {
+  userPoints = parseInt(val) || 0;
+  document.getElementById('dbgPtsInput').value = userPoints;
+  updatePtsDisplay();
+  updateDebugPanel();
+}
+
+function toggleFirst() {
+  isFirstTime = !isFirstTime;
+  updateDebugPanel();
+}
+
+function resetAll() {
+  isLoggedIn = true;
+  hasMembership = true;
+  memberPlan = 'monthly';
+  userPoints = 100;
+  isFirstTime = true;
+  selectedSubType = 'monthly';
+  selectedPkg = {pts:1000, price:128};
+  updateDisplay();
+  updateDebugPanel();
+  showPage('simPage');
+  showToast('已重置');
+}
+
+function updateDebugPanel() {
+  document.getElementById('dbgLogin').textContent = isLoggedIn ? '已登录' : '未登录';
+  document.getElementById('dbgLogin').style.color = isLoggedIn ? '#4ade80' : '#ef4444';
+  if (hasMembership) {
+    const typeMap = {weekly:'周会员',monthly:'月会员',yearly:'年会员',lifetime:'终身大会员'};
+    document.getElementById('dbgMember').textContent = typeMap[memberPlan];
+    document.getElementById('dbgMember').style.color = '#fbbf24';
+  } else {
+    document.getElementById('dbgMember').textContent = '非会员';
+    document.getElementById('dbgMember').style.color = '#6b6b8d';
+  }
+  document.getElementById('dbgPtsInput').value = userPoints;
+  document.getElementById('dbgFirst').textContent = isFirstTime ? '是' : '否';
+  document.getElementById('dbgFirst').style.color = isFirstTime ? '#4ade80' : '#6b6b8d';
+}
+
+// ===== Init =====
+updateDisplay();
+updateDebugPanel();
+</script>
+</body>
+</html>

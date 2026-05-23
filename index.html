@@ -1077,74 +1077,6 @@ body {
 .pts-btn.cancel{background:rgba(255,255,255,0.06);color:#8b8ba7}
 .pts-btn.ok{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1a1a2e}
 
-/* === Member Page === */
-.member-page{position:absolute;inset:0;background:#0f0f1a;z-index:450;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s ease}
-.member-page.show{transform:translateX(0)}
-.member-nav{display:flex;align-items:center;padding:12px 20px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0}
-.member-nav .back-btn{width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:#a78bfa;font-size:20px;cursor:pointer}
-.member-nav .title{flex:1;text-align:center;font-size:17px;font-weight:600;color:#fff}
-.member-nav .hist-link{font-size:12px;color:#a78bfa;cursor:pointer}
-.member-scroll{flex:1;overflow-y:auto;padding:16px 20px;-webkit-overflow-scrolling:touch}
-.member-scroll::-webkit-scrollbar{width:0}
-
-.member-balance{background:linear-gradient(135deg,#7c3aed,#5b21b6);border-radius:16px;padding:20px;margin-bottom:16px;text-align:center}
-.member-balance .bal-label{font-size:12px;color:rgba(255,255,255,0.6)}
-.member-balance .bal-num{font-size:36px;font-weight:800;color:#fff;margin:4px 0}
-.member-balance .bal-sub{font-size:11px;color:rgba(255,255,255,0.5)}
-
-.member-tabs{display:flex;background:rgba(255,255,255,0.04);border-radius:10px;padding:3px;margin-bottom:16px}
-.member-tab{flex:1;text-align:center;padding:8px 0;font-size:13px;font-weight:600;color:#6b6b8d;border-radius:8px;cursor:pointer;transition:all .2s}
-.member-tab.active{background:rgba(124,58,237,0.2);color:#a78bfa}
-
-.sub-cards{display:flex;flex-direction:column;gap:12px;margin-bottom:12px}
-.sub-card{background:rgba(255,255,255,0.04);border:2px solid rgba(255,255,255,0.08);border-radius:14px;padding:16px;cursor:pointer;transition:all .15s;display:flex;justify-content:space-between;align-items:center;position:relative}
-.sub-card:active{transform:scale(.98)}
-.sub-card.selected{border-color:#7c3aed;background:rgba(124,58,237,0.08)}
-.sub-badge{position:absolute;top:-1px;right:12px;font-size:9px;color:#fff;background:#ef4444;padding:2px 8px;border-radius:0 0 6px 6px}
-.sub-badge.purple{background:#7c3aed}
-.sub-badge.gold{background:#f59e0b}
-.sub-left .sub-name{font-size:15px;font-weight:700;color:#fff;margin-bottom:3px}
-.sub-left .sub-desc{font-size:11px;color:#8b8ba7;margin-bottom:2px}
-.sub-left .sub-benefits{font-size:10px;color:#6b6b8d}
-.sub-right{text-align:right}
-.sub-right .sub-price{font-size:20px;font-weight:800;color:#fbbf24}
-.sub-right .sub-period{font-size:11px;font-weight:400;color:#8b8ba7}
-.sub-right .sub-save{font-size:10px;color:#4ade80;margin-top:2px}
-.sub-note{font-size:10px;color:#6b6b8d;line-height:1.5;margin-bottom:12px}
-
-.pkg-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
-.pkg-card{background:rgba(255,255,255,0.04);border:2px solid rgba(255,255,255,0.08);border-radius:14px;padding:16px 12px;cursor:pointer;transition:all .15s;text-align:center;position:relative}
-.pkg-card:active{transform:scale(.97)}
-.pkg-card.selected{border-color:#f59e0b;background:rgba(245,158,11,0.08)}
-.pkg-card .pkg-pts{font-size:22px;font-weight:800;color:#fff;margin-bottom:2px}
-.pkg-card .pkg-price{font-size:16px;font-weight:700;color:#fbbf24;margin-bottom:2px}
-.pkg-card .pkg-unit{font-size:10px;color:#6b6b8d}
-.pkg-card .pkg-tag{position:absolute;top:-1px;left:50%;transform:translateX(-50%);font-size:9px;color:#fff;background:#f59e0b;padding:2px 8px;border-radius:0 0 6px 6px}
-
-.pay-btn{width:100%;padding:14px;border-radius:14px;font-size:16px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;margin-top:6px;transition:all .15s}
-.pay-btn.amber{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1a1a2e}
-.pay-btn:active{transform:scale(.98)}
-.pay-btn:disabled{background:#333;color:#666;cursor:not-allowed;transform:none}
-
-/* === Points Detail Page === */
-.pts-detail-page{position:absolute;inset:0;background:#0f0f1a;z-index:450;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s ease}
-.pts-detail-page.show{transform:translateX(0)}
-.pts-detail-nav{display:flex;align-items:center;padding:12px 20px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0}
-.pts-detail-nav .back-btn{width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:#a78bfa;font-size:20px;cursor:pointer}
-.pts-detail-nav .title{flex:1;text-align:center;font-size:17px;font-weight:600;color:#fff}
-.pts-detail-scroll{flex:1;overflow-y:auto;padding:16px 20px;-webkit-overflow-scrolling:touch}
-.pts-detail-scroll::-webkit-scrollbar{width:0}
-.detail-item{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
-.detail-item:last-child{border-bottom:none}
-.detail-left{flex:1}
-.detail-desc{font-size:13px;color:#e2e0f0;margin-bottom:2px}
-.detail-time{font-size:10px;color:#4a4a6a}
-.detail-right{text-align:right;flex-shrink:0}
-.detail-amount{font-size:14px;font-weight:700}
-.detail-amount.plus{color:#4ade80}
-.detail-amount.minus{color:#f87171}
-.detail-type{font-size:9px;color:#4a4a6a;margin-top:2px}
-
 /* === Debug Panel === */
 .debug-panel {
   background: #fff;
@@ -1377,7 +1309,7 @@ body {
     <div class="nav-bar">
       <div class="back-btn" onclick="goBack()">&larr;</div>
       <div class="title">内容创作</div>
-      <div class="points-badge" onclick="openMember()">
+      <div class="points-badge" onclick="showMemberNav()">
         <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
         <span class="pts-num" id="ptsDisplay">8</span>
       </div>
@@ -1602,7 +1534,7 @@ body {
       <div class="pts-msg" id="ptsModalMsg">当前可用积分 2，本次操作需要 2 积分</div>
       <div class="pts-btns">
         <button class="pts-btn cancel" onclick="closePtsModal()">取消</button>
-        <button class="pts-btn ok" id="ptsModalOk" onclick="closePtsModal();openMember()">去充值</button>
+        <button class="pts-btn ok" id="ptsModalOk" onclick="closePtsModal();showMemberNav()">去充值</button>
       </div>
     </div>
   </div>
@@ -1618,113 +1550,6 @@ body {
         <button class="pts-btn ok" style="background:rgba(239,68,68,0.9)" onclick="confirmLeave()">确定离开</button>
       </div>
     </div>
-  </div>
-
-  <!-- Member Page (会员订阅) -->
-  <div class="member-page" id="memberPage">
-    <div class="member-nav">
-      <div class="back-btn" onclick="closeMember()">&larr;</div>
-      <div class="title">会员中心</div>
-      <div class="hist-link" onclick="openPtsDetail()">积分明细</div>
-    </div>
-    <div class="member-scroll">
-      <div class="member-balance">
-        <div class="bal-label">可用积分</div>
-        <div class="bal-num" id="memberPts">2</div>
-        <div class="bal-sub">会员每月发放积分，畅用AI创作</div>
-      </div>
-
-      <div class="member-tabs">
-        <div class="member-tab active" onclick="switchMemberTab('sub')">会员订阅</div>
-        <div class="member-tab" onclick="switchMemberTab('recharge')">积分充值</div>
-      </div>
-
-      <!-- 会员订阅 -->
-      <div class="member-tab-content" id="subTab">
-        <div class="sub-cards" id="subCards">
-          <div class="sub-card" onclick="selectSub(this,'weekly')">
-            <div class="sub-left">
-              <div class="sub-name">周会员</div>
-              <div class="sub-desc">500积分 · 首周¥38</div>
-              <div class="sub-benefits">¥0.136/积分 · 可拍0.5集</div>
-            </div>
-            <div class="sub-right">
-              <div class="sub-price">¥68<span class="sub-period">/周</span></div>
-            </div>
-          </div>
-          <div class="sub-card selected" onclick="selectSub(this,'monthly')">
-            <div class="sub-badge">热门</div>
-            <div class="sub-left">
-              <div class="sub-name">月会员</div>
-              <div class="sub-desc">1000积分 · ¥0.098/积分</div>
-              <div class="sub-benefits">可拍1.1集(720p)</div>
-            </div>
-            <div class="sub-right">
-              <div class="sub-price">¥98<span class="sub-period">/月</span></div>
-            </div>
-          </div>
-          <div class="sub-card" onclick="selectSub(this,'yearly')">
-            <div class="sub-badge purple">推荐</div>
-            <div class="sub-left">
-              <div class="sub-name">年会员</div>
-              <div class="sub-desc">2000积分 · ¥0.099/积分</div>
-              <div class="sub-benefits">可拍2.1集(720p)</div>
-            </div>
-            <div class="sub-right">
-              <div class="sub-price">¥198<span class="sub-period">/年</span></div>
-            </div>
-          </div>
-          <div class="sub-card" onclick="selectSub(this,'lifetime')">
-            <div class="sub-badge gold">超值</div>
-            <div class="sub-left">
-              <div class="sub-name">终身大会员</div>
-              <div class="sub-desc">3000积分 · 一次性购买</div>
-              <div class="sub-benefits">可拍3.2集(720p) · 永久有效</div>
-            </div>
-            <div class="sub-right">
-              <div class="sub-price">¥298</div>
-            </div>
-          </div>
-        </div>
-        <div class="sub-note">周/月/年会员自动续费，会员积分当期有效</div>
-        <button class="pay-btn" id="payBtn" onclick="doPay()">立即开通 ¥98/月</button>
-      </div>
-
-      <!-- 积分充值 -->
-      <div class="member-tab-content" id="rechargeTab" style="display:none">
-        <div class="pkg-grid" id="pkgGrid">
-          <div class="pkg-card" onclick="selectPkg(this,600,68)">
-            <div class="pkg-pts">600积分</div>
-            <div class="pkg-price">¥68</div>
-            <div class="pkg-unit">¥0.113/积分</div>
-          </div>
-          <div class="pkg-card selected" onclick="selectPkg(this,1000,128)">
-            <div class="pkg-pts">1000积分</div>
-            <div class="pkg-price">¥128</div>
-            <div class="pkg-unit">¥0.128/积分</div>
-            <div class="pkg-tag">热门</div>
-          </div>
-          <div class="pkg-card" onclick="selectPkg(this,2000,228)">
-            <div class="pkg-pts">2000积分</div>
-            <div class="pkg-price">¥228</div>
-            <div class="pkg-unit">¥0.114/积分</div>
-            <div class="pkg-tag">最划算</div>
-          </div>
-        </div>
-        <div class="sub-note">积分包购买的积分永久有效</div>
-        <button class="pay-btn amber" id="rechargePayBtn" onclick="doRecharge()">立即充值 ¥128</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Points Detail Page -->
-  <div class="pts-detail-page" id="ptsDetailPage">
-    <div class="pts-detail-nav">
-      <div class="back-btn" onclick="closePtsDetail()">&larr;</div>
-      <div class="title">积分明细</div>
-      <div></div>
-    </div>
-    <div class="pts-detail-scroll" id="ptsDetailList"></div>
   </div>
 
 </div>
@@ -2382,9 +2207,15 @@ updateOutlineReadonly();
 // ===== Points & Login System =====
 let userPoints = 2;
 let isLoggedIn = false;
+let hasMembership = false;
+let memberPlan = 'monthly';
 let codeTimer = null;
 let pendingAction = null;
 let aiBusy = false;
+
+function showMemberNav() {
+  showValidationToast('前往会员中心（全局模块）');
+}
 
 function goBack() {
   if (aiBusy) {
@@ -2422,122 +2253,6 @@ function confirmLeave() {
 
 function updatePtsDisplay() {
   document.getElementById('ptsDisplay').textContent = userPoints;
-  document.getElementById('memberPts').textContent = userPoints;
-}
-
-// ===== Member & Points System =====
-let hasMembership = false;
-let selectedSubType = 'monthly';
-let selectedPkg = {pts:1000, price:128};
-
-const subPlans = {
-  weekly:  {pts:500, price:68, period: '/周'},
-  monthly: {pts:1000, price:98, period: '/月'},
-  yearly:  {pts:2000, price:198, period: '/年'},
-  lifetime:{pts:3000, price:298, period: ''},
-};
-
-// Member page
-function openMember(tab) {
-  if (!checkLogin()) return;
-  if (tab) switchMemberTab(tab);
-  document.getElementById('memberPage').classList.add('show');
-}
-function closeMember() {
-  document.getElementById('memberPage').classList.remove('show');
-}
-
-function switchMemberTab(tab) {
-  document.querySelectorAll('.member-tab').forEach(t => t.classList.remove('active'));
-  if (tab === 'sub') {
-    document.querySelectorAll('.member-tab')[0].classList.add('active');
-    document.getElementById('subTab').style.display = '';
-    document.getElementById('rechargeTab').style.display = 'none';
-  } else {
-    document.querySelectorAll('.member-tab')[1].classList.add('active');
-    document.getElementById('subTab').style.display = 'none';
-    document.getElementById('rechargeTab').style.display = '';
-  }
-}
-
-function selectSub(el, type) {
-  document.querySelectorAll('.sub-card').forEach(c => c.classList.remove('selected'));
-  el.classList.add('selected');
-  selectedSubType = type;
-  const plan = subPlans[type];
-  document.getElementById('payBtn').textContent = '立即开通 ¥' + plan.price + plan.period;
-}
-
-function doPay() {
-  const btn = document.getElementById('payBtn');
-  btn.disabled = true;
-  btn.textContent = '支付中...';
-  const plan = subPlans[selectedSubType];
-  setTimeout(() => {
-    userPoints += plan.pts;
-    hasMembership = true;
-    updatePtsDisplay();
-    btn.disabled = false;
-    btn.textContent = '立即开通 ¥' + plan.price + plan.period;
-    const t = document.createElement('div');
-    t.style.cssText = 'position:absolute;top:56px;left:50%;transform:translateX(-50%);padding:8px 16px;background:rgba(74,222,128,0.9);color:#fff;border-radius:8px;font-size:12px;z-index:600;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap';
-    t.textContent = '开通成功！首月+' + plan.pts + '积分';
-    document.getElementById('phoneFrame').appendChild(t);
-    setTimeout(() => t.style.opacity = '1', 10);
-    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 200); }, 2000);
-    closeMember();
-  }, 1500);
-}
-
-function selectPkg(el, pts, price) {
-  document.querySelectorAll('.pkg-card').forEach(c => c.classList.remove('selected'));
-  el.classList.add('selected');
-  selectedPkg = {pts, price};
-  document.getElementById('rechargePayBtn').textContent = '立即充值 ¥' + price;
-}
-
-function doRecharge() {
-  const btn = document.getElementById('rechargePayBtn');
-  btn.disabled = true;
-  btn.textContent = '支付中...';
-  setTimeout(() => {
-    userPoints += selectedPkg.pts;
-    updatePtsDisplay();
-    btn.disabled = false;
-    btn.textContent = '立即充值 ¥' + selectedPkg.price;
-    const t = document.createElement('div');
-    t.style.cssText = 'position:absolute;top:56px;left:50%;transform:translateX(-50%);padding:8px 16px;background:rgba(74,222,128,0.9);color:#fff;border-radius:8px;font-size:12px;z-index:600;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap';
-    t.textContent = '充值成功！+' + selectedPkg.pts + '积分';
-    document.getElementById('phoneFrame').appendChild(t);
-    setTimeout(() => t.style.opacity = '1', 10);
-    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 200); }, 2000);
-    closeMember();
-  }, 1500);
-}
-
-// Points detail
-const ptsHistory = [
-  {desc:'新人注册赠送',time:'2026-05-22 10:00',amount:10,type:'赠送'},
-];
-
-function openPtsDetail() {
-  const list = document.getElementById('ptsDetailList');
-  list.innerHTML = ptsHistory.map(h => `
-    <div class="detail-item">
-      <div class="detail-left">
-        <div class="detail-desc">${h.desc}</div>
-        <div class="detail-time">${h.time}</div>
-      </div>
-      <div class="detail-right">
-        <div class="detail-amount ${h.amount>0?'plus':'minus'}">${h.amount>0?'+':''}${h.amount}</div>
-        <div class="detail-type">${h.type}</div>
-      </div>
-    </div>
-  `).join('');
-  document.getElementById('ptsDetailPage').classList.add('show');
-}
-function closePtsDetail() {
-  document.getElementById('ptsDetailPage').classList.remove('show');
 }
 
 // Login
@@ -2611,10 +2326,10 @@ function checkPoints(cost, action) {
     const okBtn = document.getElementById('ptsModalOk');
     if (hasMembership) {
       okBtn.textContent = '去充值';
-      okBtn.onclick = () => { closePtsModal(); openMember('recharge'); };
+      okBtn.onclick = () => { closePtsModal(); showMemberNav(); };
     } else {
       okBtn.textContent = '开通会员';
-      okBtn.onclick = () => { closePtsModal(); openMember('sub'); };
+      okBtn.onclick = () => { closePtsModal(); showMemberNav(); };
     }
     document.getElementById('ptsModal').classList.add('show');
     return false;
