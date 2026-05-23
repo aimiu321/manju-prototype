@@ -1189,100 +1189,83 @@ body {
 /* === Guide Panel === */
 .guide-panel {
   background: #fff;
-  border: 2px solid #c8c0b4;
-  border-radius: 16px;
-  padding: 20px 24px;
+  border-radius: 14px;
+  border: 1px solid #ddd;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  overflow: hidden;
   width: 420px;
   flex-shrink: 0;
   font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
   position: sticky;
   top: 30px;
   max-height: 90vh;
-  overflow-y: auto;
 }
-.guide-title {
+.guide-header {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  color: #fff;
+  padding: 14px 18px;
   font-size: 16px;
   font-weight: 700;
-  color: #333;
-  margin-bottom: 16px;
-  padding-bottom: 10px;
-  border-bottom: 2px solid #7c3aed;
+  letter-spacing: 1px;
 }
-.guide-section {
-  margin-bottom: 18px;
+.guide-body {
+  padding: 16px 18px;
+  max-height: calc(90vh - 50px);
+  overflow-y: auto;
 }
-.guide-section:last-child {
-  margin-bottom: 0;
+.guide-body::-webkit-scrollbar { width: 4px; }
+.guide-body::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+
+.guide-section { margin-bottom: 18px; }
+.guide-section:last-child { margin-bottom: 0; }
+.guide-sec-title {
+  font-size: 14px; font-weight: 700; color: #7c3aed;
+  margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
 }
-.guide-stitle {
-  font-size: 14px;
-  font-weight: 700;
-  color: #7c3aed;
-  margin-bottom: 8px;
-}
-.guide-text {
-  font-size: 14px;
-  color: #555;
-  line-height: 1.8;
-}
-.guide-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-  margin-top: 4px;
-}
-.guide-table th {
-  background: #f3f0fa;
-  color: #7c3aed;
-  font-weight: 600;
-  padding: 8px 10px;
-  text-align: left;
-  border: 1px solid #e0dcd4;
-}
-.guide-table td {
-  padding: 7px 10px;
-  border: 1px solid #e0dcd4;
-  color: #444;
-  line-height: 1.5;
-  vertical-align: top;
-}
-.guide-table tr:nth-child(even) td {
-  background: #fafaf7;
-}
-.guide-flow {
-  margin-bottom: 14px;
-  padding: 10px 12px;
-  background: #fafaf7;
-  border-radius: 10px;
-  border: 1px solid #e8e4db;
-}
-.guide-flow:last-child {
-  margin-bottom: 0;
-}
-.guide-flow-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: #333;
-  margin-bottom: 6px;
-}
-.guide-flow-steps {
-  padding-left: 4px;
-}
-.guide-step {
-  font-size: 14px;
-  color: #555;
-  line-height: 1.7;
-  padding-left: 12px;
-  position: relative;
-}
-.guide-step::before {
-  content: '→';
-  position: absolute;
-  left: 0;
-  color: #7c3aed;
-  font-weight: 700;
+.guide-sec-title .num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: #7c3aed; color: #fff; font-size: 11px; font-weight: 700; flex-shrink: 0;
 }
 
+.guide-item {
+  display: flex; align-items: flex-start; gap: 8px;
+  margin-bottom: 6px; font-size: 13px; color: #555; line-height: 1.6;
+}
+.guide-dot {
+  width: 5px; height: 5px; border-radius: 50%; background: #ccc;
+  flex-shrink: 0; margin-top: 7px;
+}
+.guide-dot.purple { background: #7c3aed; }
+.guide-dot.green { background: #16a34a; }
+.guide-dot.orange { background: #d97706; }
+.guide-dot.red { background: #ef4444; }
+.guide-dot.blue { background: #3b82f6; }
+.guide-dot.gray { background: #999; }
+
+.guide-tag {
+  display: inline-block; font-size: 11px; padding: 1px 7px;
+  border-radius: 3px; font-weight: 600; vertical-align: middle;
+}
+.guide-tag.purple { color: #7c3aed; background: rgba(124,58,237,0.08); }
+.guide-tag.green { color: #16a34a; background: rgba(22,163,74,0.08); }
+.guide-tag.orange { color: #d97706; background: rgba(217,119,6,0.08); }
+.guide-tag.red { color: #ef4444; background: rgba(239,68,68,0.08); }
+.guide-tag.blue { color: #3b82f6; background: rgba(59,130,246,0.08); }
+.guide-tag.gray { color: #888; background: #f0f0f0; }
+
+.guide-divider { border: none; border-top: 1px solid #f0f0f0; margin: 14px 0; }
+
+.guide-table {
+  width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 4px;
+}
+.guide-table th {
+  background: #f3f0fa; color: #7c3aed; font-weight: 600;
+  padding: 6px 8px; text-align: left; border: 1px solid #e5e7eb;
+}
+.guide-table td {
+  padding: 6px 8px; border: 1px solid #e5e7eb; color: #444; line-height: 1.5; vertical-align: top;
+}
 </style>
 </head>
 <body>
@@ -2558,250 +2541,133 @@ setTimeout(updateDebugPanel, 100);
 
 <!-- ============ Operation Guide ============ -->
 <div class="guide-panel">
-  <div class="guide-title">环节1 · 原型操作说明</div>
+  <div class="guide-header">环节1 - 内容创作 操作说明</div>
+  <div class="guide-body">
 
-  <div class="guide-section">
-    <div class="guide-stitle">一、页面概览</div>
-    <div class="guide-text">
-      本原型模拟「环节1-内容创作」的完整交互流程，包括：<br>
-      ① 表单填写（剧集信息+大纲+剧本）<br>
-      ② AI功能（AI优化/AI灵感/剧本拆解）<br>
-      ③ 登录/积分/会员体系<br>
-      ④ 拆解结果展示 & 续写下一集<br>
-      所有交互均为前端模拟，AI返回的是预设demo数据。
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">1</span>页面结构</div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span><span class="guide-tag purple">主表单页</span> 剧集信息+大纲+剧本+「开始创作」按钮，纵向滚动</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span><span class="guide-tag purple">拆解结果页</span> 提交后展示，角色列表+分镜列表，卡片布局</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span><span class="guide-tag blue">全屏Loading</span> 点击「开始创作」后触发，显示「AI正在拆解剧本…」</span></div>
     </div>
-  </div>
 
-  <div class="guide-section">
-    <div class="guide-stitle">二、调试面板使用</div>
-    <div class="guide-text">
-      右侧「调试面板」可切换各项状态，验证不同场景的交互表现：<br><br>
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">2</span>主表单页操作</div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>填写 <span class="guide-tag purple">漫剧名称</span>（必填，最长20字）+ 漫剧剧本（必填，最长4000字）</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>填写 <span class="guide-tag purple">漫剧大纲</span>（选填，最长500字），3种模式：自行输入 / AI优化 / AI灵感</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>选择 <span class="guide-tag purple">剧集设定</span>：集数(5/10/20/自定义)、画风、视频比例、分辨率</span></div>
+      <div class="guide-item"><div class="guide-dot green"></div><span>点击 <span class="guide-tag green">AI优化</span> &rarr; 校验登录+积分 &rarr; 冻结2积分 &rarr; 骨架屏 &rarr; 流式输出优化文本</span></div>
+      <div class="guide-item"><div class="guide-dot green"></div><span>点击 <span class="guide-tag green">AI灵感</span> &rarr; 校验登录+积分 &rarr; 冻结2积分 &rarr; textarea清空 &rarr; 骨架屏 &rarr; 流式输出</span></div>
+      <div class="guide-item"><div class="guide-dot green"></div><span>点击 <span class="guide-tag green">开始创作</span> &rarr; 校验必填项+字数+登录+积分 &rarr; 冻结2积分 &rarr; 全屏Loading &rarr; 拆解结果</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>点击右上角 <span class="guide-tag purple">积分徽章</span> &rarr; 跳转会员中心（全局模块）</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">3</span>拆解结果页操作</div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>角色卡片：显示角色名+描述，点击「角色描述」可折叠/展开</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>分镜卡片：显示分镜编号+场景提示词+视频提示词，可折叠/展开</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>非最后一集 &rarr; 底部显示 <span class="guide-tag purple">下一集</span> 按钮</span></div>
+      <div class="guide-item"><div class="guide-dot green"></div><span>最后一集 &rarr; 底部显示 <span class="guide-tag green">下一步</span> 按钮，跳转环节2</span></div>
+      <div class="guide-item"><div class="guide-dot green"></div><span>点击 <span class="guide-tag green">重新分析</span> &rarr; 冻结2积分 &rarr; 重新拆解剧本</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">4</span>表单与按钮状态</div>
+      <div class="guide-item"><div class="guide-dot gray"></div><span><span class="guide-tag gray">「开始创作」置灰</span> 漫剧名称为空 或 剧本为空时，按钮不可点击</span></div>
+      <div class="guide-item"><div class="guide-dot green"></div><span><span class="guide-tag green">「开始创作」亮起</span> 名称+剧本都有内容时，紫色渐变可点击</span></div>
+      <div class="guide-item"><div class="guide-dot green"></div><span><span class="guide-tag green">已提交</span> 底部显示绿色「第N集已提交拆解」，表单锁定只读</span></div>
+      <div class="guide-item"><div class="guide-dot red"></div><span><span class="guide-tag red">字数超限</span> 大纲&gt;500字 / 剧本&gt;4000字 &rarr; 红色边框 + 红色字数统计</span></div>
+      <div class="guide-item"><div class="guide-dot orange"></div><span><span class="guide-tag orange">大纲只读</span> 第2集+ 大纲区域半透明+禁用，显示&#x1f512;标记，隐藏AI模式切换</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span><span class="guide-tag purple">导航栏标题</span> 第2集+变为「内容创作 &middot; 第N集」</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">5</span>AI输出方式</div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>环节1的AI优化/AI灵感 &rarr; <span class="guide-tag purple">流式文本输出</span>，在textarea内逐字显示</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>环节2/3的图片生成 &rarr; 无流式效果，生成完成后直接显示</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>环节4的视频生成 &rarr; 无流式效果，生成完成后直接显示</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>AI生成中其他AI按钮禁用，防止并发调用</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>后台生成：用户可切换编辑其他项，生成完成toast通知</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">6</span>续写下一集规则</div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>完成第1集拆解 &rarr; 点击「下一集」&rarr; 自动进入第2集</span></div>
+      <div class="guide-item"><div class="guide-dot orange"></div><span>第2集起 <span class="guide-tag orange">大纲只读</span>，显示&#x1f512;标记，自动沿用第1集大纲</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>第2集起剧本清空，需重新填写</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>大纲区域隐藏AI模式切换按钮（只读不可AI修改）</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">7</span>提示词拼接逻辑（用户不可见）</div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>AI优化 = <span class="guide-tag purple">系统提示</span> + <span class="guide-tag purple">当前内容</span> + 「不改变原有设定，优化文笔/对白」</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>AI灵感 = <span class="guide-tag purple">系统提示</span> + <span class="guide-tag purple">剧集设定</span>（名称/画风/设定等）+ 「生成完整大纲/剧本」</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>剧本拆解 = <span class="guide-tag purple">系统提示</span> + <span class="guide-tag purple">完整剧本</span> + <span class="guide-tag purple">大纲</span> + 「拆解为角色列表+分镜列表」</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>点击AI优化时可展开查看完整提示词模板</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">8</span>积分与登录</div>
+      <div class="guide-item"><div class="guide-dot green"></div><span>AI优化/AI灵感/剧本拆解/重新分析：各 <span class="guide-tag green">2积分</span></span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>生成前校验：未登录&larr;登录弹窗 &rarr; 积分不足&larr;积分不足半屏</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>积分不足半屏：非会员&larr;「开通会员」，会员&larr;「去充值」&rarr; 跳转全局模块</span></div>
+      <div class="guide-item"><div class="guide-dot green"></div><span>点击时冻结积分，AI成功后确认扣减，失败/超时解冻退还</span></div>
+      <div class="guide-item"><div class="guide-dot green"></div><span>首次生成弹出确认弹窗，重新生成无确认直接执行</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>充值后回到创作页，不自动继续操作，用户需重新点击</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">9</span>返回确认</div>
+      <div class="guide-item"><div class="guide-dot orange"></div><span>AI生成中点击&larr; &rarr; 弹窗 <span class="guide-tag orange">「AI正在生成中，确定离开吗？」</span> &rarr; 继续创作 / 确定离开</span></div>
+      <div class="guide-item"><div class="guide-dot orange"></div><span>有未提交内容点击&larr; &rarr; 弹窗 <span class="guide-tag orange">「离开创作，记录将丢失，确定离开吗？」</span></span></div>
+      <div class="guide-item"><div class="guide-dot gray"></div><span>无内容/已提交 &rarr; <span class="guide-tag gray">直接返回</span></span></div>
+      <div class="guide-item"><div class="guide-dot orange"></div><span>AI生成中确认离开：任务后台继续，成功扣减积分（不退还），失败退还</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">10</span>调试面板</div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span><span class="guide-tag purple">登录</span> 点击「切换」&rarr; 验证未登录&larr;登录弹窗流程</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span><span class="guide-tag purple">会员</span> 点击「切换」&rarr; 验证积分不足时按钮文案差异</span></div>
+      <div class="guide-item"><div class="guide-dot green"></div><span><span class="guide-tag green">积分</span> 输入数值或快捷按钮 0/2/100</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span><span class="guide-tag purple">集数</span> 重置第1集 / 模拟多集</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span><span class="guide-tag blue">项目</span> 「模拟进入」恢复已保存内容 / 「清除」删除</span></div>
+      <div class="guide-item"><div class="guide-dot red"></div><span><span class="guide-tag red">全部重置</span> 恢复初始值</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">11</span>积分消耗一览</div>
       <table class="guide-table">
-        <tr><th>调试项</th><th>操作</th><th>验证场景</th></tr>
-        <tr><td>登录</td><td>点击「切换」</td><td>未登录→触发AI时弹出登录弹窗；登录后正常操作</td></tr>
-        <tr><td>会员</td><td>点击「切换」</td><td>积分不足时：非会员→「开通会员」按钮；会员→「去充值」按钮</td></tr>
-        <tr><td>积分</td><td>点击 0/2/100</td><td>0→积分不足弹窗；2→刚好够用；100→充足</td></tr>
-        <tr><td>集数</td><td>点击「重置第1集」</td><td>切回第1集，大纲恢复可编辑</td></tr>
-        <tr><td>AI</td><td>自动显示</td><td>AI生成中显示「生成中」，完成后恢复「空闲」</td></tr>
-        <tr><td>项目</td><td>「模拟进入」/「清除」</td><td>模拟从项目进入恢复内容 / 清除保存数据</td></tr>
-        <tr><td>全部重置</td><td>点击红色按钮</td><td>所有状态恢复初始值</td></tr>
+        <tr><th>操作</th><th>积分</th><th>位置</th></tr>
+        <tr><td>AI优化（大纲/剧本）</td><td>-2</td><td>大纲/剧本区域</td></tr>
+        <tr><td>AI灵感（大纲/剧本）</td><td>-2</td><td>大纲/剧本区域</td></tr>
+        <tr><td>剧本拆解</td><td>-2</td><td>底部「开始创作」</td></tr>
+        <tr><td>重新分析</td><td>-2</td><td>拆解结果页</td></tr>
+        <tr><td>角色图生成（环节2）</td><td>-10/张</td><td>环节2</td></tr>
+        <tr><td>场景图生成（环节3）</td><td>-10/张</td><td>环节3</td></tr>
+        <tr><td>分镜视频（环节4）</td><td>-50/条</td><td>环节4</td></tr>
       </table>
     </div>
-  </div>
 
-  <div class="guide-section">
-    <div class="guide-stitle">三、核心交互流程</div>
-
-    <div class="guide-flow">
-      <div class="guide-flow-title">流程A：自行输入 + 提交拆解</div>
-      <div class="guide-flow-steps">
-        <div class="guide-step">1. 确认右侧调试面板「已登录」「积分≥2」</div>
-        <div class="guide-step">2. 填写漫剧名称（必填）+ 漫剧剧本（必须非空，「开始创作」才会亮起）</div>
-        <div class="guide-step">3. 点击「开始创作(-2)」→ 全屏Loading「AI正在拆解剧本…」</div>
-        <div class="guide-step">4. 展示拆解结果：角色列表 + 分镜列表</div>
-        <div class="guide-step">5. 点击角色/分镜中的「角色描述」「场景图提示词」「视频提示词」可折叠展开</div>
-        <div class="guide-step">6. 非最后一集→「下一集」；最后一集→「下一步」跳转环节2</div>
-      </div>
-    </div>
-
-    <div class="guide-flow">
-      <div class="guide-flow-title">流程B：AI优化</div>
-      <div class="guide-flow-steps">
-        <div class="guide-step">1. 在剧本/大纲区域输入内容</div>
-        <div class="guide-step">2. 点击「AI优化(-2)」→ 骨架屏Loading</div>
-        <div class="guide-step">3. Loading结束后内容流式输出，替换为AI优化版本</div>
-      </div>
-    </div>
-
-    <div class="guide-flow">
-      <div class="guide-flow-title">流程C：AI灵感</div>
-      <div class="guide-flow-steps">
-        <div class="guide-step">1. 点击「AI灵感(-2)」→ 无弹窗，直接开始生成</div>
-        <div class="guide-step">2. 骨架屏Loading→流式输出AI生成内容</div>
-      </div>
-    </div>
-
-    <div class="guide-flow">
-      <div class="guide-flow-title">流程D：未登录 → 登录</div>
-      <div class="guide-flow-steps">
-        <div class="guide-step">1. 右侧调试面板点击「切换」设为「未登录」</div>
-        <div class="guide-step">2. 点击任何AI按钮 → 弹出登录弹窗 + toast「您还未登录」</div>
-        <div class="guide-step">3. 输入手机号+验证码（任意11位+4位以上）→ 登录成功</div>
-        <div class="guide-step">4. 回到页面，用户需自行重新点击按钮（不自动继续）</div>
-      </div>
-    </div>
-
-    <div class="guide-flow">
-      <div class="guide-flow-title">流程E：积分不足 → 会员/充值</div>
-      <div class="guide-flow-steps">
-        <div class="guide-step">1. 右侧调试面板设「已登录」+ 积分0</div>
-        <div class="guide-step">2. 点击AI按钮 → 弹出「积分不足」半弹窗</div>
-        <div class="guide-step">3a. 非会员 → 按钮「开通会员」→ 跳转会员中心（全局模块）</div>
-        <div class="guide-step">3b. 会员 → 按钮「去充值」→ 跳转会员中心（全局模块）</div>
-        <div class="guide-step">4. 选择套餐 → 支付 → 积分到账 → 回到创作页</div>
-      </div>
-    </div>
-
-    <div class="guide-flow">
-      <div class="guide-flow-title">流程F：续写下一集</div>
-      <div class="guide-flow-steps">
-        <div class="guide-step">1. 完成第1集拆解 → 点击「下一集」</div>
-        <div class="guide-step">2. 自动进入第2集：大纲只读（🔒标记），剧本清空</div>
-        <div class="guide-step">3. 导航栏标题变为「内容创作 · 第2集」</div>
-        <div class="guide-step">4. 大纲区域隐藏AI模式切换按钮</div>
-      </div>
-    </div>
-
-    <div class="guide-flow">
-      <div class="guide-flow-title">流程G：项目保存</div>
-      <div class="guide-flow-steps">
-        <div class="guide-step">1. 点击「开始创作」提交时，内容保存至项目</div>
-        <div class="guide-step">2. 提交后表单锁定只读，内容保留不清空</div>
-        <div class="guide-step">3. 从首页进入 → 空白表单（新建创作）</div>
-        <div class="guide-step">4. 从项目进入 → 自动加载已保存内容（继续编辑）</div>
-      </div>
-    </div>
-
-    <div class="guide-flow">
-      <div class="guide-flow-title">流程H：返回确认</div>
-      <div class="guide-flow-steps">
-        <div class="guide-step">1. AI生成中点击左上角← → 弹窗「AI正在生成中，确定离开吗？」</div>
-        <div class="guide-step">2. 有内容时点击← → 弹窗「离开创作，记录将丢失，确定离开吗？」</div>
-        <div class="guide-step">3. 无内容时点击← → 直接返回</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="guide-section">
-    <div class="guide-stitle">四、页面元素与状态说明</div>
-    <table class="guide-table">
-      <tr><th>元素</th><th>状态</th><th>表现</th></tr>
-      <tr><td>「开始创作」按钮</td><td>剧本为空</td><td>灰色置灰，不可点击</td></tr>
-      <tr><td>「开始创作」按钮</td><td>剧本有内容</td><td>紫色渐变，可点击</td></tr>
-      <tr><td>提交后底部</td><td>已提交</td><td>绿色「✅ 第N集已提交拆解」，表单只读</td></tr>
-      <tr><td>剧本输入框</td><td>字数>4000</td><td>红色边框 + 红色字数统计</td></tr>
-      <tr><td>大纲输入框</td><td>字数>500</td><td>红色边框 + 红色字数统计</td></tr>
-      <tr><td>大纲输入框</td><td>第2集+</td><td>半透明+禁用，显示🔒只读标记</td></tr>
-      <tr><td>AI生成中</td><td>Loading态</td><td>骨架屏动画→流式输出文字</td></tr>
-      <tr><td>导航栏标题</td><td>第2集+</td><td>变为「内容创作 · 第N集」</td></tr>
-      <tr><td>积分不足弹窗</td><td>非会员</td><td>按钮「开通会员」→跳转全局模块</td></tr>
-      <tr><td>积分不足弹窗</td><td>会员</td><td>按钮「去充值」→跳转全局模块</td></tr>
-    </table>
-  </div>
-
-  <div class="guide-section">
-    <div class="guide-stitle">五、积分消耗一览</div>
-    <table class="guide-table">
-      <tr><th>操作</th><th>积分</th><th>位置</th></tr>
-      <tr><td>AI优化（大纲/剧本）</td><td>-2</td><td>大纲/剧本区域「AI优化」按钮</td></tr>
-      <tr><td>AI灵感（大纲/剧本）</td><td>-2</td><td>大纲/剧本区域「AI灵感」按钮</td></tr>
-      <tr><td>剧本拆解</td><td>-2</td><td>底部「开始创作」按钮</td></tr>
-      <tr><td>角色图（环节2）</td><td>-10/张</td><td>环节2</td></tr>
-      <tr><td>场景图（环节3）</td><td>-10/张</td><td>环节3</td></tr>
-      <tr><td>分镜视频（环节4）</td><td>-50/条</td><td>环节4</td></tr>
-    </table>
-  </div>
-</div>
-
-<!-- Debug Panel -->
-<div class="debug-panel">
-  <div class="dbg-title">状态调试面板</div>
-
-  <!-- 快捷场景 -->
-  <div class="dbg-section-title">快捷场景</div>
-  <div class="dbg-row" style="flex-wrap:wrap;gap:6px">
-    <button class="dbg-btn preset" onclick="dbgPreset('newUser')">新用户(未登录)</button>
-    <button class="dbg-btn preset" onclick="dbgPreset('freeUser')">免费用户(无积分)</button>
-    <button class="dbg-btn preset" onclick="dbgPreset('member')">会员(充足积分)</button>
-    <button class="dbg-btn preset" onclick="dbgPreset('lowPts')">积分紧张(2分)</button>
-    <button class="dbg-btn preset" onclick="dbgPreset('ep2')">第2集续写</button>
-  </div>
-
-  <div class="dbg-divider"></div>
-
-  <!-- 用户状态 -->
-  <div class="dbg-section-title">用户状态</div>
-  <div class="dbg-row">
-    <span class="dbg-label">登录</span>
-    <select class="dbg-select" id="dbgLoginSel" onchange="dbgSetLogin(this.value)">
-      <option value="0">未登录</option>
-      <option value="1">已登录</option>
-    </select>
-  </div>
-  <div class="dbg-row">
-    <span class="dbg-label">会员</span>
-    <select class="dbg-select" id="dbgMemberSel" onchange="dbgSetMember(this.value)">
-      <option value="0">非会员</option>
-      <option value="1">会员</option>
-    </select>
-  </div>
-  <div class="dbg-row">
-    <span class="dbg-label">积分</span>
-    <input class="dbg-input" type="number" id="dbgPtsInput" value="2" min="0" onchange="dbgSetPoints(this.value)">
-    <span class="dbg-val" id="dbgPoints">2</span>
-  </div>
-
-  <div class="dbg-divider"></div>
-
-  <!-- 创作状态 -->
-  <div class="dbg-section-title">创作状态</div>
-  <div class="dbg-row">
-    <span class="dbg-label">集数</span>
-    <select class="dbg-select" id="dbgEpSel" onchange="dbgSetEpisode(this.value)">
-      <option value="1">第1集</option>
-      <option value="2">第2集</option>
-      <option value="3">第3集</option>
-      <option value="5">第5集(末集)</option>
-    </select>
-    <span class="dbg-val" id="dbgEpisode">1/5</span>
-  </div>
-  <div class="dbg-row">
-    <span class="dbg-label">画风</span>
-    <select class="dbg-select" id="dbgStyleSel" onchange="dbgSetArtStyle(this.value)">
-      <option value="3D国画风" selected>3D国画风</option>
-      <option value="古风">古风</option>
-      <option value="日漫风">日漫风</option>
-      <option value="水墨风">水墨风</option>
-      <option value="写实风">写实风</option>
-    </select>
-  </div>
-  <div class="dbg-row">
-    <span class="dbg-label">比例</span>
-    <select class="dbg-select" id="dbgRatioSel" onchange="dbgSetRatio(this.value)">
-      <option value="16:9" selected>16:9 横屏</option>
-      <option value="9:16">9:16 竖屏</option>
-    </select>
-  </div>
-  <div class="dbg-row">
-    <span class="dbg-label">分辨率</span>
-    <select class="dbg-select" id="dbgResSel" onchange="dbgSetRes(this.value)">
-      <option value="480p">480p</option>
-      <option value="720p" selected>720p</option>
-      <option value="1080p">1080p</option>
-    </select>
-  </div>
-
-  <div class="dbg-divider"></div>
-
-  <!-- 运行状态 -->
-  <div class="dbg-section-title">运行状态</div>
-  <div class="dbg-row">
-    <span class="dbg-label">AI</span>
-    <span class="dbg-val" id="dbgAiBusy">空闲</span>
-  </div>
-  <div class="dbg-row">
-    <span class="dbg-label">表单</span>
-    <span class="dbg-val" id="dbgFormStatus">可编辑</span>
-  </div>
-  <div class="dbg-row">
-    <span class="dbg-label">项目</span>
-    <span class="dbg-val" id="dbgDraft">无</span>
-    <button class="dbg-btn" onclick="dbgEnterFromProject()">进入</button>
-    <button class="dbg-btn" onclick="dbgClearDraft()">清除</button>
-  </div>
-
-  <div class="dbg-row" style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,0,0,0.1)">
-    <button class="dbg-btn danger" onclick="dbgResetAll()">全部重置</button>
   </div>
 </div>
 
