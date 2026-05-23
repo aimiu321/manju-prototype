@@ -2539,6 +2539,107 @@ setTimeout(updateDebugPanel, 100);
 
 </script>
 
+<div class="debug-panel">
+  <div class="dbg-title">状态调试面板</div>
+
+  <!-- 快捷场景 -->
+  <div class="dbg-section-title">快捷场景</div>
+  <div class="dbg-row" style="flex-wrap:wrap;gap:6px">
+    <button class="dbg-btn preset" onclick="dbgPreset('newUser')">新用户(未登录)</button>
+    <button class="dbg-btn preset" onclick="dbgPreset('freeUser')">免费用户(无积分)</button>
+    <button class="dbg-btn preset" onclick="dbgPreset('member')">会员(充足积分)</button>
+    <button class="dbg-btn preset" onclick="dbgPreset('lowPts')">积分紧张(2分)</button>
+    <button class="dbg-btn preset" onclick="dbgPreset('ep2')">第2集续写</button>
+  </div>
+
+  <div class="dbg-divider"></div>
+
+  <!-- 用户状态 -->
+  <div class="dbg-section-title">用户状态</div>
+  <div class="dbg-row">
+    <span class="dbg-label">登录</span>
+    <select class="dbg-select" id="dbgLoginSel" onchange="dbgSetLogin(this.value)">
+      <option value="0">未登录</option>
+      <option value="1">已登录</option>
+    </select>
+  </div>
+  <div class="dbg-row">
+    <span class="dbg-label">会员</span>
+    <select class="dbg-select" id="dbgMemberSel" onchange="dbgSetMember(this.value)">
+      <option value="0">非会员</option>
+      <option value="1">会员</option>
+    </select>
+  </div>
+  <div class="dbg-row">
+    <span class="dbg-label">积分</span>
+    <input class="dbg-input" type="number" id="dbgPtsInput" value="2" min="0" onchange="dbgSetPoints(this.value)">
+    <span class="dbg-val" id="dbgPoints">2</span>
+  </div>
+
+  <div class="dbg-divider"></div>
+
+  <!-- 创作状态 -->
+  <div class="dbg-section-title">创作状态</div>
+  <div class="dbg-row">
+    <span class="dbg-label">集数</span>
+    <select class="dbg-select" id="dbgEpSel" onchange="dbgSetEpisode(this.value)">
+      <option value="1">第1集</option>
+      <option value="2">第2集</option>
+      <option value="3">第3集</option>
+      <option value="5">第5集(末集)</option>
+    </select>
+    <span class="dbg-val" id="dbgEpisode">1/5</span>
+  </div>
+  <div class="dbg-row">
+    <span class="dbg-label">画风</span>
+    <select class="dbg-select" id="dbgStyleSel" onchange="dbgSetArtStyle(this.value)">
+      <option value="3D国画风" selected>3D国画风</option>
+      <option value="古风">古风</option>
+      <option value="日漫风">日漫风</option>
+      <option value="水墨风">水墨风</option>
+      <option value="写实风">写实风</option>
+    </select>
+  </div>
+  <div class="dbg-row">
+    <span class="dbg-label">比例</span>
+    <select class="dbg-select" id="dbgRatioSel" onchange="dbgSetRatio(this.value)">
+      <option value="16:9" selected>16:9 横屏</option>
+      <option value="9:16">9:16 竖屏</option>
+    </select>
+  </div>
+  <div class="dbg-row">
+    <span class="dbg-label">分辨率</span>
+    <select class="dbg-select" id="dbgResSel" onchange="dbgSetRes(this.value)">
+      <option value="480p">480p</option>
+      <option value="720p" selected>720p</option>
+      <option value="1080p">1080p</option>
+    </select>
+  </div>
+
+  <div class="dbg-divider"></div>
+
+  <!-- 运行状态 -->
+  <div class="dbg-section-title">运行状态</div>
+  <div class="dbg-row">
+    <span class="dbg-label">AI</span>
+    <span class="dbg-val" id="dbgAiBusy">空闲</span>
+  </div>
+  <div class="dbg-row">
+    <span class="dbg-label">表单</span>
+    <span class="dbg-val" id="dbgFormStatus">可编辑</span>
+  </div>
+  <div class="dbg-row">
+    <span class="dbg-label">项目</span>
+    <span class="dbg-val" id="dbgDraft">无</span>
+    <button class="dbg-btn" onclick="dbgEnterFromProject()">进入</button>
+    <button class="dbg-btn" onclick="dbgClearDraft()">清除</button>
+  </div>
+
+  <div class="dbg-row" style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,0,0,0.1)">
+    <button class="dbg-btn danger" onclick="dbgResetAll()">全部重置</button>
+  </div>
+</div>
+
 <!-- ============ Operation Guide ============ -->
 <div class="guide-panel">
   <div class="guide-header">环节1 - 内容创作 操作说明</div>
