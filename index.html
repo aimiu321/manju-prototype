@@ -107,20 +107,6 @@ body {
   border-radius: 12px;
 }
 
-.save-indicator {
-  position: absolute;
-  top: 52px;
-  right: 16px;
-  font-size: 10px;
-  color: #4ade80;
-  opacity: 0;
-  transition: opacity 0.3s;
-  pointer-events: none;
-}
-.save-indicator.show {
-  opacity: 1;
-}
-
 /* Points Badge */
 .points-badge {
   display: flex;
@@ -1291,7 +1277,6 @@ body {
         <span class="pts-num" id="ptsDisplay">8</span>
       </div>
       <div class="step-badge">1/5</div>
-      <div class="save-indicator" id="saveIndicator">已保存</div>
     </div>
 
     <!-- Scrollable Area -->
@@ -1300,7 +1285,7 @@ body {
       <!-- 漫剧名称 -->
       <div class="section">
         <div class="section-label">漫剧名称<span class="required">*</span></div>
-        <input class="input-field" type="text" placeholder="请输入漫剧名称" maxlength="20" id="seriesName" oninput="updateCharCount();scheduleSave()">
+        <input class="input-field" type="text" placeholder="请输入漫剧名称" maxlength="20" id="seriesName" oninput="updateCharCount()">
       </div>
 
       <!-- 集数选择 -->
@@ -1404,7 +1389,7 @@ body {
             <div class="skeleton-line"></div><div class="skeleton-line"></div><div class="skeleton-line"></div>
             <div class="ai-loading-text">AI正在生成…</div>
           </div>
-          <textarea class="input-field textarea-field" id="outlineInput" placeholder="请输入漫剧大纲，描述整体故事走向…" oninput="updateOutlineCharCount();scheduleSave()"></textarea>
+          <textarea class="input-field textarea-field" id="outlineInput" placeholder="请输入漫剧大纲，描述整体故事走向…" oninput="updateOutlineCharCount()"></textarea>
         </div>
         <div class="outline-readonly-badge" id="outlineReadonlyBadge" style="display:none">
           <span>&#128274;</span> 第1集已填写，大纲自动沿用
@@ -1430,7 +1415,7 @@ body {
             <div class="skeleton-line"></div><div class="skeleton-line"></div><div class="skeleton-line"></div>
             <div class="ai-loading-text">AI正在生成…</div>
           </div>
-          <textarea class="input-field textarea-field tall" id="scriptInput" placeholder="请输入漫剧剧本，或使用AI生成…" oninput="updateCharCount();scheduleSave()"></textarea>
+          <textarea class="input-field textarea-field tall" id="scriptInput" placeholder="请输入漫剧剧本，或使用AI生成…" oninput="updateCharCount()"></textarea>
         </div>
         <div class="char-count" id="charCount">0 / 4000</div>
       </div>
@@ -1558,9 +1543,8 @@ const state = {
   outlineOpen: false,
 };
 
-// ===== Draft Auto-Save =====
+// ===== Draft Save =====
 const DRAFT_KEY = 'manju_draft_step1';
-let saveTimer = null;
 
 function saveDraft() {
   const data = {
@@ -1579,15 +1563,6 @@ function saveDraft() {
     formLocked: formLocked,
   };
   localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
-  // Show save indicator
-  const indicator = document.getElementById('saveIndicator');
-  indicator.classList.add('show');
-  setTimeout(() => indicator.classList.remove('show'), 1500);
-}
-
-function scheduleSave() {
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(saveDraft, 800);
 }
 
 function restoreDraft() {
