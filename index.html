@@ -1778,12 +1778,6 @@ function restoreDraft() {
       const toggle = document.getElementById(toggleId);
       if (toggle) toggle.querySelectorAll('.mode-btn:not(.clear-btn)').forEach(b => b.classList.toggle('selected', b.dataset.mode === mode));
     });
-    // Restore outline open/close state
-    if (data.outlineOpen) {
-      state.outlineOpen = true;
-      document.getElementById('outlineBody').classList.add('open');
-      document.getElementById('outlineArrow').classList.add('open');
-    }
     // Update char counts
     updateCharCount();
     updateOutlineCharCount();
@@ -1892,19 +1886,6 @@ function clearTextarea(field) {
   if (field === 'outline') updateOutlineCharCount();
 }
 
-// Collapsible
-function toggleCollapse(id) {
-  state.outlineOpen = !state.outlineOpen;
-  const body = document.getElementById('outlineBody');
-  const arrow = document.getElementById('outlineArrow');
-  if (state.outlineOpen) {
-    body.classList.add('open');
-    arrow.classList.add('open');
-  } else {
-    body.classList.remove('open');
-    arrow.classList.remove('open');
-  }
-}
 
 // Mode Switching
 function switchMode(field, mode) {
@@ -2836,7 +2817,7 @@ setTimeout(updateDebugPanel, 100);
       <div class="guide-flow-title">流程A：自行输入 + 提交拆解</div>
       <div class="guide-flow-steps">
         <div class="guide-step">1. 确认右侧调试面板「已登录」「积分≥2」</div>
-        <div class="guide-step">2. 填写漫剧剧本（必须非空，「开始创作」才会亮起）</div>
+        <div class="guide-step">2. 填写漫剧名称（必填）+ 漫剧剧本（必须非空，「开始创作」才会亮起）</div>
         <div class="guide-step">3. 点击「开始创作(-2)」→ 全屏Loading「AI正在拆解剧本…」</div>
         <div class="guide-step">4. 展示拆解结果：角色列表 + 分镜列表</div>
         <div class="guide-step">5. 点击角色/分镜中的「角色描述」「场景图提示词」「视频提示词」可折叠展开</div>
