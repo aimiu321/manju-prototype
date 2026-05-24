@@ -1357,6 +1357,9 @@ body {
         <div class="ratio-group" id="ratioGroup">
           <div class="ratio-btn selected" data-value="16:9" onclick="selectRatio(this)">16:9 横屏</div>
           <div class="ratio-btn" data-value="9:16" onclick="selectRatio(this)">9:16 竖屏</div>
+          <div class="ratio-btn" data-value="1:1" onclick="selectRatio(this)">1:1</div>
+          <div class="ratio-btn" data-value="4:3" onclick="selectRatio(this)">4:3</div>
+          <div class="ratio-btn" data-value="3:4" onclick="selectRatio(this)">3:4</div>
         </div>
       </div>
 
@@ -1680,6 +1683,11 @@ function clearTextarea(field) {
   textarea.value = '';
   textarea.disabled = false;
   textarea.style.opacity = '1';
+  // Reset mode to self-input and deselect AI mode buttons
+  if (field === 'outline') state.outlineMode = 'self';
+  else state.scriptMode = 'self';
+  const toggleId = field === 'outline' ? 'outlineModeToggle' : 'scriptModeToggle';
+  document.getElementById(toggleId).querySelectorAll('.mode-btn:not(.clear-btn)').forEach(b => b.classList.remove('selected'));
   if (field === 'script') updateCharCount();
   if (field === 'outline') updateOutlineCharCount();
 }
