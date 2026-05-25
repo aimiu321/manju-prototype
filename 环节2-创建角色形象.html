@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI漫剧创作大师 — 环节2 创建角色形象</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;background:#e8e8e8;display:flex;justify-content:center;align-items:flex-start;gap:20px;min-height:100vh;padding:20px;flex-wrap:wrap}
+
+.phone-frame{width:390px;height:844px;background:#f7f7f7;border-radius:44px;border:2px solid #ccc;overflow:hidden;position:relative;box-shadow:0 4px 24px rgba(0,0,0,0.1)}
+.phone-notch{width:126px;height:30px;background:#f7f7f7;border-radius:0 0 18px 18px;margin:0 auto;position:relative;z-index:100}
+.phone-notch::before{content:'';width:8px;height:8px;background:#ddd;border-radius:50%;position:absolute;right:26px;top:10px}
+.status-bar{display:flex;justify-content:space-between;align-items:center;padding:0 28px;height:18px;color:#333;font-size:13px;font-weight:600}
+.app-content{height:calc(844px - 30px - 18px);display:flex;flex-direction:column;background:#f7f7f7}
+
+/* Nav */
+.nav-bar{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid #e0e0e0;flex-shrink:0}
+.nav-bar .back{color:#7c3aed;font-size:20px;cursor:pointer;padding:4px}
+.nav-bar .title{font-size:18px;font-weight:700;color:#111;margin-left:8px;flex:1}
+.nav-bar .points-badge{font-size:13px;color:#7c3aed;background:rgba(124,58,237,0.08);padding:4px 10px;border-radius:12px;margin-left:8px;cursor:pointer}
+.nav-bar .lib-btn{font-size:14px;color:#7c3aed;cursor:pointer;margin-left:12px}
+
+.scroll{flex:1;overflow-y:auto;padding:14px 16px 80px;-webkit-overflow-scrolling:touch}
+.scroll::-webkit-scrollbar{width:0}
+
+/* === Character Card === */
+.char-card{display:flex;gap:14px;background:#fff;border-radius:14px;padding:14px;margin-bottom:14px;border:1px solid #e8e8e8;cursor:pointer;transition:border-color .15s;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+.char-card:active{border-color:#7c3aed}
+
+/* Left Image */
+.char-img-wrap{width:110px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:8px}
+.char-img-box{width:110px;height:146px;border-radius:10px;overflow:hidden;background:#eee;border:1px solid #ddd;position:relative;display:flex;align-items:center;justify-content:center}
+.char-img-box .ph{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#aaa}
+.char-img-box .ph-icon{font-size:30px}
+.char-img-box .ph-txt{font-size:12px;margin-top:4px}
+.char-img-box .skel{position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,0.02) 25%,rgba(0,0,0,0.06) 50%,rgba(0,0,0,0.02) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;display:none}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.char-img-box .gimg{width:100%;height:100%;object-fit:cover;display:none}
+.char-img-box .fail{display:none;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#ef4444}
+.char-img-box .fail-icon{font-size:30px}
+.char-img-box .fail-txt{font-size:12px;margin-top:4px;color:#999}
+
+.gen-btn{width:100%;padding:8px 0;border-radius:8px;font-size:13px;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:all .15s}
+.gen-btn.pri{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff}
+.gen-btn.pri:active{transform:scale(.97)}
+.gen-btn.out{background:transparent;border:1px solid #7c3aed;color:#7c3aed}
+
+/* Right Info */
+.char-info{flex:1;display:flex;flex-direction:column;min-width:0}
+.char-name-row{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.char-name{font-size:17px;font-weight:700;color:#111}
+.char-role{font-size:12px;color:#7c3aed;background:rgba(124,58,237,0.08);padding:2px 8px;border-radius:4px}
+.char-arrow{margin-left:auto;color:#ccc;font-size:16px}
+.char-desc{font-size:14px;color:#666;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:4px}
+
+/* Status tag */
+.char-status{margin-top:auto;padding-top:8px}
+.status-tag{font-size:12px;padding:3px 10px;border-radius:4px;display:inline-block}
+.status-tag.pending{color:#888;background:#f0f0f0}
+.status-tag.done{color:#16a34a;background:rgba(22,163,74,0.08)}
+
+/* === Bottom Bar === */
+.bottom-bar{position:absolute;bottom:0;left:0;right:0;padding:12px 16px 28px;background:linear-gradient(transparent,#f7f7f7 20%);display:flex;gap:10px}
+.bar-btn{flex:1;padding:14px;border-radius:12px;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:inherit}
+.bar-btn.ghost{background:#fff;color:#7c3aed;border:1px solid #7c3aed}
+.bar-btn.solid{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff}
+.bar-btn.solid:disabled{background:#ddd;color:#999;cursor:not-allowed}
+
+/* === Detail Page === */
+.detail-page{position:absolute;inset:0;background:#f7f7f7;z-index:200;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s ease}
+.detail-page.show{transform:translateX(0)}
+.det-nav{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid #e0e0e0;flex-shrink:0}
+.det-nav .back{color:#7c3aed;font-size:20px;cursor:pointer;padding:4px}
+.det-nav .title{font-size:18px;font-weight:700;color:#111;margin-left:8px;flex:1}
+.det-nav .points-badge{font-size:13px;color:#7c3aed;background:rgba(124,58,237,0.08);padding:4px 10px;border-radius:12px;cursor:pointer}
+.det-scroll{flex:1;overflow-y:auto;padding:16px;-webkit-overflow-scrolling:touch}
+.det-scroll::-webkit-scrollbar{width:0}
+
+.det-img-area{width:180px;height:240px;margin:0 auto 20px;border-radius:12px;overflow:hidden;background:#eee;border:1px solid #ddd;position:relative;display:flex;align-items:center;justify-content:center}
+.det-img-area .ph{color:#bbb;text-align:center}
+.det-img-area .ph-icon{font-size:44px}
+.det-img-area .ph-txt{font-size:13px;margin-top:6px}
+.det-img-area .skel{position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,0.02) 25%,rgba(0,0,0,0.06) 50%,rgba(0,0,0,0.02) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;display:none}
+.det-img-area .gimg{width:100%;height:100%;object-fit:cover;display:none}
+.det-img-area .regen-tag{position:absolute;bottom:8px;right:8px;padding:6px 12px;border-radius:6px;background:rgba(255,255,255,0.9);color:#7c3aed;font-size:12px;cursor:pointer;border:1px solid rgba(124,58,237,0.2);display:none}
+.det-img-area .fail-overlay{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(247,247,247,0.9)}
+.det-img-area .fail-overlay .fail-icon{font-size:40px;color:#ef4444}
+.det-img-area .fail-overlay .fail-txt{font-size:14px;color:#999;margin-top:8px}
+
+.det-section{margin-bottom:16px}
+.det-label{font-size:14px;color:#666;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.det-char-count{font-size:12px;color:#aaa}
+.det-char-count.warn{color:#ef4444}
+.det-text{font-size:14px;color:#444;line-height:1.6;background:#fff;border-radius:8px;padding:12px;cursor:pointer;word-break:break-all;transition:background .15s;border:1px solid #e8e8e8}
+.det-text:hover{background:#fafafa}
+.det-text.editing{outline:2px solid rgba(124,58,237,0.4);background:#fafafa}
+.det-text.error{outline:2px solid #ef4444;background:rgba(239,68,68,0.04)}
+.det-text.error-msg{font-size:12px;color:#ef4444;margin-top:6px;display:none}
+.det-text.error-msg.show{display:block}
+
+/* Mode */
+.det-mode-row{display:flex;align-items:center;gap:10px}
+.det-mode-tabs{display:flex;gap:0;background:#f0f0f0;border-radius:8px;padding:3px;flex:1}
+.det-mode-tab{flex:1;padding:9px;border-radius:6px;font-size:14px;color:#888;cursor:pointer;text-align:center;transition:all .15s;user-select:none}
+.det-mode-tab.on{color:#fff;background:#7c3aed}
+
+/* Ref Upload */
+.det-ref{margin-top:10px;display:none}
+.det-ref.show{display:block}
+.det-ref-row{display:flex;align-items:center;gap:10px}
+.det-ref-thumb{width:64px;height:64px;border-radius:8px;border:1px dashed rgba(124,58,237,0.3);display:flex;align-items:center;justify-content:center;cursor:pointer;background:#f5f5f5;overflow:hidden;flex-shrink:0}
+.det-ref-thumb .plus{font-size:24px;color:#bbb}
+.det-ref-hint{font-size:12px;color:#999;line-height:1.4}
+.det-ref-thumb .ref-del{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#ef4444;color:#fff;font-size:12px;display:none;align-items:center;justify-content:center;cursor:pointer;line-height:1;border:none;padding:0}
+
+/* Fullscreen Preview */
+.preview-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.85);z-index:600;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.preview-overlay.show{opacity:1;pointer-events:all}
+.preview-overlay img{max-width:90%;max-height:80%;border-radius:8px;object-fit:contain}
+.preview-close{position:absolute;top:40px;right:16px;color:#fff;font-size:24px;cursor:pointer;padding:8px}
+
+.det-gen-btn{width:100%;padding:16px;border-radius:12px;font-size:16px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;margin-top:8px}
+.det-gen-btn:active{transform:scale(.98)}
+.det-gen-btn:disabled{background:#ddd;color:#999;cursor:not-allowed}
+
+/* Library Sheet */
+.sheet-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.3);z-index:300;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .2s}
+.sheet-overlay.show{opacity:1;pointer-events:all}
+.sheet-body{width:100%;background:#fff;border-radius:20px 20px 0 0;padding:16px;max-height:70%;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .3s ease}
+.sheet-overlay.show .sheet-body{transform:translateY(0)}
+.sheet-handle{width:32px;height:3px;background:#ddd;border-radius:2px;margin:0 auto 12px}
+.sheet-title{font-size:17px;font-weight:700;color:#111;margin-bottom:12px}
+.sheet-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;overflow-y:auto;padding-bottom:20px}
+.sheet-grid::-webkit-scrollbar{width:0}
+.sheet-item{aspect-ratio:9/16;border-radius:8px;overflow:hidden;background:#eee;border:1px solid #ddd;position:relative}
+.sheet-item .si-img{width:100%;height:100%;object-fit:cover}
+.sheet-item .si-name{position:absolute;bottom:0;left:0;right:0;padding:4px 6px;background:linear-gradient(transparent,rgba(0,0,0,0.6));font-size:12px;color:#fff}
+.sheet-item .si-import{position:absolute;top:6px;right:6px;padding:4px 10px;border-radius:4px;background:rgba(124,58,237,0.9);color:#fff;font-size:11px;cursor:pointer;border:none;font-family:inherit}
+.sheet-item .si-import:active{transform:scale(.95)}
+.sheet-item .si-imported{position:absolute;top:6px;right:6px;padding:4px 10px;border-radius:4px;background:rgba(22,163,74,0.15);color:#16a34a;font-size:11px;pointer-events:none}
+
+/* Login Popup */
+.login-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;z-index:500;opacity:0;pointer-events:none;transition:opacity .2s}
+.login-overlay.show{opacity:1;pointer-events:all}
+.login-box{width:300px;background:#fff;border-radius:16px;padding:24px;text-align:center}
+.login-title{font-size:19px;font-weight:700;color:#111;margin-bottom:20px}
+.login-field{display:flex;align-items:center;background:#f5f5f5;border-radius:10px;padding:0 12px;margin-bottom:12px;border:1px solid #e0e0e0}
+.login-field input{flex:1;background:none;border:none;color:#111;font-size:15px;padding:14px 0;outline:none;font-family:inherit}
+.login-field input::placeholder{color:#bbb}
+.login-field .code-btn{font-size:13px;color:#7c3aed;cursor:pointer;white-space:nowrap}
+.login-submit{width:100%;padding:14px;border-radius:10px;font-size:16px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;margin-top:4px}
+.login-submit:active{transform:scale(.98)}
+.login-close{margin-top:14px;font-size:14px;color:#999;cursor:pointer}
+
+/* Points Insufficient Sheet */
+.points-sheet{position:absolute;inset:0;background:rgba(0,0,0,0.3);z-index:500;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .2s}
+.points-sheet.show{opacity:1;pointer-events:all}
+.points-sheet-body{width:100%;background:#fff;border-radius:20px 20px 0 0;padding:24px 16px 28px;transform:translateY(100%);transition:transform .3s ease}
+.points-sheet.show .points-sheet-body{transform:translateY(0)}
+.points-sheet-handle{width:32px;height:3px;background:#ddd;border-radius:2px;margin:0 auto 16px}
+.points-sheet-icon{font-size:40px;margin-bottom:8px}
+.points-sheet-title{font-size:18px;font-weight:700;color:#111;margin-bottom:6px;text-align:center}
+.points-sheet-desc{font-size:14px;color:#888;text-align:center;margin-bottom:20px;line-height:1.5}
+.points-sheet-info{background:#f5f5f5;border-radius:10px;padding:14px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+.points-sheet-info .psi-label{font-size:14px;color:#888}
+.points-sheet-info .psi-val{font-size:18px;font-weight:700;color:#ef4444}
+.points-sheet-btns{display:flex;gap:10px}
+.points-sheet-btns .psb{flex:1;padding:14px;border-radius:10px;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:inherit}
+.psb.cancel{background:#f0f0f0;color:#666}
+.psb.ok{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff}
+
+/* Dialog */
+.dlg-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;z-index:400;opacity:0;pointer-events:none;transition:opacity .2s}
+.dlg-overlay.show{opacity:1;pointer-events:all}
+.dlg-box{width:300px;background:#fff;border-radius:14px;padding:24px;text-align:center}
+.dlg-title{font-size:17px;font-weight:700;color:#111;margin-bottom:10px}
+.dlg-msg{font-size:14px;color:#666;line-height:1.5;margin-bottom:18px}
+.dlg-btns{display:flex;gap:10px}
+.dlg-btn{flex:1;padding:12px;border-radius:8px;font-size:15px;font-weight:600;border:none;cursor:pointer;font-family:inherit}
+.dlg-btn.cancel{background:#f0f0f0;color:#666}
+.dlg-btn.ok{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff}
+
+.analyze-loading{position:absolute;inset:0;background:rgba(15,15,26,0.92);z-index:700;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
+.analyze-loading.show{opacity:1;pointer-events:all}
+.analyze-spinner{width:40px;height:40px;border:3px solid rgba(124,58,237,0.2);border-top-color:#7c3aed;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.analyze-loading-text{color:#fff;font-size:16px;font-weight:600;margin-bottom:6px}
+.analyze-loading-sub{color:#999;font-size:13px}
+
+.toast{position:absolute;top:56px;left:50%;transform:translateX(-50%);padding:10px 20px;background:rgba(124,58,237,0.9);color:#fff;border-radius:8px;font-size:14px;z-index:600;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+
+/* === Debug Panel === */
+.debug-panel{width:280px;align-self:flex-start;background:#fff;border-radius:12px;padding:16px;border:1px solid #ddd;box-shadow:0 1px 3px rgba(0,0,0,0.06);position:sticky;top:20px}
+.debug-title{font-size:14px;font-weight:700;color:#333;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #eee}
+.debug-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.debug-label{font-size:13px;color:#666;min-width:70px}
+.debug-btn{padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid #ddd;cursor:pointer;font-family:inherit;background:#f5f5f5;color:#444;transition:all .15s}
+.debug-btn:active{transform:scale(.96)}
+.debug-btn.on{background:#7c3aed;color:#fff;border-color:#7c3aed}
+.debug-input{width:60px;padding:5px 8px;border:1px solid #ddd;border-radius:6px;font-size:13px;text-align:center;outline:none}
+.debug-input:focus{border-color:#7c3aed}
+.debug-section{margin-top:4px;padding-top:8px;border-top:1px solid #f0f0f0}
+
+/* === Guide Panel === */
+.guide-panel{width:380px;align-self:flex-start;background:#fff;border-radius:14px;border:1px solid #ddd;box-shadow:0 1px 3px rgba(0,0,0,0.06);overflow:hidden;position:sticky;top:20px;max-height:calc(100vh - 40px)}
+.guide-header{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;padding:14px 18px;font-size:16px;font-weight:700;letter-spacing:1px}
+.guide-body{padding:16px 18px;max-height:calc(100vh - 40px - 48px);overflow-y:auto}
+.guide-body::-webkit-scrollbar{width:4px}
+.guide-body::-webkit-scrollbar-thumb{background:#ccc;border-radius:2px}
+.guide-section{margin-bottom:18px}
+.guide-section:last-child{margin-bottom:0}
+.guide-sec-title{font-size:14px;font-weight:700;color:#7c3aed;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.guide-sec-title .num{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#7c3aed;color:#fff;font-size:11px;font-weight:700;flex-shrink:0}
+.guide-item{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;font-size:13px;color:#555;line-height:1.6}
+.guide-dot{width:5px;height:5px;border-radius:50%;background:#ccc;flex-shrink:0;margin-top:7px}
+.guide-dot.purple{background:#7c3aed}
+.guide-dot.green{background:#16a34a}
+.guide-dot.orange{background:#d97706}
+.guide-dot.red{background:#ef4444}
+.guide-dot.blue{background:#3b82f6}
+.guide-tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:3px;font-weight:600;vertical-align:middle}
+.guide-tag.purple{color:#7c3aed;background:rgba(124,58,237,0.08)}
+.guide-tag.green{color:#16a34a;background:rgba(22,163,74,0.08)}
+.guide-tag.orange{color:#d97706;background:rgba(217,119,6,0.08)}
+.guide-tag.red{color:#ef4444;background:rgba(239,68,68,0.08)}
+.guide-tag.blue{color:#3b82f6;background:rgba(59,130,246,0.08)}
+.guide-tag.gray{color:#888;background:#f0f0f0}
+.guide-divider{border:none;border-top:1px solid #f0f0f0;margin:14px 0}
+.guide-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
+.guide-table th{background:#f3f0fa;color:#7c3aed;font-weight:600;padding:8px 10px;text-align:left;border:1px solid #e0dcd4}
+.guide-table td{padding:7px 10px;border:1px solid #e0dcd4;color:#444;line-height:1.5;vertical-align:top}
+.guide-table tr:nth-child(even) td{background:#fafaf7}
+</style>
+</head>
+<body>
+
+<!-- ===== 左栏：原型图 ===== -->
+<div class="phone-frame">
+  <div class="phone-notch"></div>
+  <div class="status-bar"><span>9:41</span><span>&#9679;&#9679;&#9679;&#9679;</span></div>
+
+  <!-- ===== 一级页面：角色列表 ===== -->
+  <div class="app-content" id="mainPage">
+    <div class="nav-bar">
+      <div class="back" onclick="goBack()">&larr;</div>
+      <div class="title">创建角色形象</div>
+      <div class="points-badge" id="pointsBadge" onclick="openPointsSheet()">100积分</div>
+      <div class="lib-btn" onclick="openLib()">角色库</div>
+      <div style="font-size:13px;color:#999;margin-left:10px">2/5</div>
+    </div>
+    <div class="scroll" id="cardList"></div>
+    <div class="bottom-bar">
+      <button class="bar-btn ghost" onclick="reAnalyze()">重新分析</button>
+      <button class="bar-btn solid" id="nextBtn" onclick="genAllOrNext()">一键生成</button>
+    </div>
+  </div>
+
+  <!-- ===== 二级页面：角色编辑 ===== -->
+  <div class="detail-page" id="detPage">
+    <div class="det-nav">
+      <div class="back" onclick="closeDet()">&larr;</div>
+      <div class="title" id="detTitle">角色编辑</div>
+      <div class="points-badge" id="pointsBadge2" onclick="openPointsSheet()">100积分</div>
+    </div>
+    <div class="det-scroll" id="detBody"></div>
+  </div>
+
+  <!-- Library -->
+  <div class="sheet-overlay" id="libSheet">
+    <div class="sheet-body">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">角色库</div>
+      <div class="sheet-grid" id="libGrid"></div>
+    </div>
+  </div>
+
+  <!-- Login Popup -->
+  <div class="login-overlay" id="loginPopup">
+    <div class="login-box">
+      <div class="login-title">手机号登录</div>
+      <div class="login-field">
+        <input id="phoneInput" type="tel" placeholder="请输入手机号" maxlength="11">
+      </div>
+      <div class="login-field">
+        <input id="codeInput" type="text" placeholder="验证码" maxlength="6">
+        <div class="code-btn" onclick="sendCode()">获取验证码</div>
+      </div>
+      <button class="login-submit" onclick="doLogin()">登录</button>
+      <div class="login-close" onclick="closeLogin()">暂不登录</div>
+    </div>
+  </div>
+
+  <!-- Points Insufficient Sheet -->
+  <div class="points-sheet" id="pointsSheet">
+    <div class="points-sheet-body">
+      <div class="points-sheet-handle"></div>
+      <div class="points-sheet-icon">&#128176;</div>
+      <div class="points-sheet-title">积分不足</div>
+      <div class="points-sheet-desc">当前积分余额不足以完成此操作，请充值后继续</div>
+      <div class="points-sheet-info">
+        <span class="psi-label">当前积分</span>
+        <span class="psi-val" id="psiVal">0</span>
+      </div>
+      <div class="points-sheet-btns">
+        <button class="psb cancel" onclick="closePointsSheet()">取消</button>
+        <button class="psb ok" id="psiOkBtn" onclick="goRecharge()">去充值</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dialog -->
+  <div class="dlg-overlay" id="dlg">
+    <div class="dlg-box">
+      <div class="dlg-title" id="dlgT"></div>
+      <div class="dlg-msg" id="dlgM"></div>
+      <div class="dlg-btns">
+        <button class="dlg-btn cancel" onclick="closeDlg()">取消</button>
+        <button class="dlg-btn ok" id="dlgOk">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Photo Source Picker -->
+  <div class="dlg-overlay" id="photoPicker">
+    <div class="dlg-box">
+      <div class="dlg-title">选择照片</div>
+      <div class="dlg-msg">请选择参考图的获取方式</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="dlg-btn ok" onclick="pickFromCamera()" style="width:100%">拍照</button>
+        <button class="dlg-btn ok" onclick="pickFromAlbum()" style="width:100%;background:#fff;color:#7c3aed;border:1px solid #7c3aed">从相册选择</button>
+        <button class="dlg-btn cancel" onclick="closePhotoPicker()" style="width:100%">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Permission Denied Guide -->
+  <div class="dlg-overlay" id="permGuide">
+    <div class="dlg-box">
+      <div class="dlg-title">无法访问相册</div>
+      <div class="dlg-msg">请在系统设置中开启相册访问权限，以便选择参考照片</div>
+      <div style="text-align:center;margin-bottom:14px">
+        <div style="width:48px;height:48px;border-radius:12px;background:#f0f0f0;display:inline-flex;align-items:center;justify-content:center;font-size:28px">&#128247;</div>
+        <div style="font-size:12px;color:#aaa;margin-top:4px">设置 → AI漫剧 → 照片</div>
+      </div>
+      <div class="dlg-btns">
+        <button class="dlg-btn cancel" onclick="closePermGuide()">取消</button>
+        <button class="dlg-btn ok" onclick="goToSettings()">去设置</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<!-- ===== 操作说明 ===== -->
+<div class="guide-panel">
+  <div class="guide-header">环节2 · 创建角色形象</div>
+  <div class="guide-body">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">1</span>页面结构</div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span><span class="guide-tag purple">一级页面</span> 角色卡片列表，每张卡片含角色图区+角色信息+状态标签</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span><span class="guide-tag purple">二级页面</span> 点击卡片进入，含模式切换、描述/外貌编辑、参考图上传、生成按钮</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span><span class="guide-tag blue">角色库</span> 半屏弹窗，展示本剧已生成角色，支持引入到当前集</span></div>
+      <div class="guide-item"><div class="guide-dot gray"></div><span>所有交互均为前端模拟，AI返回预设demo数据</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">2</span>一级页面操作</div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>点击卡片区域 → 进入二级页面编辑角色</span></div>
+      <div class="guide-item"><div class="guide-dot green"></div><span>点击 <span class="guide-tag green">生成形象</span> 按钮 → 校验登录+积分 → 积分充足直接执行（无确认弹窗）</span></div>
+      <div class="guide-item"><div class="guide-dot green"></div><span>点击 <span class="guide-tag green">重新生成</span> 按钮 → 积分充足直接执行（无确认弹窗）</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>点击已生成角色图 → 全屏放大预览，点击空白关闭</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>点击 <span class="guide-tag blue">角色库</span> → 半屏弹出，3列网格展示本剧已有角色</span></div>
+      <div class="guide-item"><div class="guide-dot orange"></div><span>点击 <span class="guide-tag orange">重新分析</span> → 确认弹窗（消耗2积分），全页等待遮罩，拆解完成后刷新角色列表</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">3</span>二级页面操作</div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span><span class="guide-tag purple">模式切换</span> 点击「文生图」/「文+参考图」标签切换生成模式</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>参考图上传：模式2下点击+号 → 选择照片 → 预览缩略图</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>参考图替换/删除：点击已上传缩略图 → 弹出选择「拍照/从相册选择/删除」</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span><span class="guide-tag purple">描述/外貌编辑</span> 点击文本进入编辑态（紫色边框），描述≤500字，外貌≤80字</span></div>
+      <div class="guide-item"><div class="guide-dot orange"></div><span>编辑已生成角色 → 自动标记 <span class="guide-tag orange">需重新生成</span></span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>放大预览：点击已生成角色图 → 全屏查看</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>点击 <span class="guide-tag purple">←返回</span> → 直接返回一级页面（无确认弹窗）</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">4</span>角色图状态</div>
+      <div class="guide-item"><div class="guide-dot gray"></div><span><span class="guide-tag gray">待生成</span> 占位图+「生成形象」按钮</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span><span class="guide-tag purple">生成中</span> 骨架屏动画，按钮隐藏</span></div>
+      <div class="guide-item"><div class="guide-dot green"></div><span><span class="guide-tag green">已生成</span> 角色图展示+「重新生成」按钮+可放大预览</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span><span class="guide-tag blue">已选择</span> 角色图（来自角色库引入/自动填充）+「重新生成」按钮</span></div>
+      <div class="guide-item"><div class="guide-dot red"></div><span><span class="guide-tag red">生成失败</span> ❌图标+「重新生成」按钮+退还积分</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">5</span>底部按钮逻辑</div>
+      <div class="guide-item"><div class="guide-dot orange"></div><span><span class="guide-tag orange">重新分析</span> 消耗2积分+确认弹窗，全页等待遮罩后刷新角色列表</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span><span class="guide-tag purple">一键生成</span> 并行后台生成所有待生成角色，每个独立完成后toast通知</span></div>
+      <div class="guide-item"><div class="guide-dot green"></div><span><span class="guide-tag green">下一步</span> 全部角色已生成后显示，跳转环节3</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">6</span>角色库规则</div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>角色库按剧（series）隔离，不同剧集互不可见</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>角色图生成后自动存入角色库</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>非第一集：自动从角色库匹配填充（状态「已选择」）</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>手动引入：点击角色库 → 选择引入 → 带入角色图+描述+外貌</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>同名角色不可重复引入，按钮变为「已选择」</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">7</span>前序环节联动</div>
+      <div class="guide-item"><div class="guide-dot orange"></div><span>画风变更 → 所有已生成角色标记 <span class="guide-tag orange">需重新生成</span></span></div>
+      <div class="guide-item"><div class="guide-dot orange"></div><span>原因：画风变更后角色图视觉风格不一致</span></div>
+      <div class="guide-item"><div class="guide-dot orange"></div><span>调试面板点击「模拟画风变更」可验证此联动效果</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">8</span>相册权限</div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>首次上传 → 弹出系统权限请求「允许访问照片？」</span></div>
+      <div class="guide-item"><div class="guide-dot red"></div><span>已拒绝 → 弹出引导弹窗「无法访问相册」→ 点击「去设置」跳转系统设置</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>返回后重检：从设置返回时自动重新检查权限状态</span></div>
+      <div class="guide-item"><div class="guide-dot gray"></div><span>调试面板可手动切换「未请求/已授权/已拒绝」状态</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">9</span>返回与导航</div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>一级页面←返回 → 确认弹窗「返回后剧本将重新拆解，确认返回吗？」</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>二级页面←返回 → 直接返回一级页面（无确认弹窗）</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>返回按钮独立于重新分析，两者互不影响</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">10</span>积分与登录</div>
+      <div class="guide-item"><div class="guide-dot green"></div><span>角色图生成：10积分/张，生成/重新生成/一键生成均需消耗</span></div>
+      <div class="guide-item"><div class="guide-dot orange"></div><span>重新分析：2积分/次（唯一需确认弹窗的操作）</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>校验流程：未登录→登录弹窗 → 积分不足→积分不足半屏 → 充足→直接执行</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>积分不足半屏：非会员→「开通会员」，会员→「购买积分包」</span></div>
+      <div class="guide-item"><div class="guide-dot green"></div><span>生成成功扣减积分，失败/超时解冻退还</span></div>
+      <div class="guide-item"><div class="guide-dot green"></div><span>生成/重新生成无确认弹窗，积分充足直接执行</span></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== 调试面板 ===== -->
+<div class="debug-panel">
+  <div class="debug-title">调试面板</div>
+  <div class="debug-row">
+    <span class="debug-label">登录状态</span>
+    <button class="debug-btn" id="dbLogin" onclick="toggleLogin()">未登录</button>
+  </div>
+  <div class="debug-row">
+    <span class="debug-label">积分</span>
+    <input class="debug-input" id="dbPoints" type="number" value="100" onchange="setPoints(this.value)">
+    <span style="font-size:12px;color:#999">积分</span>
+  </div>
+  <div class="debug-row">
+    <span class="debug-label">会员</span>
+    <button class="debug-btn" id="dbMember" onclick="toggleMember()">非会员</button>
+  </div>
+  <div class="debug-section">
+    <div class="debug-row">
+      <span class="debug-label">角色状态</span>
+      <button class="debug-btn" onclick="setState('all-pending')">全部待生成</button>
+      <button class="debug-btn" onclick="setState('all-done')">全部已生成</button>
+      <button class="debug-btn" onclick="setState('all-failed')">全部失败</button>
+      <button class="debug-btn" onclick="setState('all-generating')">全部生成中</button>
+      <button class="debug-btn" onclick="setState('mixed')">混合状态</button>
+      <button class="debug-btn" onclick="setState('reset')">重置</button>
+    </div>
+  </div>
+  <div class="debug-section">
+    <div class="debug-row">
+      <span class="debug-label">集数模拟</span>
+      <button class="debug-btn" id="dbEp1" onclick="switchEpisode(1)">第1集</button>
+      <button class="debug-btn" id="dbEp2" onclick="switchEpisode(2)">第2集</button>
+    </div>
+  </div>
+  <div class="debug-section">
+    <div class="debug-row">
+      <span class="debug-label">画风变更</span>
+      <button class="debug-btn" onclick="simStyleChange()">模拟画风变更</button>
+    </div>
+  </div>
+  <div class="debug-section">
+    <div class="debug-row">
+      <span class="debug-label">生成结果</span>
+      <button class="debug-btn" id="dbFailMode" onclick="toggleFailMode()">成功</button>
+    </div>
+  </div>
+  <div class="debug-section">
+    <div class="debug-row">
+      <span class="debug-label">相册权限</span>
+      <button class="debug-btn" id="dbPhotoPerm" onclick="togglePhotoPerm()">未请求</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let isLoggedIn=false;
+let userPoints=100;
+let isMember=false;
+const CHAR_COST=10;
+let pendingGenCallback=null;
+let simFailMode=false;
+
+const chars=[
+  {id:1,name:'陆沉',role:'主角',emoji:'&#128100;',
+   desc:'水墨晕染底色与精致3D渲染结合的古风仙侠画面，青绿金赤色调，柔和立体光影，白色纯色背景，正面全身照，同一个角色，黑色长发随意束起几缕碎发垂落额前，身形清瘦挺拔约一米七八，灰色粗布道袍袖口磨损腰系麻绳，眉头微蹙目光沉静，左手腕内侧有一道淡色旧伤疤，站立姿势，包含完整脚部，无背景杂物',
+   appear:'身穿灰色粗布道袍黑发披散面容清瘦的青年男子',
+   mode:1,done:false,generating:false,failed:false,refUp:false,imported:false,needsRegen:false,source:'ai_parse'},
+  {id:2,name:'白芷',role:'配角',emoji:'&#127800;',
+   desc:'水墨晕染底色与精致3D渲染结合的古风仙侠画面，青绿金赤色调，柔和立体光影，白色纯色背景，正面全身照，同一个角色，乌黑长发及腰以白玉簪固定，身姿纤细约一米六五，白色儒裙腰系青色丝带袖口绣有药草纹样，眉目温婉嘴角含笑，右耳垂有一颗小痣，站立姿势，包含完整脚部，无背景杂物',
+   appear:'身穿白色儒裙长发及腰眉目温婉的年轻女子',
+   mode:1,done:false,generating:false,failed:false,refUp:false,imported:false,needsRegen:false,source:'ai_parse'},
+  {id:3,name:'苏墨',role:'反派',emoji:'&#128128;',
+   desc:'水墨晕染底色与精致3D渲染结合的古风仙侠画面，青绿金赤色调，柔和立体光影，白色纯色背景，正面全身照，同一个角色，银白色短发利落向后梳起，身材高大约一米八五，黑色劲装外罩深紫长袍肩部有暗纹，面容冷峻嘴角微扬似笑非笑，左眼下方有一道细长疤痕，站立姿势，包含完整脚部，无背景杂物',
+   appear:'身穿黑色劲装外罩深紫长袍银发冷峻的青年男子',
+   mode:1,done:false,generating:false,failed:false,refUp:false,imported:false,needsRegen:false,source:'ai_parse'},
+];
+
+let curId=null;
+const DESC_MAX=500;
+const APPEAR_MAX=80;
+
+function updatePointsUI(){
+  const txt=userPoints+'积分';
+  const b1=document.getElementById('pointsBadge');if(b1)b1.textContent=txt;
+  const b2=document.getElementById('pointsBadge2');if(b2)b2.textContent=txt;
+  document.getElementById('dbPoints').value=userPoints;
+}
+
+// ===== 调试面板 =====
+function toggleLogin(){
+  isLoggedIn=!isLoggedIn;
+  const btn=document.getElementById('dbLogin');
+  btn.textContent=isLoggedIn?'已登录':'未登录';
+  btn.className='debug-btn'+(isLoggedIn?' on':'');
+}
+function setPoints(v){userPoints=parseInt(v)||0;updatePointsUI();}
+function toggleMember(){
+  isMember=!isMember;
+  const btn=document.getElementById('dbMember');
+  btn.textContent=isMember?'会员':'非会员';
+  btn.className='debug-btn'+(isMember?' on':'');
+}
+function setState(mode){
+  if(mode==='all-pending') chars.forEach(c=>{c.done=false;c.generating=false;c.failed=false;c.imported=false;c.needsRegen=false;c.source='ai_parse';});
+  else if(mode==='all-done') chars.forEach(c=>{c.done=true;c.generating=false;c.failed=false;c.needsRegen=false;});
+  else if(mode==='all-failed') chars.forEach(c=>{c.done=false;c.generating=false;c.failed=true;c.needsRegen=false;});
+  else if(mode==='all-generating') chars.forEach(c=>{c.done=false;c.generating=true;c.failed=false;c.needsRegen=false;});
+  else if(mode==='mixed'){chars[0].done=true;chars[0].generating=false;chars[0].failed=false;chars[0].needsRegen=false;chars[1].done=false;chars[1].generating=true;chars[1].failed=false;chars[1].needsRegen=false;chars[2].done=false;chars[2].generating=false;chars[2].failed=true;chars[2].needsRegen=false;}
+  else if(mode==='reset'){chars.forEach(c=>{c.done=false;c.generating=false;c.failed=false;c.imported=false;c.needsRegen=false;c.source='ai_parse';});userPoints=100;isLoggedIn=false;isMember=false;document.getElementById('dbLogin').textContent='未登录';document.getElementById('dbLogin').className='debug-btn';document.getElementById('dbMember').textContent='非会员';document.getElementById('dbMember').className='debug-btn';}
+  renderList();
+  if(curId)renderDet();
+  updatePointsUI();
+}
+
+// ===== 集数切换 & 自动填充 =====
+let currentEpisode=1;
+
+function switchEpisode(ep){
+  currentEpisode=ep;
+  document.getElementById('dbEp1').className='debug-btn'+(ep===1?' on':'');
+  document.getElementById('dbEp2').className='debug-btn'+(ep===2?' on':'');
+  chars.forEach(c=>{c.done=false;c.generating=false;c.failed=false;c.imported=false;c.needsRegen=false;c.source='ai_parse';});
+  if(ep===2){
+    // 第2集：AI拆解出新角色苏墨，角色库中有陆沉、白芷
+    chars.length=0;
+    chars.push(
+      {id:1,name:'苏墨',role:'反派',desc:'水墨晕染底色与精致3D渲染结合的古风仙侠画面，青绿金赤色调，柔和立体光影，白色纯色背景，正面全身照，同一个角色，银白色短发利落向后梳起，身材高大约一米八五，黑色劲装外罩深紫长袍肩部有暗纹，面容冷峻嘴角微扬似笑非笑，左眼下方有一道细长疤痕，站立姿势，包含完整脚部，无背景杂物',appear:'身穿黑色劲装外罩深紫长袍银发冷峻的青年男子',mode:1,done:false,generating:false,failed:false,refUp:false,imported:false,needsRegen:false,source:'ai_parse'},
+    );
+    autoFillFromLib();
+  }else{
+    chars.length=0;
+    chars.push(
+      {id:1,name:'陆沉',role:'主角',desc:'水墨晕染底色与精致3D渲染结合的古风仙侠画面，青绿金赤色调，柔和立体光影，白色纯色背景，正面全身照，同一个角色，黑色长发随意束起几缕碎发垂落额前，身形清瘦挺拔约一米七八，灰色粗布道袍袖口磨损腰系麻绳，眉头微蹙目光沉静，左手腕内侧有一道淡色旧伤疤，站立姿势，包含完整脚部，无背景杂物',appear:'身穿灰色粗布道袍黑发披散面容清瘦的青年男子',mode:1,done:false,generating:false,failed:false,refUp:false,imported:false,needsRegen:false,source:'ai_parse'},
+      {id:2,name:'白芷',role:'配角',desc:'水墨晕染底色与精致3D渲染结合的古风仙侠画面，青绿金赤色调，柔和立体光影，白色纯色背景，正面全身照，同一个角色，乌黑长发及腰以白玉簪固定，身姿纤细约一米六五，白色儒裙腰系青色丝带袖口绣有药草纹样，眉目温婉嘴角含笑，右耳垂有一颗小痣，站立姿势，包含完整脚部，无背景杂物',appear:'身穿白色儒裙长发及腰眉目温婉的年轻女子',mode:1,done:false,generating:false,failed:false,refUp:false,imported:false,needsRegen:false,source:'ai_parse'},
+      {id:3,name:'苏墨',role:'反派',desc:'水墨晕染底色与精致3D渲染结合的古风仙侠画面，青绿金赤色调，柔和立体光影，白色纯色背景，正面全身照，同一个角色，银白色短发利落向后梳起，身材高大约一米八五，黑色劲装外罩深紫长袍肩部有暗纹，面容冷峻嘴角微扬似笑非笑，左眼下方有一道细长疤痕，站立姿势，包含完整脚部，无背景杂物',appear:'身穿黑色劲装外罩深紫长袍银发冷峻的青年男子',mode:1,done:false,generating:false,failed:false,refUp:false,imported:false,needsRegen:false,source:'ai_parse'},
+    );
+  }
+  closeDet();
+  renderList();
+  updatePointsUI();
+  showToast(ep===1?'切换至第1集':'切换至第2集（已自动填充角色库角色）');
+}
+
+// ===== 校验流程 =====
+function checkAndRun(callback,cost){
+  if(!isLoggedIn){pendingGenCallback=callback;openLogin();return;}
+  if(userPoints<cost){openPointsSheet();return;}
+  callback();
+}
+
+// ===== Login =====
+function openLogin(){document.getElementById('loginPopup').classList.add('show');}
+function closeLogin(){
+  document.getElementById('loginPopup').classList.remove('show');
+  document.getElementById('phoneInput').value='';
+  document.getElementById('codeInput').value='';
+  pendingGenCallback=null;
+}
+function sendCode(){showToast('验证码已发送');}
+function doLogin(){
+  const phone=document.getElementById('phoneInput').value.trim();
+  if(phone.length<11){showToast('请输入正确的手机号');return;}
+  isLoggedIn=true;
+  document.getElementById('dbLogin').textContent='已登录';
+  document.getElementById('dbLogin').className='debug-btn on';
+  closeLogin();
+  showToast('登录成功');
+  if(pendingGenCallback){pendingGenCallback();pendingGenCallback=null;}
+}
+
+// ===== Points Insufficient =====
+function openPointsSheet(){
+  document.getElementById('psiVal').textContent=userPoints;
+  document.getElementById('psiOkBtn').textContent=isMember?'购买积分包':'开通会员';
+  document.getElementById('pointsSheet').classList.add('show');
+}
+function closePointsSheet(){document.getElementById('pointsSheet').classList.remove('show');}
+function goRecharge(){
+  closePointsSheet();
+  showToast(isMember?'跳转积分包充值页':'跳转会员开通页');
+}
+
+// ===== 一级页面渲染 =====
+function renderList(){
+  document.getElementById('cardList').innerHTML=chars.map(c=>`
+  <div class="char-card" onclick="openDet(${c.id})">
+    <div class="char-img-wrap" onclick="event.stopPropagation()">
+      <div class="char-img-box" id="ibox-${c.id}" onclick="${c.done?'previewImg('+c.id+')':'void(0)'}">
+        ${c.done
+          ?`<div class="gimg" style="display:block;background:linear-gradient(135deg,#e8dff5,#d5e8f0)"></div>`
+          :c.failed
+          ?`<div class="fail" style="display:flex"><div class="fail-icon">&#10060;</div><div class="fail-txt">生成失败</div></div>`
+          :`<div class="ph"><div class="ph-icon">&#128444;</div><div class="ph-txt">9:16</div></div>`
+        }
+        <div class="skel" id="skel-${c.id}"></div>
+      </div>
+      ${c.generating
+        ?``
+        :c.done
+        ?`<button class="gen-btn out" onclick="event.stopPropagation();onRegen(${c.id})">重新生成</button>`
+        :`<button class="gen-btn pri" onclick="event.stopPropagation();onGenOne(${c.id})">生成形象</button>`
+      }
+    </div>
+    <div class="char-info">
+      <div class="char-name-row">
+        <span class="char-name">${c.name}</span>
+        <span class="char-role">${c.role}</span>
+        <span class="char-arrow">&#8250;</span>
+      </div>
+      <div class="char-desc">${c.desc}</div>
+      <div class="char-status">
+        ${c.done&&c.needsRegen
+          ?`<span class="status-tag" style="color:#d97706;background:rgba(217,119,6,0.08)">需重新生成</span>`
+          :c.done
+          ?c.imported
+            ?`<span class="status-tag done">已选择</span>`
+            :`<span class="status-tag done">已生成</span>`
+          :c.generating
+          ?`<span class="status-tag pending">生成中...</span>`
+          :c.failed
+          ?`<span class="status-tag" style="color:#ef4444;background:rgba(239,68,68,0.08)">生成失败</span>`
+          :c.needsRegen
+          ?`<span class="status-tag" style="color:#d97706;background:rgba(217,119,6,0.08)">需重新生成</span>`
+          :`<span class="status-tag pending">待生成</span>`
+        }
+      </div>
+    </div>
+  </div>`).join('');
+  updateBtn();
+}
+
+// ===== 二级页面 =====
+function openDet(id){
+  curId=id;
+  const c=chars.find(x=>x.id===id);
+  document.getElementById('detTitle').textContent=c.name;
+  renderDet();
+  document.getElementById('detPage').classList.add('show');
+}
+function closeDet(){document.getElementById('detPage').classList.remove('show');curId=null;}
+
+function renderDet(){
+  const c=chars.find(x=>x.id===curId);
+  document.getElementById('detBody').innerHTML=`
+    <div class="det-img-area" id="detImg" ${c.done?'onclick="previewImg('+c.id+')"' :''} style="${c.done?'cursor:pointer':''}">
+      ${c.done
+        ?`<div class="gimg" style="display:block;background:linear-gradient(135deg,#e8dff5,#d5e8f0)"></div>
+          <div class="regen-tag" style="display:block" onclick="event.stopPropagation();onRegen(${c.id})">重新生成</div>`
+        :c.failed
+        ?`<div class="fail-overlay" style="display:flex"><div class="fail-icon">&#10060;</div><div class="fail-txt">生成失败，请重试</div></div>`
+        :`<div class="ph"><div class="ph-icon">&#128444;</div><div class="ph-txt">9:16 正面全身照</div></div>`
+      }
+      <div class="skel" id="detSkel"></div>
+    </div>
+
+    <div class="det-section">
+      <div class="det-label">生成模式</div>
+      <div class="det-mode-row">
+        <div class="det-mode-tabs">
+          <div class="det-mode-tab ${c.mode===1?'on':''}" onclick="setMode(${c.id},1)">文生图</div>
+          <div class="det-mode-tab ${c.mode===2?'on':''}" onclick="setMode(${c.id},2)">文+参考图</div>
+        </div>
+      </div>
+      <div class="det-ref ${c.mode===2?'show':''}">
+        <div class="det-ref-row">
+          <div class="det-ref-thumb" style="position:relative" onclick="${c.refUp?'chooseRefAction('+c.id+')':'uploadRef('+c.id+')'}">
+            ${c.refUp
+              ?`<div style="width:100%;height:100%;background:linear-gradient(135deg,#f9a8d4,#a78bfa)"></div>
+                <button class="ref-del" style="display:flex" onclick="event.stopPropagation();delRef(${c.id})">&#10005;</button>`
+              :`<span class="plus">&#43;</span>`
+            }
+          </div>
+          <div class="det-ref-hint">请上传正面清晰人脸照片<br>五官以参考图为准，服装发型以描述为准<br>${c.refUp?'点击缩略图可替换或删除':''}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="det-section">
+      <div class="det-label">角色描述 <span class="det-char-count" id="desc-count">${c.desc.length}/${DESC_MAX}</span></div>
+      <div class="det-text" id="det-desc" onclick="editDet('desc')">${c.desc}</div>
+      <div class="det-text error-msg" id="desc-err">角色描述不能为空，最大${DESC_MAX}字</div>
+    </div>
+
+    <div class="det-section">
+      <div class="det-label">角色外貌 <span class="det-char-count" id="appear-count">${c.appear.length}/${APPEAR_MAX}</span></div>
+      <div class="det-text" id="det-appear" onclick="editDet('appear')" style="background:rgba(124,58,237,0.04);border:1px solid rgba(124,58,237,0.08)">${c.appear}</div>
+      <div class="det-text error-msg" id="appear-err">角色外貌不能为空，最大${APPEAR_MAX}字</div>
+    </div>
+
+    <button class="det-gen-btn" onclick="onGenFromDet(${c.id})" ${c.generating?'disabled':''}>
+      ${c.generating?'生成中...':c.done?'重新生成':c.failed?'重新生成':'生成角色形象'}
+    </button>
+  `;
+}
+
+function editDet(field){
+  const c=chars.find(x=>x.id===curId);
+  const el=document.getElementById('det-'+field);
+  const maxLen=field==='desc'?DESC_MAX:APPEAR_MAX;
+  const countEl=document.getElementById(field+'-count');
+  const errEl=document.getElementById(field+'-err');
+  if(el.contentEditable==='true')return;
+  el.contentEditable='true';
+  el.classList.add('editing');
+  el.focus();
+  const rng=document.createRange();
+  rng.selectNodeContents(el);
+  window.getSelection().removeAllRanges();
+  window.getSelection().addRange(rng);
+  const updateCount=()=>{
+    const len=el.textContent.trim().length;
+    if(countEl){countEl.textContent=len+'/'+maxLen;countEl.className='det-char-count'+(len>maxLen?' warn':'');}
+  };
+  el.oninput=updateCount;
+  const done=()=>{
+    el.contentEditable='false';
+    el.classList.remove('editing');
+    const val=el.textContent.trim();
+    const len=val.length;
+    if(!val||len>maxLen){
+      el.classList.add('error');
+      if(errEl)errEl.classList.add('show');
+      if(!val)el.textContent=field==='desc'?c.desc:c.appear;
+      else{if(field==='desc')c.desc=val;else c.appear=val;}
+      setTimeout(()=>{el.classList.remove('error');if(errEl)errEl.classList.remove('show');},2000);
+    }else{
+      if(field==='desc') c.desc=val;
+      else c.appear=val;
+    }
+    if(c.done){c.needsRegen=true;renderDet();renderList();}
+  };
+  el.onblur=done;
+  el.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();el.blur();}};
+}
+
+function setMode(id,m){
+  const c=chars.find(x=>x.id===id);
+  c.mode=m;
+  if(m===2&&!c.desc.includes('参考图中人物的面部五官和形象')){
+    c.desc=c.desc.replace('白色纯色背景，正面全身照','白色纯色背景，参考图中人物的面部五官和形象，正面全身照');
+  }
+  if(m===1&&c.desc.includes('参考图中人物的面部五官和形象')){
+    c.desc=c.desc.replace('参考图中人物的面部五官和形象，','');
+  }
+  renderDet();
+}
+
+let photoPermStatus='notDetermined'; // notDetermined / authorized / denied
+let pendingPickCharId=null;
+
+function uploadRef(id){
+  pendingPickCharId=id;
+  // 先检查权限
+  if(photoPermStatus==='denied'){
+    openPermGuide();return;
+  }
+  if(photoPermStatus==='notDetermined'){
+    // 模拟系统权限弹窗
+    showDlg('系统权限请求','允许"AI漫剧"访问你的照片？',()=>{
+      photoPermStatus='authorized';
+      document.getElementById('dbPhotoPerm').textContent='已授权';
+      document.getElementById('dbPhotoPerm').className='debug-btn on';
+      openPhotoPicker();
+    });
+    return;
+  }
+  // authorized → 打开选择弹窗
+  openPhotoPicker();
+}
+
+function openPhotoPicker(){document.getElementById('photoPicker').classList.add('show');}
+function closePhotoPicker(){document.getElementById('photoPicker').classList.remove('show');}
+
+function pickFromCamera(){
+  closePhotoPicker();
+  showToast('打开相机（模拟）');
+  setTimeout(()=>{doPickPhoto();},800);
+}
+function pickFromAlbum(){
+  closePhotoPicker();
+  showToast('打开相册（模拟）');
+  setTimeout(()=>{doPickPhoto();},800);
+}
+function doPickPhoto(){
+  const c=chars.find(x=>x.id===pendingPickCharId);
+  if(c){c.refUp=true;renderDet();}
+  showToast('参考图已选择');
+}
+
+function openPermGuide(){document.getElementById('permGuide').classList.add('show');}
+function closePermGuide(){document.getElementById('permGuide').classList.remove('show');}
+function goToSettings(){
+  closePermGuide();
+  showToast('跳转系统设置（模拟）');
+  // 模拟用户在设置中授权后返回
+  setTimeout(()=>{
+    photoPermStatus='authorized';
+    document.getElementById('dbPhotoPerm').textContent='已授权';
+    document.getElementById('dbPhotoPerm').className='debug-btn on';
+    showToast('相册权限已开启');
+    openPhotoPicker();
+  },1500);
+}
+
+// ===== 生成入口 =====
+function onGenOne(id){
+  checkAndRun(()=>genOne(id),CHAR_COST);
+}
+function onGenFromDet(id){
+  checkAndRun(()=>genOne(id),CHAR_COST);
+}
+function onRegen(id){checkAndRun(()=>regen(id),CHAR_COST);}
+
+// ===== Generation =====
+function genOne(id){
+  const c=chars.find(x=>x.id===id);
+  if(c.generating)return;
+  c.generating=true;c.failed=false;c.done=false;c.needsRegen=false;
+  userPoints-=CHAR_COST;
+  updatePointsUI();
+  renderList();
+  if(curId===id) renderDet();
+  const box=document.getElementById('ibox-'+id);
+  if(box){
+    const ph=box.querySelector('.ph');const gi=box.querySelector('.gimg');
+    const fl=box.querySelector('.fail');const sk=box.querySelector('.skel');
+    if(ph)ph.style.display='none';if(gi)gi.style.display='none';
+    if(fl)fl.style.display='none';if(sk)sk.style.display='block';
+  }
+
+  setTimeout(()=>{
+    c.generating=false;
+    if(simFailMode){
+      c.failed=true;c.done=false;c.needsRegen=false;
+      userPoints+=CHAR_COST;
+      updatePointsUI();
+      renderList();
+      if(curId===id) renderDet();
+      showToast(c.name+' 生成失败，请重试');
+    }else{
+      c.done=true;c.needsRegen=false;c.source='ai_parse';
+      // 自动存入角色库
+      if(!seriesLibChars.some(l=>l.name===c.name)){
+        seriesLibChars.push({id:'l'+Date.now(),name:c.name,role:c.role,desc:c.desc,appear:c.appear,mode:c.mode,done:true,generating:false,failed:false,refUp:false});
+      }
+      renderList();
+      if(curId===id) renderDet();
+      showToast(c.name+' 形象已生成');
+    }
+  },2200);
+}
+
+function genOneFail(id){
+  const c=chars.find(x=>x.id===id);
+  if(c.generating)return;
+  c.generating=true;c.failed=false;c.done=false;c.needsRegen=false;
+  userPoints-=CHAR_COST;
+  updatePointsUI();
+  renderList();
+  if(curId===id) renderDet();
+  const box=document.getElementById('ibox-'+id);
+  if(box){
+    const ph=box.querySelector('.ph');const gi=box.querySelector('.gimg');
+    const fl=box.querySelector('.fail');const sk=box.querySelector('.skel');
+    if(ph)ph.style.display='none';if(gi)gi.style.display='none';
+    if(fl)fl.style.display='none';if(sk)sk.style.display='block';
+  }
+  setTimeout(()=>{
+    c.generating=false;c.failed=true;c.done=false;c.needsRegen=false;
+    userPoints+=CHAR_COST;
+    updatePointsUI();
+    renderList();
+    if(curId===id) renderDet();
+    showToast(c.name+' 生成失败，请重试');
+  },2200);
+}
+
+function regen(id){
+  const c=chars.find(x=>x.id===id);
+  if(c.generating)return;
+  c.done=false;c.failed=false;c.needsRegen=false;
+  genOne(id);
+}
+
+function genAll(){
+  chars.forEach((c,i)=>{
+    if((!c.done||c.needsRegen)&&!c.generating){
+      // 并行后台生成：每个角色独立计时，互不阻塞
+      c.generating=true;c.failed=false;c.needsRegen=false;
+      userPoints-=CHAR_COST;
+      updatePointsUI();
+      renderList();
+      const box=document.getElementById('ibox-'+c.id);
+      if(box){
+        const ph=box.querySelector('.ph');const gi=box.querySelector('.gimg');
+        const fl=box.querySelector('.fail');const sk=box.querySelector('.skel');
+        if(ph)ph.style.display='none';if(gi)gi.style.display='none';
+        if(fl)fl.style.display='none';if(sk)sk.style.display='block';
+      }
+      // 模拟不同角色不同生成时长（1.5~3秒）
+      const delay=1500+Math.random()*1500;
+      setTimeout(()=>{
+        c.generating=false;c.needsRegen=false;
+        if(simFailMode){
+          c.failed=true;c.done=false;
+          userPoints+=CHAR_COST;
+          updatePointsUI();
+          renderList();
+          if(curId===c.id)renderDet();
+          showToast(c.name+' 生成失败，请重试');
+        }else{
+          c.done=true;c.source='ai_parse';
+          // 自动存入角色库
+          if(!seriesLibChars.some(l=>l.name===c.name)){
+            seriesLibChars.push({id:'l'+Date.now()+c.id,name:c.name,role:c.role,desc:c.desc,appear:c.appear,mode:c.mode,done:true,generating:false,failed:false,refUp:false});
+          }
+          renderList();
+          if(curId===c.id)renderDet();
+          showToast(c.name+' 形象已生成');
+        }
+      },delay);
+    }
+  });
+}
+
+function updateBtn(){
+  const btn=document.getElementById('nextBtn');
+  const allDone=chars.every(c=>c.done&&!c.needsRegen);
+  btn.textContent=allDone?'下一步':'一键生成';
+  btn.disabled=false;
+}
+function genAllOrNext(){
+  const allDone=chars.every(c=>c.done&&!c.needsRegen);
+  if(allDone){showToast('跳转至环节3：分镜场景');return;}
+  const pending=chars.filter(c=>!c.done||c.needsRegen);
+  checkAndRun(genAll,CHAR_COST*pending.length);
+}
+
+function reAnalyze(){
+  checkAndRun(()=>{
+    showDlg('重新分析','重新拆解剧本将消耗2积分，当前角色列表会被更新，继续？',()=>{
+      userPoints-=2;
+      updatePointsUI();
+      // 全屏等待遮罩
+      const mask=document.createElement('div');
+      mask.className='analyze-loading';
+      mask.innerHTML='<div class="analyze-spinner"></div><div class="analyze-loading-text">AI正在拆解剧本…</div><div class="analyze-loading-sub">请稍候，角色列表将更新</div>';
+      document.querySelector('.app-content').appendChild(mask);
+      requestAnimationFrame(()=>mask.classList.add('show'));
+      // 模拟2-4秒后返回新的角色列表
+      const delay=2000+Math.random()*2000;
+      setTimeout(()=>{
+        mask.classList.remove('show');
+        setTimeout(()=>mask.remove(),300);
+        if(simFailMode){
+          // 拆解失败：退还积分
+          userPoints+=2;
+          updatePointsUI();
+          showToast('拆解失败，请重试');
+        }else{
+          // 刷新角色列表（模拟新的拆解结果）
+          chars.forEach(c=>{
+            c.done=false;
+            c.failed=false;
+            c.generating=false;
+            c.refUp=false;
+            c.mode=1;
+            c.needsRegen=false;
+          });
+          renderList();
+          if(curId)renderDet();
+          showToast('剧本拆解完成，角色列表已更新');
+        }
+      },delay);
+    });
+  },2);
+}
+
+function goBack(){
+  showDlg('返回确认','返回后剧本将重新拆解，确认返回吗？',()=>{
+    showToast('返回环节1：内容创作');
+  });
+}
+
+// ===== Library =====
+function openLib(){document.getElementById('libSheet').classList.add('show');renderLib();}
+function closeLib(){document.getElementById('libSheet').classList.remove('show');}
+document.getElementById('libSheet').addEventListener('click',e=>{if(e.target.classList.contains('sheet-overlay'))closeLib();});
+
+const seriesLibChars=[
+  {id:'l1',name:'陆沉',role:'主角',desc:'水墨晕染底色与精致3D渲染结合的古风仙侠画面，青绿金赤色调，柔和立体光影，白色纯色背景，正面全身照，同一个角色，黑色长发随意束起几缕碎发垂落额前，身形清瘦挺拔约一米七八，灰色粗布道袍袖口磨损腰系麻绳，眉头微蹙目光沉静，左手腕内侧有一道淡色旧伤疤，站立姿势，包含完整脚部，无背景杂物',appear:'身穿灰色粗布道袍黑发披散面容清瘦的青年男子',mode:1,done:true,generating:false,failed:false,refUp:false},
+  {id:'l2',name:'白芷',role:'配角',desc:'水墨晕染底色与精致3D渲染结合的古风仙侠画面，青绿金赤色调，柔和立体光影，白色纯色背景，正面全身照，同一个角色，乌黑长发及腰以白玉簪固定，身姿纤细约一米六五，白色儒裙腰系青色丝带袖口绣有药草纹样，眉目温婉嘴角含笑，右耳垂有一颗小痣，站立姿势，包含完整脚部，无背景杂物',appear:'身穿白色儒裙长发及腰眉目温婉的年轻女子',mode:1,done:true,generating:false,failed:false,refUp:false},
+];
+
+let autoFilled=false;
+function autoFillFromLib(){
+  if(autoFilled)return;
+  autoFilled=true;
+  seriesLibChars.forEach(lib=>{
+    const existing=chars.find(c=>c.name===lib.name);
+    if(existing){
+      // 同名角色：用库中数据覆盖AI拆解数据（描述/外貌/角色图），标记"已选择"
+      existing.desc=lib.desc;
+      existing.appear=lib.appear;
+      existing.mode=lib.mode;
+      existing.done=true;
+      existing.generating=false;
+      existing.failed=false;
+      existing.refUp=false;
+      existing.imported=true;
+      existing.needsRegen=false;
+      existing.source='library_autofill';
+    }else{
+      // 不重名的库角色：添加到列表
+      const newId=Math.max(...chars.map(x=>x.id),0)+1;
+      chars.push({id:newId,name:lib.name,role:lib.role,desc:lib.desc,appear:lib.appear,mode:lib.mode,done:true,generating:false,failed:false,refUp:false,imported:true,needsRegen:false,source:'library_autofill'});
+    }
+  });
+  renderList();
+}
+
+function renderLib(){
+  const all=seriesLibChars.filter(c=>c.done);
+  const currentNames=new Set(chars.map(c=>c.name));
+  document.getElementById('libGrid').innerHTML=all.map(c=>{
+    const imported=currentNames.has(c.name);
+    return`<div class="sheet-item">
+      <div class="si-img" style="background:linear-gradient(135deg,#e8dff5,#d5e8f0)"></div>
+      <div class="si-name">${c.name}</div>
+      ${imported
+        ?`<div class="si-imported">已选择</div>`
+        :`<button class="si-import" onclick="importChar('${c.id}')">引入</button>`
+      }
+    </div>`;
+  }).join('')||'<div style="grid-column:1/-1;text-align:center;color:#ccc;font-size:14px;padding:40px 0">暂无已生成角色</div>';
+}
+
+function importChar(libId){
+  const c=seriesLibChars.find(x=>x.id===libId);
+  if(!c)return;
+  if(chars.some(x=>x.name===c.name)){showToast('该角色已在当前集中');return;}
+  const newId=Math.max(...chars.map(x=>x.id))+1;
+  chars.push({id:newId,name:c.name,role:c.role,desc:c.desc,appear:c.appear,mode:c.mode,done:true,generating:false,failed:false,refUp:false,imported:true,needsRegen:false,source:'library_import'});
+  renderList();renderLib();
+  showToast(c.name+'已选择');
+}
+
+// ===== Dialog =====
+let dlgCb=null;
+function showDlg(t,m,cb){
+  document.getElementById('dlgT').textContent=t;
+  document.getElementById('dlgM').textContent=m;
+  dlgCb=cb;
+  document.getElementById('dlgOk').onclick=()=>{closeDlg();if(dlgCb)dlgCb();};
+  document.getElementById('dlg').classList.add('show');
+}
+function closeDlg(){document.getElementById('dlg').classList.remove('show');}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+// ===== 放大预览 =====
+function previewImg(id){
+  const c=chars.find(x=>x.id===id);
+  const overlay=document.createElement('div');
+  overlay.className='preview-overlay';
+  overlay.innerHTML=`<div class="preview-close" onclick="this.parentElement.classList.remove('show');setTimeout(()=>this.parentElement.remove(),200)">&#10005;</div><div style="text-align:center"><div style="width:202px;height:270px;background:linear-gradient(135deg,#e8dff5,#d5e8f0);border-radius:12px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;color:#7c3aed;font-size:16px;font-weight:600">${c?c.name:'角色图'}</div><div style="color:#aaa;font-size:12px">双指缩放 · 点击空白关闭</div></div>`;
+  document.querySelector('.phone-frame').appendChild(overlay);
+  requestAnimationFrame(()=>overlay.classList.add('show'));
+  overlay.addEventListener('click',e=>{if(e.target===overlay){overlay.classList.remove('show');setTimeout(()=>overlay.remove(),200);}});
+}
+
+// ===== 参考图替换/删除 =====
+function chooseRefAction(id){
+  pendingPickCharId=id;
+  // 已上传→弹出选择（拍照/相册/删除）
+  openPhotoPickerWithDelete();
+}
+
+function openPhotoPickerWithDelete(){
+  // 复用photoPicker但加删除按钮
+  const pp=document.getElementById('photoPicker');
+  pp.querySelector('.dlg-box').innerHTML=`
+    <div class="dlg-title">选择操作</div>
+    <div class="dlg-msg">请选择参考图的操作方式</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="dlg-btn ok" onclick="pickFromCamera()" style="width:100%">拍照</button>
+      <button class="dlg-btn ok" onclick="pickFromAlbum()" style="width:100%;background:#fff;color:#7c3aed;border:1px solid #7c3aed">从相册选择</button>
+      <button class="dlg-btn cancel" onclick="delRefAction()" style="width:100%;color:#ef4444;border-color:#ef4444">删除参考图</button>
+      <button class="dlg-btn cancel" onclick="closePhotoPicker()" style="width:100%">取消</button>
+    </div>`;
+  pp.classList.add('show');
+}
+
+function delRefAction(){
+  closePhotoPicker();
+  const c=chars.find(x=>x.id===pendingPickCharId);
+  if(!c)return;
+  c.refUp=false;c.mode=1;
+  if(c.desc.includes('参考图中人物的面部五官和形象')){
+    c.desc=c.desc.replace('参考图中人物的面部五官和形象，','');
+  }
+  renderDet();
+  showToast('参考图已删除，已切换为文生图模式');
+}
+// ===== 画风变更模拟 =====
+function togglePhotoPerm(){
+  const states=['notDetermined','authorized','denied'];
+  const labels=['未请求','已授权','已拒绝'];
+  const idx=(states.indexOf(photoPermStatus)+1)%3;
+  photoPermStatus=states[idx];
+  document.getElementById('dbPhotoPerm').textContent=labels[idx];
+  document.getElementById('dbPhotoPerm').className='debug-btn'+(photoPermStatus==='authorized'?' on':'');
+  showToast('相册权限：'+labels[idx]);
+}
+
+function simStyleChange(){
+  const affected=chars.filter(c=>c.done);
+  if(affected.length===0){showToast('当前无已生成角色');return;}
+  affected.forEach(c=>{c.needsRegen=true;c.failed=false;});
+  renderList();
+  if(curId)renderDet();
+  showToast('画风已变更，请重新生成角色形象');
+}
+
+function toggleFailMode(){
+  simFailMode=!simFailMode;
+  const btn=document.getElementById('dbFailMode');
+  btn.textContent=simFailMode?'失败':'成功';
+  btn.className='debug-btn'+(simFailMode?' on':'');
+}
+
+updatePointsUI();
+renderList();
+</script>
+</body>
+</html>

@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI漫剧创作大师 — 全局模块 我的漫剧</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;background:#e8e8e8;min-height:100vh;display:flex;justify-content:center;padding:20px}
+
+/* === 三栏布局 === */
+.layout{display:flex;gap:20px;max-width:1440px;width:100%}
+.col-left{flex-shrink:0;display:flex;align-items:flex-start;justify-content:center}
+.col-mid{flex:1;min-width:0}
+.col-right{flex-shrink:0;width:320px}
+
+/* === 手机模型 === */
+.phone-frame{width:390px;height:844px;background:#0d0d0d;border-radius:44px;border:2px solid #ccc;overflow:hidden;position:relative;box-shadow:0 4px 24px rgba(0,0,0,0.1)}
+.phone-notch{width:126px;height:30px;background:#0d0d0d;border-radius:0 0 18px 18px;margin:0 auto;position:relative;z-index:100}
+.phone-notch::before{content:'';width:8px;height:8px;background:#1a1a1a;border-radius:50%;position:absolute;right:26px;top:10px}
+.status-bar{display:flex;justify-content:space-between;align-items:center;padding:0 28px;height:18px;color:#ccc;font-size:11px;font-weight:600}
+.app-content{height:calc(844px - 30px - 18px);display:flex;flex-direction:column;background:#0d0d0d}
+
+/* Nav */
+.nav-bar{display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid #1a1a1a;flex-shrink:0}
+.nav-bar .back{color:#8b7bf7;font-size:18px;cursor:pointer;margin-right:8px}
+.nav-bar .title{font-size:16px;font-weight:700;color:#fff;flex:1}
+.nav-bar .my-btn{padding:6px 12px;border-radius:8px;background:#1a1a1a;color:#8b7bf7;font-size:12px;font-weight:600;border:none;cursor:pointer;font-family:inherit}
+.nav-bar .step-tag{font-size:11px;color:#555;margin-left:auto}
+
+/* Page */
+.page{display:none;flex-direction:column;height:100%}
+.page.active{display:flex}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.scroll::-webkit-scrollbar{width:0}
+
+/* 首页 */
+.home-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center}
+.home-logo{width:80px;height:80px;border-radius:20px;background:linear-gradient(135deg,#7c3aed,#5b21b6);display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-shadow:0 8px 32px rgba(124,58,237,0.3)}
+.home-logo span{font-size:32px}
+.home-title{font-size:22px;font-weight:800;color:#fff;margin-bottom:6px}
+.home-sub{font-size:13px;color:#555;margin-bottom:36px;line-height:1.5}
+.home-start{width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;box-shadow:0 4px 20px rgba(124,58,237,0.3);transition:all .15s}
+.home-start:active{transform:scale(.97)}
+.steps{display:flex;gap:6px;margin-top:28px}
+.step-dot{width:6px;height:6px;border-radius:50%;background:#333}
+.step-dot.on{background:#7c3aed}
+.steps-label{font-size:10px;color:#333;margin-top:10px}
+
+/* 环节1 */
+.s1-sec{padding:0 16px;margin-bottom:18px}
+.s1-label{font-size:12px;font-weight:600;color:#8b7bf7;margin-bottom:8px}
+.s1-input{width:100%;padding:10px 12px;border-radius:8px;border:1px solid #252525;background:#161616;color:#fff;font-size:13px;font-family:inherit;outline:none}
+.s1-input:focus{border-color:#7c3aed}
+.s1-input::placeholder{color:#444}
+.s1-tags{display:flex;flex-wrap:wrap;gap:6px}
+.s1-tag{padding:6px 12px;border-radius:8px;background:#161616;border:1px solid #252525;color:#666;font-size:11px;cursor:pointer;transition:all .12s}
+.s1-tag.on{background:linear-gradient(135deg,#7c3aed,#5b21b6);border-color:transparent;color:#fff}
+.s1-textarea{width:100%;height:80px;padding:10px 12px;border-radius:8px;border:1px solid #252525;background:#161616;color:#fff;font-size:12px;font-family:inherit;outline:none;resize:none}
+.s1-textarea:focus{border-color:#7c7bf7}
+.s1-textarea::placeholder{color:#444}
+.s1-hint{font-size:10px;color:#d97706;margin-top:4px;display:none}
+.s1-hint.show{display:block}
+
+/* 通用底部栏 */
+.bottom-bar{position:absolute;bottom:0;left:0;right:0;padding:12px 16px 24px;background:linear-gradient(transparent,#0d0d0d 20%);display:flex;gap:10px;z-index:10}
+.bar-btn{flex:1;padding:12px;border-radius:12px;font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:inherit}
+.bar-btn.ghost{background:#1a1a1a;color:#8b7bf7}
+.bar-btn.solid{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff}
+
+/* 环节2-4 简化卡片 */
+.char-card{display:flex;gap:10px;padding:14px 16px;border-bottom:1px solid #1a1a1a;cursor:pointer}
+.char-card:active{background:#1a1a1a}
+.char-thumb{width:60px;height:80px;flex-shrink:0;border-radius:8px;background:linear-gradient(135deg,#1e1236,#2a1a3c);display:flex;align-items:center;justify-content:center;color:#2a2a2a;font-size:18px}
+.char-info{flex:1;display:flex;flex-direction:column;justify-content:center}
+.char-name{font-size:14px;font-weight:700;color:#fff;margin-bottom:2px}
+.char-desc{font-size:10px;color:#555}
+.char-arrow{color:#333;font-size:16px;align-self:center}
+.shot-card{background:#161616;border-radius:14px;padding:12px;margin:0 16px 12px;border:1px solid #1f1f1f}
+.shot-top{display:flex;gap:10px}
+.shot-thumb{width:80px;height:45px;flex-shrink:0;border-radius:6px;background:#1a1a1a;display:flex;align-items:center;justify-content:center;color:#333;font-size:14px}
+.shot-info{flex:1}
+.shot-name{font-size:13px;font-weight:700;color:#fff;margin-bottom:2px}
+.shot-status{font-size:10px;color:#555}
+
+/* 环节5 */
+.video-area{flex:1;position:relative;display:flex;align-items:center;justify-content:center;background:#000}
+.video-area .placeholder{width:100%;height:100%;background:linear-gradient(135deg,#1a0f2e 0%,#0d1a2e 40%,#1a1a0f 100%);display:flex;align-items:center;justify-content:center}
+.play-big{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.play-big::after{content:'';width:0;height:0;border-top:11px solid transparent;border-bottom:11px solid transparent;border-left:18px solid rgba(255,255,255,0.8);margin-left:4px}
+.ep-tag{position:absolute;top:12px;left:12px;padding:3px 10px;border-radius:6px;background:rgba(124,58,237,0.7);color:#fff;font-size:11px;font-weight:600;display:none}
+.dur-tag{position:absolute;top:12px;right:12px;padding:3px 8px;border-radius:6px;background:rgba(0,0,0,0.6);color:#fff;font-size:11px;display:none}
+.v-bottom{display:flex;gap:8px;padding:14px 16px 28px;background:#0d0d0d;flex-shrink:0}
+.v-btn{flex:1;padding:10px 0;border-radius:10px;font-size:11px;font-weight:700;border:none;cursor:pointer;font-family:inherit}
+.v-btn.out{background:transparent;border:1px solid #333;color:#8b7bf7}
+.v-btn.solid{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff}
+
+/* 我的漫剧: 剧本列表 */
+.script-card{display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid #1a1a1a;cursor:pointer}
+.script-card:active{background:#1a1a1a}
+.script-cover{width:68px;height:90px;flex-shrink:0;border-radius:8px;background:linear-gradient(135deg,#1e1236,#2a1a3c);display:flex;align-items:center;justify-content:center;font-size:22px;opacity:.3}
+.script-info{flex:1;display:flex;flex-direction:column;justify-content:center}
+.script-name{font-size:15px;font-weight:700;color:#fff;margin-bottom:4px}
+.script-meta{font-size:11px;color:#555}
+.script-arrow{color:#333;font-size:16px;align-self:center}
+.empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 40px;text-align:center}
+.empty-icon{font-size:48px;margin-bottom:16px;opacity:.3}
+.empty-text{font-size:14px;color:#555;margin-bottom:24px}
+.empty-btn{padding:12px 32px;border-radius:12px;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff}
+
+/* 我的漫剧: 剧集列表 */
+.ep-card{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #1a1a1a;cursor:pointer}
+.ep-card:active{background:#1a1a1a}
+.ep-thumb{width:72px;height:40px;flex-shrink:0;border-radius:6px;background:linear-gradient(135deg,#1e1236,#2a1a3c);position:relative;display:flex;align-items:center;justify-content:center}
+.ep-thumb::after{content:'▶';font-size:10px;color:rgba(255,255,255,0.4)}
+.ep-name{font-size:13px;font-weight:600;color:#fff}
+.ep-meta{font-size:10px;color:#555;margin-top:2px}
+.ep-btns{display:flex;gap:6px;flex-shrink:0}
+.ep-edit{padding:4px 8px;border-radius:5px;font-size:9px;font-weight:600;border:none;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;cursor:pointer;font-family:inherit}
+.ep-dl{padding:4px 8px;border-radius:5px;font-size:9px;font-weight:600;border:1px solid #333;background:transparent;color:#8b7bf7;cursor:pointer;font-family:inherit}
+.ep-bottom{padding:16px 16px 28px;flex-shrink:0}
+.create-btn{width:100%;padding:13px;border-radius:12px;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;display:flex;align-items:center;justify-content:center;gap:6px}
+.create-btn:active{transform:scale(.98)}
+.create-btn .plus{font-size:18px;font-weight:400}
+
+/* Save Sheet */
+.sheet-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.6);z-index:300;opacity:0;pointer-events:none;transition:opacity .25s}
+.sheet-overlay.show{opacity:1;pointer-events:all}
+.sheet{position:absolute;bottom:0;left:0;right:0;background:#151515;border-radius:20px 20px 0 0;padding:24px 16px 28px;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);text-align:center}
+.sheet-overlay.show .sheet{transform:translateY(0)}
+.sheet-handle{width:36px;height:4px;background:#333;border-radius:2px;margin:0 auto 16px}
+.save-icon{font-size:36px;margin-bottom:8px}
+.save-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:4px}
+.save-sub{font-size:12px;color:#555;margin-bottom:18px}
+.save-btns{display:flex;gap:10px}
+.save-btns .s-btn{flex:1;padding:11px;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:inherit}
+.s-btn.cancel{background:#222;color:#666}
+.s-btn.ok{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff}
+
+/* Login Sheet */
+.login-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.6);z-index:400;opacity:0;pointer-events:none;transition:opacity .25s}
+.login-overlay.show{opacity:1;pointer-events:all}
+.login-sheet{position:absolute;bottom:0;left:0;right:0;background:#151515;border-radius:20px 20px 0 0;padding:24px 16px 28px;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);text-align:center}
+.login-overlay.show .login-sheet{transform:translateY(0)}
+.login-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:12px}
+.login-input{width:100%;padding:12px;border-radius:10px;border:1px solid #252525;background:#161616;color:#fff;font-size:14px;font-family:inherit;outline:none;margin-bottom:10px;text-align:center}
+.login-input:focus{border-color:#7c3aed}
+.login-btn{width:100%;padding:12px;border-radius:10px;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;margin-top:6px}
+.login-skip{font-size:12px;color:#555;margin-top:12px;cursor:pointer}
+
+.toast{position:absolute;top:56px;left:50%;transform:translateX(-50%);padding:8px 16px;background:rgba(124,58,237,0.9);color:#fff;border-radius:8px;font-size:12px;z-index:500;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+
+/* === 操作说明面板 === */
+.guide-panel{background:#fff;border-radius:14px;border:1px solid #ddd;box-shadow:0 1px 3px rgba(0,0,0,0.06);overflow:hidden}
+.guide-header{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;padding:14px 18px;font-size:16px;font-weight:700;letter-spacing:1px}
+.guide-body{padding:16px 18px;max-height:812px;overflow-y:auto}
+.guide-body::-webkit-scrollbar{width:4px}
+.guide-body::-webkit-scrollbar-thumb{background:#ccc;border-radius:2px}
+.guide-section{margin-bottom:18px}
+.guide-section:last-child{margin-bottom:0}
+.guide-sec-title{font-size:14px;font-weight:700;color:#7c3aed;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.guide-sec-title .num{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#7c3aed;color:#fff;font-size:11px;font-weight:700;flex-shrink:0}
+.guide-item{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;font-size:13px;color:#555;line-height:1.6}
+.guide-dot{width:5px;height:5px;border-radius:50%;background:#ccc;flex-shrink:0;margin-top:7px}
+.guide-dot.purple{background:#7c3aed}
+.guide-dot.green{background:#16a34a}
+.guide-dot.orange{background:#d97706}
+.guide-dot.red{background:#ef4444}
+.guide-dot.blue{background:#3b82f6}
+.guide-dot.pink{background:#db2777}
+.guide-tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:3px;font-weight:600;vertical-align:middle}
+.guide-tag.purple{color:#7c3aed;background:rgba(124,58,237,0.08)}
+.guide-tag.green{color:#16a34a;background:rgba(22,163,74,0.08)}
+.guide-tag.orange{color:#d97706;background:rgba(217,119,6,0.08)}
+.guide-tag.red{color:#ef4444;background:rgba(239,68,68,0.08)}
+.guide-tag.blue{color:#3b82f6;background:rgba(59,130,246,0.08)}
+.guide-tag.pink{color:#db2777;background:rgba(219,39,119,0.08)}
+.guide-tag.gray{color:#888;background:#f0f0f0}
+.guide-divider{border:none;border-top:1px solid #f0f0f0;margin:14px 0}
+
+/* === 调试面板 === */
+.debug-panel{background:#fff;border-radius:14px;border:1px solid #ddd;box-shadow:0 1px 3px rgba(0,0,0,0.06);overflow:hidden}
+.debug-header{background:linear-gradient(135deg,#6d28d9,#5b21b6);color:#fff;padding:14px 18px;font-size:16px;font-weight:700;letter-spacing:1px}
+.debug-body{padding:16px 18px;max-height:812px;overflow-y:auto}
+.debug-body::-webkit-scrollbar{width:4px}
+.debug-body::-webkit-scrollbar-thumb{background:#ccc;border-radius:2px}
+.debug-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.debug-label{font-size:13px;color:#666;min-width:70px}
+.debug-btn{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;border:1px solid #ddd;cursor:pointer;font-family:inherit;background:#f5f5f5;color:#444;transition:all .15s}
+.debug-btn:active{transform:scale(.96)}
+.debug-btn.on{background:#7c3aed;color:#fff;border-color:#7c3aed}
+.debug-input{width:56px;padding:4px 6px;border:1px solid #ddd;border-radius:6px;font-size:12px;text-align:center;outline:none}
+.debug-input:focus{border-color:#7c3aed}
+.debug-section{margin-top:4px;padding-top:8px;border-top:1px solid #f0f0f0}
+.debug-info{font-size:11px;color:#7c3aed;line-height:1.4;word-break:break-all;background:#f9f5ff;border:1px solid #e0d8f0;border-radius:6px;padding:8px;width:100%;margin-top:4px}
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+<!-- ===== 左栏：手机模型 ===== -->
+<div class="col-left">
+<div class="phone-frame">
+  <div class="phone-notch"></div>
+  <div class="status-bar"><span>9:41</span><span>&#9679;&#9679;&#9679;&#9679;</span></div>
+
+  <div class="app-content">
+
+    <!-- 首页 -->
+    <div class="page active" id="pgHome">
+      <div class="nav-bar">
+        <div class="title">AI漫剧创作大师</div>
+        <button class="my-btn" onclick="enterMyDrama()">我的漫剧</button>
+      </div>
+      <div class="home-body">
+        <div class="home-logo"><span>&#127917;</span></div>
+        <div class="home-title">AI漫剧创作大师</div>
+        <div class="home-sub">从剧本到成片，AI全流程创作漫剧</div>
+        <button class="home-start" onclick="startCreate()">开始漫剧创作</button>
+        <div class="steps"><div class="step-dot on"></div><div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div></div>
+        <div class="steps-label">内容创作 → 角色创建 → 场景图 → 分镜生成 → 合成视频</div>
+      </div>
+    </div>
+
+    <!-- 环节1 -->
+    <div class="page" id="pgS1">
+      <div class="nav-bar">
+        <div class="back" onclick="goBack('pgS1')">&larr;</div>
+        <div class="title">内容创作</div>
+        <div class="step-tag">1/5</div>
+      </div>
+      <div class="scroll">
+        <div class="s1-sec"><div class="s1-label">剧集名称</div><input class="s1-input" id="s1Name" value="" placeholder="请输入剧集名称"></div>
+        <div class="s1-sec"><div class="s1-label">集数</div><div class="s1-tags"><div class="s1-tag">5集</div><div class="s1-tag on">10集</div><div class="s1-tag">20集</div></div></div>
+        <div class="s1-sec"><div class="s1-label">剧情设定</div><div class="s1-tags"><div class="s1-tag">修仙</div><div class="s1-tag">都市</div><div class="s1-tag">校园</div><div class="s1-tag">悬疑</div><div class="s1-tag">奇幻</div></div></div>
+        <div class="s1-sec"><div class="s1-label">画面风格</div><div class="s1-tags"><div class="s1-tag">3D国画风</div><div class="s1-tag">古风</div><div class="s1-tag">日漫风</div><div class="s1-tag">写实风</div></div></div>
+        <div class="s1-sec"><div class="s1-label">视频比例</div><div class="s1-tags"><div class="s1-tag">16:9</div><div class="s1-tag on">9:16</div><div class="s1-tag">1:1</div></div></div>
+        <div class="s1-sec">
+          <div class="s1-label">剧本大纲</div>
+          <textarea class="s1-textarea" id="s1Outline" placeholder="请输入剧本大纲…"></textarea>
+          <div class="s1-hint" id="s1OutlineHint">&#128214; 已自动填入剧本大纲，可编辑修改</div>
+        </div>
+        <div class="s1-sec"><div class="s1-label">剧本内容</div><textarea class="s1-textarea" placeholder="请输入剧本内容，或使用AI生成…"></textarea></div>
+        <div style="height:80px"></div>
+      </div>
+      <div class="bottom-bar"><button class="bar-btn solid" onclick="go('pgS2')">开始创作</button></div>
+    </div>
+
+    <!-- 环节2 -->
+    <div class="page" id="pgS2">
+      <div class="nav-bar">
+        <div class="back" onclick="goBack('pgS2')">&larr;</div>
+        <div class="title">角色创建</div>
+        <div class="step-tag">2/5</div>
+      </div>
+      <div class="scroll">
+        <div class="char-card"><div class="char-thumb">&#128100;</div><div class="char-info"><div class="char-name">陆沉</div><div class="char-desc">灰色粗布道袍 · 青年男子</div></div><div class="char-arrow">&rsaquo;</div></div>
+        <div class="char-card"><div class="char-thumb">&#128100;</div><div class="char-info"><div class="char-name">白芷</div><div class="char-desc">白色儒裙 · 青年女子</div></div><div class="char-arrow">&rsaquo;</div></div>
+      </div>
+      <div class="bottom-bar"><button class="bar-btn ghost" onclick="goBack('pgS2')">上一步</button><button class="bar-btn solid" onclick="go('pgS3')">确认，下一步</button></div>
+    </div>
+
+    <!-- 环节3 -->
+    <div class="page" id="pgS3">
+      <div class="nav-bar">
+        <div class="back" onclick="goBack('pgS3')">&larr;</div>
+        <div class="title">场景图</div>
+        <div class="step-tag">3/5</div>
+      </div>
+      <div class="scroll">
+        <div class="char-card"><div class="char-thumb" style="width:68px;height:90px">&#127912;</div><div class="char-info"><div class="char-name">场景1</div><div class="char-desc">古风庭院，秋叶纷飞</div></div><div class="char-arrow">&rsaquo;</div></div>
+        <div class="char-card"><div class="char-thumb" style="width:68px;height:90px">&#127912;</div><div class="char-info"><div class="char-name">场景2</div><div class="char-desc">庭院门口，暮色渐沉</div></div><div class="char-arrow">&rsaquo;</div></div>
+      </div>
+      <div class="bottom-bar"><button class="bar-btn ghost" onclick="goBack('pgS3')">上一步</button><button class="bar-btn solid" onclick="go('pgS4')">一键生成视频</button></div>
+    </div>
+
+    <!-- 环节4 -->
+    <div class="page" id="pgS4">
+      <div class="nav-bar">
+        <div class="back" onclick="goBack('pgS4')">&larr;</div>
+        <div class="title">分镜生成</div>
+        <div class="step-tag">4/5</div>
+      </div>
+      <div class="scroll">
+        <div class="shot-card"><div class="shot-top"><div class="shot-thumb">&#127909;</div><div class="shot-info"><div class="shot-name">分镜1</div><div class="shot-status">已生成</div></div></div></div>
+        <div class="shot-card"><div class="shot-top"><div class="shot-thumb">&#127909;</div><div class="shot-info"><div class="shot-name">分镜2</div><div class="shot-status">已生成</div></div></div></div>
+        <div style="height:80px"></div>
+      </div>
+      <div class="bottom-bar"><button class="bar-btn ghost" onclick="goBack('pgS4')">上一步</button><button class="bar-btn solid" onclick="go('pgS5')">合成视频</button></div>
+    </div>
+
+    <!-- 环节5 -->
+    <div class="page" id="pgS5">
+      <div class="nav-bar">
+        <div class="back" onclick="goBack('pgS5')">&larr;</div>
+        <div class="title" id="s5Title">合成视频</div>
+        <div class="step-tag" id="s5Step">5/5</div>
+      </div>
+      <div class="video-area">
+        <div class="ep-tag" id="s5EpTag"></div>
+        <div class="dur-tag" id="s5DurTag"></div>
+        <div class="placeholder"><div class="play-big"></div></div>
+      </div>
+      <div class="v-bottom" id="s5Bottom">
+        <button class="v-btn out" onclick="go('pgS4')">返回修改</button>
+        <button class="v-btn out" onclick="toast('下载视频')">下载视频</button>
+        <button class="v-btn solid" onclick="openSave()">保存剧集</button>
+      </div>
+      <div class="v-bottom" id="s5BottomReadonly" style="display:none">
+        <button class="v-btn out" style="flex:1" onclick="toast('下载视频')">下载视频</button>
+      </div>
+    </div>
+
+    <!-- 剧本列表 -->
+    <div class="page" id="pgMy">
+      <div class="nav-bar">
+        <div class="back" onclick="go('pgHome')">&larr;</div>
+        <div class="title">我的漫剧</div>
+      </div>
+      <div class="scroll" id="scriptList">
+        <div class="script-card" onclick="openEpisodeList('仙途缘起')">
+          <div class="script-cover">&#127917;</div>
+          <div class="script-info"><div class="script-name">仙途缘起</div><div class="script-meta">修仙 · 2集</div></div>
+          <div class="script-arrow">&rsaquo;</div>
+        </div>
+        <div class="script-card" onclick="openEpisodeList('都市暗影')">
+          <div class="script-cover">&#127917;</div>
+          <div class="script-info"><div class="script-name">都市暗影</div><div class="script-meta">都市 · 1集</div></div>
+          <div class="script-arrow">&rsaquo;</div>
+        </div>
+      </div>
+      <div class="empty-state" id="scriptEmpty" style="display:none">
+        <div class="empty-icon">&#127917;</div>
+        <div class="empty-text">还没有漫剧作品，去创作吧</div>
+        <button class="empty-btn" onclick="go('pgHome')">开始创作</button>
+      </div>
+    </div>
+
+    <!-- 剧集列表 -->
+    <div class="page" id="pgEp">
+      <div class="nav-bar">
+        <div class="back" id="epBack" onclick="goBack('pgEp')">&larr;</div>
+        <div class="title" id="epTitle">仙途缘起</div>
+      </div>
+      <div class="scroll" id="episodeList"></div>
+      <div class="ep-bottom">
+        <button class="create-btn" onclick="createNextEpisode()"><span class="plus">+</span> 创作下一集</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Save Sheet -->
+  <div class="sheet-overlay" id="saveSheet" onclick="if(event.target===this)closeSave()">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="save-icon">&#128190;</div>
+      <div class="save-title">保存成功</div>
+      <div class="save-sub" id="saveSub">已保存为第一集</div>
+      <div class="save-btns">
+        <button class="s-btn cancel" onclick="closeSave()">继续编辑</button>
+        <button class="s-btn ok" onclick="closeSave();goToMyDrama()">查看我的漫剧</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login Sheet -->
+  <div class="login-overlay" id="loginSheet" onclick="if(event.target===this)closeLogin()">
+    <div class="login-sheet">
+      <div class="sheet-handle" style="width:36px;height:4px;background:#333;border-radius:2px;margin:0 auto 16px"></div>
+      <div class="login-title">登录后即可查看</div>
+      <input class="login-input" placeholder="请输入手机号">
+      <input class="login-input" placeholder="验证码">
+      <button class="login-btn" onclick="onLoginSuccess()">登录</button>
+      <div class="login-skip" onclick="closeLogin()">暂不登录</div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+</div>
+
+<!-- ===== 中栏：操作说明 ===== -->
+<div class="col-mid">
+<div class="guide-panel">
+  <div class="guide-header">全局模块 - 我的漫剧 操作说明</div>
+  <div class="guide-body">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">1</span>模块概述</div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>"我的漫剧"是用户管理已保存漫剧剧集的全局模块，包含 <span class="guide-tag purple">剧本列表</span> 和 <span class="guide-tag purple">剧集列表</span> 两个页面</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span><span class="guide-tag blue">入口A</span> 首页"我的漫剧"按钮 → 剧本列表 → 点击剧本 → 剧集列表</span></div>
+      <div class="guide-item"><div class="guide-dot pink"></div><span><span class="guide-tag pink">入口B</span> 环节5保存成功 → "查看我的漫剧" → 直接跳剧集列表（跳过剧本列表）</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">2</span>剧本列表页</div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>导航栏：← 返回 | "我的漫剧"</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>剧本卡片：封面(最新剧集缩略图) + 剧本名 + 类型·集数 + 箭头</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>点击剧本卡片 → 调用 GET /scripts/{id}/episodes → 进入剧集列表</span></div>
+      <div class="guide-item"><div class="guide-dot gray"></div><span>空状态："还没有漫剧作品，去创作吧" + "开始创作"按钮</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>未登录点击"我的漫剧"→ 弹出登录弹窗，登录后继续</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">3</span>剧集列表页</div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>导航栏：← 返回 | <span class="guide-tag purple">剧本名称</span>（如"仙途缘起"，非"我的漫剧"）</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>剧集卡片：缩略图(▶) + 剧集名 + 日期·时长 + <span class="guide-tag pink">编辑</span>按钮 + <span class="guide-tag blue">下载</span>按钮</span></div>
+      <div class="guide-item"><div class="guide-dot green"></div><span>点击卡片 → 环节5 <span class="guide-tag green">只读播放</span>模式（仅"下载视频"按钮）</span></div>
+      <div class="guide-item"><div class="guide-dot pink"></div><span>点击 <span class="guide-tag pink">编辑</span> → 环节5 <span class="guide-tag pink">编辑</span>模式（完整按钮，可回退环节4~1）</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>点击 <span class="guide-tag blue">下载</span> → 校验相册权限 → 保存到相册</span></div>
+      <div class="guide-item"><div class="guide-dot orange"></div><span>点击 <span class="guide-tag orange">+ 创作下一集</span> → 跳转环节1，自动填入剧本大纲（详见第6节）</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">4</span>只读模式 vs 编辑模式</div>
+      <div class="guide-item"><div class="guide-dot green"></div><span><span class="guide-tag green">只读模式</span>（点击卡片进入）：底部仅"下载视频"按钮，← 返回→剧集列表</span></div>
+      <div class="guide-item"><div class="guide-dot pink"></div><span><span class="guide-tag pink">编辑模式</span>（点击"编辑"进入）：底部完整按钮（重新合成/下载/保存），可←回退环节4→3→2→1</span></div>
+      <div class="guide-item"><div class="guide-dot pink"></div><span>编辑模式下回退：环节5→4(分镜)→3(场景图)→2(角色)→1(内容)，环节1←返回→剧集列表</span></div>
+      <div class="guide-item"><div class="guide-dot orange"></div><span>目的：让用户回看各环节的生成记录（角色形象、场景图、分镜等）</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">5</span>返回逻辑</div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>剧集列表 ← 返回：入口A→剧本列表；入口B→环节5</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>环节5 ← 返回：只读模式→剧集列表；编辑模式→环节4</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>环节1 ← 返回："创作下一集"进入→剧集列表；"编辑"回退→环节2；全新创作→首页</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">6</span>创作下一集 — 大纲自动带入</div>
+      <div class="guide-item"><div class="guide-dot green"></div><span><span class="guide-tag green">自动填入</span> 剧本大纲（outline）→ "剧本大纲"textarea，用户可编辑</span></div>
+      <div class="guide-item"><div class="guide-dot green"></div><span><span class="guide-tag green">自动填入</span> 剧集名称 → 填入当前剧本名称</span></div>
+      <div class="guide-item"><div class="guide-dot red"></div><span><span class="guide-tag red">不带入</span> 剧情设定、画面风格、视频比例 — 由用户重新选择</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>新集自动关联同一scriptId，共享角色库和场景库</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>环节1显示黄色提示："已自动填入剧本大纲，可编辑修改"</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">7</span>登录与积分</div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>查看"我的漫剧"：需登录，未登录弹出登录弹窗</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>下载剧集：无需登录</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>创作下一集：需登录（进入环节1时校验）</span></div>
+      <div class="guide-item"><div class="guide-dot green"></div><span>本模块0积分消耗，进入环节1后按环节1规则执行</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">8</span>MVP限制</div>
+      <div class="guide-item"><div class="guide-dot red"></div><span>不支持删除剧集（后续版本增加左滑删除+二次确认）</span></div>
+      <div class="guide-item"><div class="guide-dot red"></div><span>不支持编辑剧集名称（仅保存成功半屏中可编辑）</span></div>
+      <div class="guide-item"><div class="guide-dot red"></div><span>不支持剧集排序（固定按episodeNumber升序）</span></div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- ===== 右栏：调试器 ===== -->
+<div class="col-right">
+<div class="debug-panel">
+  <div class="debug-header">状态调试器</div>
+  <div class="debug-body">
+
+    <div class="debug-row">
+      <span class="debug-label">登录状态</span>
+      <button class="debug-btn" id="dbLogin" onclick="toggleLogin()">未登录</button>
+    </div>
+
+    <div class="debug-section">
+      <div class="debug-row">
+        <span class="debug-label">入口模拟</span>
+      </div>
+      <div class="debug-row">
+        <button class="debug-btn on" id="dbEntryHome" onclick="setEntry('home')">首页入口</button>
+        <button class="debug-btn" id="dbEntryS5" onclick="setEntry('s5')">环节5保存成功</button>
+      </div>
+      <div class="debug-row">
+        <button class="debug-btn" id="dbEntryEp" onclick="setEntry('ep_direct')">直接进剧集列表</button>
+      </div>
+    </div>
+
+    <div class="debug-section">
+      <div class="debug-row">
+        <span class="debug-label">剧本数据</span>
+      </div>
+      <div class="debug-row">
+        <button class="debug-btn on" id="dbDataNormal" onclick="setDataState('normal')">有数据</button>
+        <button class="debug-btn" id="dbDataEmpty" onclick="setDataState('empty')">空列表</button>
+      </div>
+    </div>
+
+    <div class="debug-section">
+      <div class="debug-row">
+        <span class="debug-label">当前剧本</span>
+        <button class="debug-btn on" id="dbScript0" onclick="switchScript(0)">仙途缘起</button>
+        <button class="debug-btn" id="dbScript1" onclick="switchScript(1)">都市暗影</button>
+      </div>
+    </div>
+
+    <div class="debug-section">
+      <div class="debug-row">
+        <span class="debug-label">环节5模式</span>
+        <button class="debug-btn on" id="dbS5Edit" onclick="setS5Mode('edit')">编辑模式</button>
+        <button class="debug-btn" id="dbS5Readonly" onclick="setS5Mode('readonly')">只读模式</button>
+      </div>
+    </div>
+
+    <div class="debug-section">
+      <div class="debug-row">
+        <span class="debug-label">大纲带入</span>
+        <button class="debug-btn on" id="dbOutlineOn" onclick="toggleOutline(true)">自动填入</button>
+        <button class="debug-btn" id="dbOutlineOff" onclick="toggleOutline(false)">不填入</button>
+      </div>
+    </div>
+
+    <div class="debug-section">
+      <div class="debug-row" style="flex-direction:column;align-items:flex-start;gap:4px">
+        <span class="debug-label">当前状态</span>
+        <div class="debug-info" id="dbgState">页面：首页 | 入口：home | 登录：否</div>
+      </div>
+    </div>
+
+    <div class="debug-section">
+      <div class="debug-row" style="flex-direction:column;align-items:flex-start;gap:4px">
+        <span class="debug-label">剧本大纲（将带入环节1）</span>
+        <div class="debug-info" id="dbgOutline">少年陆沉在修仙世界中历经磨难…</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+</div>
+
+<script>
+// ---- State ----
+let isLoggedIn = false;
+let epCounter = 1;
+let currentScriptIdx = 0;
+let entrySource = 'home';
+let pendingAction = null;
+let outlineAutoFill = true;
+
+const scripts = [
+  { name: '仙途缘起', genre: '修仙', episodeCount: 2, outline: '少年陆沉在修仙世界中历经磨难，从一个凡人成长为一代仙尊。白芷是他在修行路上遇到的挚友，两人携手对抗黑暗势力，守护人间安宁。' },
+  { name: '都市暗影', genre: '都市', episodeCount: 1, outline: '普通上班族陈默意外获得预知能力，卷入一场都市暗战。他必须在正义与私欲之间做出选择，同时揭开隐藏在都市背后的惊天秘密。' }
+];
+
+const episodesByScript = {
+  0: [
+    { name: '第一集', date: '2026-05-21 14:32', duration: 22 },
+    { name: '第二集', date: '2026-05-21 15:10', duration: 19 }
+  ],
+  1: [
+    { name: '第一集', date: '2026-05-22 10:05', duration: 25 }
+  ]
+};
+
+let dataEmpty = false;
+
+function getCurrentScript() { return scripts[currentScriptIdx]; }
+
+// ---- Navigation ----
+function go(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  updateDbgState();
+}
+
+function goBack(fromPage) {
+  if (fromPage === 'pgEp') {
+    if (entrySource === 's5') go('pgS5');
+    else go('pgMy');
+  } else if (fromPage === 'pgS1') {
+    if (entrySource === 'ep') go('pgEp');
+    else if (entrySource === 'ep_edit') go('pgS2');
+    else go('pgHome');
+  } else if (fromPage === 'pgS2') { go('pgS1'); }
+  else if (fromPage === 'pgS3') { go('pgS2'); }
+  else if (fromPage === 'pgS4') { go('pgS3'); }
+  else if (fromPage === 'pgS5') {
+    if (entrySource === 's5_readonly') go('pgEp');
+    else go('pgS4');
+  }
+  updateDbgState();
+}
+
+// ---- 首页入口 ----
+function enterMyDrama() {
+  if (!isLoggedIn) {
+    pendingAction = function() { entrySource = 'home'; go('pgMy'); };
+    openLogin();
+    return;
+  }
+  entrySource = 'home';
+  go('pgMy');
+}
+
+function startCreate() {
+  entrySource = 'home';
+  currentScriptIdx = -1;
+  document.getElementById('s1Name').value = '';
+  document.getElementById('s1Outline').value = '';
+  document.getElementById('s1OutlineHint').classList.remove('show');
+  go('pgS1');
+}
+
+// ---- 剧本列表 → 剧集列表 ----
+function openEpisodeList(scriptName) {
+  currentScriptIdx = scripts.findIndex(s => s.name === scriptName) || 0;
+  entrySource = 'home';
+  document.getElementById('epTitle').textContent = scriptName;
+  renderEpisodes();
+  go('pgEp');
+}
+
+// ---- 环节5保存成功 → 直接跳剧集列表 ----
+function goToMyDrama() {
+  closeSave();
+  entrySource = 's5';
+  currentScriptIdx = 0;
+  document.getElementById('epTitle').textContent = scripts[0].name;
+  renderEpisodes();
+  go('pgEp');
+}
+
+// ---- 渲染剧集列表 ----
+function renderEpisodes() {
+  const eps = episodesByScript[currentScriptIdx] || [];
+  document.getElementById('episodeList').innerHTML = eps.map((ep, i) => `
+    <div class="ep-card" onclick="playEpisode('${ep.name}',${ep.duration})">
+      <div class="ep-thumb"></div>
+      <div style="flex:1"><div class="ep-name">${ep.name}</div><div class="ep-meta">${ep.date} · ${ep.duration}s</div></div>
+      <div class="ep-btns">
+        <button class="ep-edit" onclick="event.stopPropagation();editEpisode('${ep.name}',${ep.duration})">编辑</button>
+        <button class="ep-dl" onclick="event.stopPropagation();toast('下载${ep.name}')">下载</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ---- 剧集卡片 → 只读播放 ----
+function playEpisode(epName, duration) {
+  entrySource = 's5_readonly';
+  document.getElementById('s5Title').textContent = getCurrentScript().name;
+  document.getElementById('s5Step').style.display = 'none';
+  document.getElementById('s5EpTag').textContent = epName;
+  document.getElementById('s5EpTag').style.display = 'block';
+  document.getElementById('s5DurTag').textContent = '0:' + String(duration).padStart(2, '0');
+  document.getElementById('s5DurTag').style.display = 'block';
+  document.getElementById('s5Bottom').style.display = 'none';
+  document.getElementById('s5BottomReadonly').style.display = 'flex';
+  go('pgS5');
+}
+
+// ---- 剧集卡片 → 编辑 ----
+function editEpisode(epName, duration) {
+  entrySource = 'ep_edit';
+  document.getElementById('s5Title').textContent = '合成视频';
+  document.getElementById('s5Step').style.display = '';
+  document.getElementById('s5Step').textContent = '5/5';
+  document.getElementById('s5EpTag').textContent = epName;
+  document.getElementById('s5EpTag').style.display = 'block';
+  document.getElementById('s5DurTag').textContent = '0:' + String(duration).padStart(2, '0');
+  document.getElementById('s5DurTag').style.display = 'block';
+  document.getElementById('s5Bottom').style.display = 'flex';
+  document.getElementById('s5BottomReadonly').style.display = 'none';
+  go('pgS5');
+}
+
+// ---- 创作下一集 ----
+function createNextEpisode() {
+  entrySource = 'ep';
+  const script = getCurrentScript();
+  document.getElementById('s1Name').value = script.name;
+  document.getElementById('s1Outline').value = outlineAutoFill ? script.outline : '';
+  document.getElementById('s1OutlineHint').classList.toggle('show', outlineAutoFill);
+  go('pgS1');
+}
+
+// ---- Save Sheet ----
+function openSave() {
+  document.getElementById('saveSub').textContent = '已保存为第' + numCn(epCounter) + '集';
+  epCounter++;
+  document.getElementById('saveSheet').classList.add('show');
+}
+function closeSave() { document.getElementById('saveSheet').classList.remove('show'); }
+
+// ---- Login Sheet ----
+function openLogin() { document.getElementById('loginSheet').classList.add('show'); }
+function closeLogin() { document.getElementById('loginSheet').classList.remove('show'); pendingAction = null; }
+function onLoginSuccess() {
+  isLoggedIn = true;
+  document.getElementById('dbLogin').textContent = '已登录';
+  document.getElementById('dbLogin').className = 'debug-btn on';
+  closeLogin();
+  toast('登录成功');
+  if (pendingAction) { pendingAction(); pendingAction = null; }
+  updateDbgState();
+}
+
+// ---- Reset S5 ----
+function resetS5() {
+  document.getElementById('s5Title').textContent = '合成视频';
+  document.getElementById('s5Step').style.display = '';
+  document.getElementById('s5EpTag').style.display = 'none';
+  document.getElementById('s5DurTag').style.display = 'none';
+  document.getElementById('s5Bottom').style.display = 'flex';
+  document.getElementById('s5BottomReadonly').style.display = 'none';
+}
+
+// Override go to reset S5 when leaving
+const _go = go;
+go = function(id) {
+  if (document.getElementById('pgS5').classList.contains('active') && id !== 'pgS5') resetS5();
+  _go(id);
+};
+
+// ---- Debug controls ----
+function toggleLogin() {
+  isLoggedIn = !isLoggedIn;
+  const btn = document.getElementById('dbLogin');
+  btn.textContent = isLoggedIn ? '已登录' : '未登录';
+  btn.className = 'debug-btn' + (isLoggedIn ? ' on' : '');
+  updateDbgState();
+}
+
+function setEntry(mode) {
+  if (mode === 'home') { entrySource = 'home'; go('pgMy'); }
+  else if (mode === 's5') { entrySource = 's5'; currentScriptIdx = 0; document.getElementById('epTitle').textContent = scripts[0].name; renderEpisodes(); go('pgEp'); toast('模拟：从环节5保存成功进入'); }
+  else if (mode === 'ep_direct') { entrySource = 'home'; currentScriptIdx = 0; document.getElementById('epTitle').textContent = scripts[0].name; renderEpisodes(); go('pgEp'); }
+  ['dbEntryHome','dbEntryS5','dbEntryEp'].forEach(id => document.getElementById(id).className = 'debug-btn');
+  const map = { home: 'dbEntryHome', s5: 'dbEntryS5', ep_direct: 'dbEntryEp' };
+  document.getElementById(map[mode]).className = 'debug-btn on';
+  updateDbgState();
+}
+
+function setDataState(state) {
+  dataEmpty = state === 'empty';
+  document.getElementById('scriptList').style.display = dataEmpty ? 'none' : '';
+  document.getElementById('scriptEmpty').style.display = dataEmpty ? 'flex' : 'none';
+  document.getElementById('dbDataNormal').className = 'debug-btn' + (!dataEmpty ? ' on' : '');
+  document.getElementById('dbDataEmpty').className = 'debug-btn' + (dataEmpty ? ' on' : '');
+}
+
+function switchScript(idx) {
+  currentScriptIdx = idx;
+  document.getElementById('epTitle').textContent = scripts[idx].name;
+  renderEpisodes();
+  document.getElementById('dbScript0').className = 'debug-btn' + (idx === 0 ? ' on' : '');
+  document.getElementById('dbScript1').className = 'debug-btn' + (idx === 1 ? ' on' : '');
+  document.getElementById('dbgOutline').textContent = scripts[idx].outline;
+}
+
+function setS5Mode(mode) {
+  if (mode === 'edit') editEpisode('第一集', 22);
+  else playEpisode('第一集', 22);
+  document.getElementById('dbS5Edit').className = 'debug-btn' + (mode === 'edit' ? ' on' : '');
+  document.getElementById('dbS5Readonly').className = 'debug-btn' + (mode === 'readonly' ? ' on' : '');
+}
+
+function toggleOutline(on) {
+  outlineAutoFill = on;
+  document.getElementById('dbOutlineOn').className = 'debug-btn' + (on ? ' on' : '');
+  document.getElementById('dbOutlineOff').className = 'debug-btn' + (!on ? ' on' : '');
+}
+
+function updateDbgState() {
+  const activePage = document.querySelector('.page.active');
+  const pageName = activePage ? activePage.id : '?';
+  const pageNames = { pgHome: '首页', pgS1: '环节1-内容创作', pgS2: '环节2-角色创建', pgS3: '环节3-场景图', pgS4: '环节4-分镜生成', pgS5: '环节5-合成视频', pgMy: '剧本列表', pgEp: '剧集列表' };
+  const entryNames = { home: '首页', s5: '环节5保存', s5_readonly: '只读播放', ep: '创作下一集', ep_edit: '编辑模式' };
+  document.getElementById('dbgState').textContent = `页面：${pageNames[pageName]||pageName} | 入口：${entryNames[entrySource]||entrySource} | 登录：${isLoggedIn?'是':'否'}`;
+}
+
+// ---- Utils ----
+function numCn(n) { const m = ['','一','二','三','四','五','六','七','八','九','十']; return n <= 10 ? m[n] : n; }
+function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 1800); }
+
+// Init
+renderEpisodes();
+updateDbgState();
+</script>
+</body>
+</html>

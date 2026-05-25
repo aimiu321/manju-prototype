@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI漫剧创作大师 — 环节5 合成视频</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;background:#e8e8e8;min-height:100vh;display:flex;justify-content:center;padding:20px}
+
+/* === 三栏布局 === */
+.layout{display:flex;gap:20px;max-width:1440px;width:100%}
+.col-left{flex-shrink:0;display:flex;align-items:flex-start;justify-content:center}
+.col-mid{flex:1;min-width:0}
+.col-right{flex-shrink:0;width:320px}
+
+/* === 手机模型 === */
+.phone-frame{width:390px;height:844px;background:#0d0d0d;border-radius:44px;border:3px solid #222;overflow:hidden;position:relative;box-shadow:0 4px 24px rgba(0,0,0,0.15)}
+.phone-notch{width:126px;height:30px;background:#0d0d0d;border-radius:0 0 18px 18px;margin:0 auto;position:relative;z-index:100}
+.phone-notch::before{content:'';width:8px;height:8px;background:#1a1a1a;border-radius:50%;position:absolute;right:26px;top:10px}
+.status-bar{display:flex;justify-content:space-between;align-items:center;padding:0 28px;height:18px;color:#ccc;font-size:11px;font-weight:600}
+.app-content{height:calc(844px - 30px - 18px);display:flex;flex-direction:column;background:#0d0d0d}
+
+/* Nav */
+.nav-bar{display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid #1a1a1a;flex-shrink:0}
+.nav-bar .back{color:#8b7bf7;font-size:18px;cursor:pointer;padding:4px}
+.nav-bar .title{font-size:16px;font-weight:700;color:#fff;margin-left:8px;flex:1}
+.nav-bar .step{font-size:11px;color:#555;margin-left:auto}
+.nav-bar .hist-btn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:6px;transition:background .15s;margin-left:8px}
+.nav-bar .hist-btn:hover{background:#1a1a1a}
+.nav-bar .hist-btn svg{width:18px;height:18px;fill:#8b7bf7}
+
+/* Page transitions */
+.page{display:none;flex-direction:column;height:100%}
+.page.active{display:flex}
+
+/* ===== Page1: 合成视频 ===== */
+.video-area{flex:1;position:relative;display:flex;align-items:center;justify-content:center;background:#000;overflow:hidden;min-height:0}
+
+/* 合成进度 */
+.merge-progress{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.merge-spinner{width:40px;height:40px;border:3px solid rgba(139,123,247,0.15);border-top-color:#8b7bf7;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.merge-text{color:#aaa;font-size:14px;font-weight:600}
+.merge-sub{color:#555;font-size:11px}
+
+/* 合成失败 */
+.merge-fail{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+.merge-fail-icon{font-size:36px;opacity:.6}
+.merge-fail-text{color:#888;font-size:14px}
+.merge-fail-retry{color:#8b7bf7;font-size:12px;margin-top:4px}
+
+/* 视频播放 */
+.video-ready{width:100%;height:100%;position:relative}
+.video-poster{width:100%;height:100%;background:linear-gradient(135deg,#1a0f2e 0%,#0d1a2e 40%,#1a1a0f 100%);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.play-big{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.1);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s}
+.play-big:active{transform:scale(.93)}
+.play-big::after{content:'';width:0;height:0;border-top:11px solid transparent;border-bottom:11px solid transparent;border-left:18px solid rgba(255,255,255,0.8);margin-left:4px}
+.dur-info{position:absolute;top:12px;right:12px;padding:3px 8px;border-radius:5px;background:rgba(0,0,0,0.6);color:#aaa;font-size:10px}
+.ep-tag{position:absolute;top:12px;left:12px;padding:3px 10px;border-radius:5px;background:rgba(124,58,237,0.6);color:#fff;font-size:11px;font-weight:600}
+
+/* AVPlayer controls */
+.av-controls{position:absolute;bottom:0;left:0;right:0;padding:8px 12px 10px;background:linear-gradient(transparent,rgba(0,0,0,0.7));display:none}
+.av-controls.show{display:flex;align-items:center;gap:8px}
+.av-play{width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.av-play::after{content:'';width:0;height:0;border-top:7px solid transparent;border-bottom:7px solid transparent;border-left:11px solid #fff;margin-left:2px}
+.av-play.playing::after{content:'';width:9px;height:11px;border-left:2.5px solid #fff;border-right:2.5px solid #fff}
+.av-time{color:#aaa;font-size:10px;flex-shrink:0;min-width:32px;text-align:center}
+.av-bar{flex:1;height:3px;background:rgba(255,255,255,0.15);border-radius:2px;cursor:pointer;position:relative}
+.av-fill{height:100%;width:0%;background:#8b7bf7;border-radius:2px;transition:width .2s linear}
+.av-full{width:24px;height:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.av-full svg{width:14px;height:14px;fill:#aaa}
+
+/* 分镜组成信息 */
+.shot-composition{border-top:1px solid #1a1a1a;padding:8px 16px;flex-shrink:0;max-height:140px;overflow-y:auto}
+.shot-composition::-webkit-scrollbar{width:0}
+.sc-header{display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px 0}
+.sc-header .sc-title{font-size:12px;color:#8b7bf7;font-weight:600}
+.sc-header .sc-arrow{font-size:10px;color:#555;transition:transform .2s}
+.sc-header .sc-arrow.collapsed{transform:rotate(-90deg)}
+.sc-list{margin-top:6px}
+.sc-row{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #111}
+.sc-row:last-child{border-bottom:none}
+.sc-num{font-size:10px;color:#555;width:18px;flex-shrink:0}
+.sc-thumb{width:40px;height:22px;border-radius:3px;background:linear-gradient(135deg,#1e1236,#2a1a3c);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:6px;color:#444}
+.sc-char{font-size:11px;color:#aaa;flex:1}
+.sc-dur{font-size:9px;color:#555;flex-shrink:0}
+
+/* Bottom bar */
+.bottom-bar{padding:10px 16px 28px;background:#0d0d0d;display:flex;gap:8px;flex-shrink:0}
+.bar-btn{flex:1;padding:11px 0;border-radius:10px;font-size:12px;font-weight:700;border:none;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;transition:all .15s}
+.bar-btn:active{transform:scale(.97)}
+.bar-btn.out{background:transparent;border:1px solid #333;color:#8b7bf7}
+.bar-btn.out svg{width:14px;height:14px;fill:#8b7bf7}
+.bar-btn.solid{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff}
+.bar-btn.solid svg{width:14px;height:14px;fill:#fff}
+.bar-btn.disabled{opacity:.35;pointer-events:none}
+.bar-btn.retry{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff}
+
+/* === Sheets === */
+.sheet-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.6);z-index:300;opacity:0;pointer-events:none;transition:opacity .25s}
+.sheet-overlay.show{opacity:1;pointer-events:all}
+.sheet{position:absolute;bottom:0;left:0;right:0;background:#151515;border-radius:20px 20px 0 0;padding:20px 16px 28px;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1)}
+.sheet-overlay.show .sheet{transform:translateY(0)}
+.sheet-handle{width:36px;height:4px;background:#333;border-radius:2px;margin:0 auto 16px}
+.sheet-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:4px}
+.sheet-subtitle{font-size:12px;color:#666;margin-bottom:14px}
+
+/* Shot Select Sheet */
+.ss-list{max-height:340px;overflow-y:auto}
+.ss-list::-webkit-scrollbar{width:0}
+.ss-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1e1e1e}
+.ss-item:last-child{border-bottom:none}
+.ss-item.disabled{opacity:.35;pointer-events:none}
+.ss-check{width:20px;height:20px;border-radius:4px;border:2px solid #333;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+.ss-check.checked{background:#7c3aed;border-color:#7c3aed}
+.ss-check.checked::after{content:'✓';color:#fff;font-size:12px;font-weight:700}
+.ss-thumb{width:44px;height:25px;border-radius:4px;overflow:hidden;background:linear-gradient(135deg,#1e1236,#2a1a3c);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;color:#444}
+.ss-info{flex:1;min-width:0}
+.ss-name{font-size:13px;font-weight:600;color:#fff}
+.ss-meta{font-size:10px;color:#555;margin-top:2px}
+.ss-status{font-size:10px;color:#555;flex-shrink:0}
+.ss-status.done{color:#16a34a}
+.ss-footer{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:10px;border-top:1px solid #1e1e1e}
+.ss-count{font-size:12px;color:#aaa}
+.ss-count b{color:#8b7bf7}
+.ss-merge-btn{padding:10px 28px;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff}
+.ss-merge-btn.disabled{opacity:.35;pointer-events:none}
+
+/* History Sheet */
+.h-list{max-height:360px;overflow-y:auto}
+.h-list::-webkit-scrollbar{width:0}
+.h-item{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #1e1e1e}
+.h-item:last-child{border-bottom:none}
+.h-thumb{width:48px;height:27px;flex-shrink:0;border-radius:4px;overflow:hidden;background:linear-gradient(135deg,#1e1236,#2a1a3c)}
+.h-info{flex:1;min-width:0}
+.h-name{font-size:13px;font-weight:600;color:#fff}
+.h-time{font-size:10px;color:#555;margin-top:2px}
+.h-dl{padding:5px 10px;border-radius:6px;font-size:10px;font-weight:600;border:1px solid #333;background:transparent;color:#8b7bf7;cursor:pointer;font-family:inherit;flex-shrink:0}
+
+/* Save Sheet */
+.save-sheet .sheet{text-align:center}
+.save-icon{font-size:36px;margin-bottom:10px}
+.save-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:4px}
+.save-sub{font-size:12px;color:#555;margin-bottom:16px}
+.ep-name-edit{display:inline-flex;align-items:center;gap:4px;background:#1a1a2e;border:1px solid rgba(139,123,247,0.3);border-radius:8px;padding:8px 14px;margin-bottom:18px;cursor:pointer;transition:border-color .15s}
+.ep-name-edit:hover{border-color:rgba(139,123,247,0.6)}
+.ep-name-edit .name-text{color:#fff;font-size:14px;font-weight:600}
+.ep-name-edit .edit-hint{color:#555;font-size:11px}
+.ep-name-input{background:#1a1a2e;border:1px solid #8b7bf7;border-radius:8px;padding:8px 14px;color:#fff;font-size:14px;font-weight:600;font-family:inherit;text-align:center;outline:none;max-width:200px;margin-bottom:18px}
+.save-btns{display:flex;gap:10px}
+.save-btns .s-btn{flex:1;padding:11px;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:inherit}
+.s-btn.cancel{background:#222;color:#666}
+.s-btn.ok{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff}
+
+/* Dialog */
+.dlg-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:400;opacity:0;pointer-events:none;transition:opacity .2s}
+.dlg-overlay.show{opacity:1;pointer-events:all}
+.dlg-box{width:280px;background:#1a1a1a;border-radius:14px;padding:24px;text-align:center}
+.dlg-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:10px}
+.dlg-msg{font-size:13px;color:#888;line-height:1.5;margin-bottom:18px}
+.dlg-btns{display:flex;gap:10px}
+.dlg-btn{flex:1;padding:11px;border-radius:8px;font-size:13px;font-weight:600;border:none;cursor:pointer;font-family:inherit}
+.dlg-btn.cancel{background:#222;color:#666}
+.dlg-btn.ok{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff}
+
+/* Login Popup */
+.login-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:500;opacity:0;pointer-events:none;transition:opacity .2s}
+.login-overlay.show{opacity:1;pointer-events:all}
+.login-box{width:280px;background:#1a1a1a;border-radius:14px;padding:24px;text-align:center}
+.login-title{font-size:17px;font-weight:700;color:#fff;margin-bottom:20px}
+.login-field{display:flex;align-items:center;background:#111;border-radius:10px;padding:0 12px;margin-bottom:12px;border:1px solid #222}
+.login-field input{flex:1;background:none;border:none;color:#fff;font-size:15px;padding:14px 0;outline:none;font-family:inherit}
+.login-field input::placeholder{color:#444}
+.login-field .code-btn{font-size:12px;color:#8b7bf7;cursor:pointer;white-space:nowrap}
+.login-submit{width:100%;padding:14px;border-radius:10px;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;margin-top:4px}
+.login-submit:active{transform:scale(.98)}
+.login-close{margin-top:14px;font-size:13px;color:#555;cursor:pointer}
+
+/* Toast */
+.toast{position:absolute;top:56px;left:50%;transform:translateX(-50%);padding:8px 16px;background:rgba(124,58,237,0.9);color:#fff;border-radius:8px;font-size:12px;z-index:500;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+
+/* === 操作说明面板 === */
+.guide-panel{background:#fff;border-radius:14px;border:1px solid #ddd;box-shadow:0 1px 3px rgba(0,0,0,0.06);overflow:hidden}
+.guide-header{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;padding:14px 18px;font-size:16px;font-weight:700;letter-spacing:1px}
+.guide-body{padding:16px 18px;max-height:812px;overflow-y:auto}
+.guide-body::-webkit-scrollbar{width:4px}
+.guide-body::-webkit-scrollbar-thumb{background:#ccc;border-radius:2px}
+
+.guide-section{margin-bottom:18px}
+.guide-section:last-child{margin-bottom:0}
+.guide-sec-title{font-size:14px;font-weight:700;color:#7c3aed;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.guide-sec-title .num{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#7c3aed;color:#fff;font-size:11px;font-weight:700;flex-shrink:0}
+
+.guide-item{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;font-size:13px;color:#555;line-height:1.6}
+.guide-dot{width:5px;height:5px;border-radius:50%;background:#ccc;flex-shrink:0;margin-top:7px}
+.guide-dot.purple{background:#7c3aed}
+.guide-dot.green{background:#16a34a}
+.guide-dot.orange{background:#d97706}
+.guide-dot.red{background:#ef4444}
+.guide-dot.blue{background:#3b82f6}
+.guide-dot.gray{background:#888}
+
+.guide-tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:3px;font-weight:600;vertical-align:middle}
+.guide-tag.purple{color:#7c3aed;background:rgba(124,58,237,0.08)}
+.guide-tag.green{color:#16a34a;background:rgba(22,163,74,0.08)}
+.guide-tag.orange{color:#d97706;background:rgba(217,119,6,0.08)}
+.guide-tag.red{color:#ef4444;background:rgba(239,68,68,0.08)}
+.guide-tag.blue{color:#3b82f6;background:rgba(59,130,246,0.08)}
+.guide-tag.gray{color:#888;background:#f0f0f0}
+
+.guide-divider{border:none;border-top:1px solid #f0f0f0;margin:14px 0}
+
+/* === 调试面板 === */
+.debug-panel{background:#fff;border-radius:14px;border:1px solid #ddd;box-shadow:0 1px 3px rgba(0,0,0,0.06);overflow:hidden}
+.debug-header{background:linear-gradient(135deg,#6d28d9,#5b21b6);color:#fff;padding:14px 18px;font-size:16px;font-weight:700;letter-spacing:1px}
+.debug-body{padding:16px 18px;max-height:812px;overflow-y:auto}
+.debug-body::-webkit-scrollbar{width:4px}
+.debug-body::-webkit-scrollbar-thumb{background:#ccc;border-radius:2px}
+.debug-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.debug-label{font-size:13px;color:#666;min-width:70px}
+.debug-btn{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;border:1px solid #ddd;cursor:pointer;font-family:inherit;background:#f5f5f5;color:#444;transition:all .15s}
+.debug-btn:active{transform:scale(.96)}
+.debug-btn.on{background:#7c3aed;color:#fff;border-color:#7c3aed}
+.debug-btn.warn{border-color:#ef4444;color:#ef4444}
+.debug-input{width:56px;padding:4px 6px;border:1px solid #ddd;border-radius:6px;font-size:12px;text-align:center;outline:none}
+.debug-input:focus{border-color:#7c3aed}
+.debug-section{margin-top:4px;padding-top:8px;border-top:1px solid #f0f0f0}
+.debug-state{font-size:11px;color:#888;line-height:1.6;margin:6px 0;padding:8px;background:#f9f5ff;border:1px solid #e0d8f0;border-radius:6px;font-family:monospace;word-break:break-all}
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+<!-- ===== 左栏：手机模型 ===== -->
+<div class="col-left">
+<div class="phone-frame">
+  <div class="phone-notch"></div>
+  <div class="status-bar"><span>9:41</span><span>&#9679;&#9679;&#9679;&#9679;</span></div>
+
+  <div class="app-content">
+
+    <!-- ===== Page1: 合成视频 ===== -->
+    <div class="page active" id="page1">
+      <div class="nav-bar">
+        <div class="back" onclick="goBack()">&larr;</div>
+        <div class="title">合成视频</div>
+        <div class="step">5/5</div>
+        <div class="hist-btn" onclick="openHist()">
+          <svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+        </div>
+      </div>
+      <div class="video-area" id="videoArea"></div>
+      <div class="shot-composition" id="shotComp"></div>
+      <div class="bottom-bar" id="bottomBar"></div>
+    </div>
+
+  </div>
+
+  <!-- 合成视频记录 Sheet -->
+  <div class="sheet-overlay" id="histSheet" onclick="if(event.target===this)closeHist()">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">合成视频记录</div>
+      <div class="sheet-subtitle">本剧所有合成视频</div>
+      <div class="h-list" id="histList"></div>
+    </div>
+  </div>
+
+  <!-- Shot Select Sheet -->
+  <div class="sheet-overlay" id="shotSheet" onclick="if(event.target===this)closeShotSelect()">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">选择分镜</div>
+      <div class="sheet-subtitle">选择要合成的分镜视频，至少选择2个</div>
+      <div class="ss-list" id="shotList"></div>
+      <div class="ss-footer">
+        <div class="ss-count">已选 <b id="shotCount">0</b> 个分镜</div>
+        <button class="ss-merge-btn disabled" id="shotMergeBtn" onclick="confirmShotSelect()">合成</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Save Sheet -->
+  <div class="sheet-overlay save-sheet" id="saveSheet" onclick="if(event.target===this)closeSave()">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="save-icon">&#128190;</div>
+      <div class="save-title">保存成功</div>
+      <div class="save-sub" id="saveSub">已保存为第一集</div>
+      <div id="nameArea"></div>
+      <div class="save-btns">
+        <button class="s-btn cancel" onclick="closeSave()">继续编辑</button>
+        <button class="s-btn ok" onclick="goMyDrama()">查看我的漫剧</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dialog (合成中返回确认) -->
+  <div class="dlg-overlay" id="dlg" onclick="if(event.target===this)closeDlg()">
+    <div class="dlg-box">
+      <div class="dlg-title" id="dlgT"></div>
+      <div class="dlg-msg" id="dlgM"></div>
+      <div class="dlg-btns">
+        <button class="dlg-btn cancel" onclick="closeDlg()">取消</button>
+        <button class="dlg-btn ok" id="dlgOk">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login -->
+  <div class="login-overlay" id="loginPopup">
+    <div class="login-box">
+      <div class="login-title">手机号登录</div>
+      <div class="login-field"><input id="phoneInput" type="tel" placeholder="请输入手机号" maxlength="11"></div>
+      <div class="login-field"><input id="codeInput" type="text" placeholder="验证码" maxlength="6"><div class="code-btn" onclick="showToast('验证码已发送')">获取验证码</div></div>
+      <button class="login-submit" onclick="doLogin()">登录</button>
+      <div class="login-close" onclick="closeLogin()">暂不登录</div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+</div>
+
+<!-- ===== 中栏：操作说明 ===== -->
+<div class="col-mid">
+<div class="guide-panel">
+  <div class="guide-header">环节5 - 合成视频 操作说明</div>
+  <div class="guide-body">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">1</span>页面结构</div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span><span class="guide-tag purple">Page1 合成视频</span> 视频播放区 + 分镜组成（可折叠）+ 底部操作栏</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span><span class="guide-tag blue">分镜选择半屏</span> 点击"选择分镜"/"重新合成"弹出，选择≥2个分镜后合成</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span><span class="guide-tag blue">分镜组成</span> 视频区下方可折叠区域，展示合成视频包含的分镜信息</span></div>
+      <div class="guide-item"><div class="guide-dot gray"></div><span>"我的漫剧"（剧本列表+剧集列表+创建下一集）为全局模块，独立于环节5</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">2</span>不同入口进入逻辑</div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span><span class="guide-tag purple">从环节4进入</span> → 若已有mergedVideoUrl直接展示，否则显示引导态"点击下方选择分镜开始合成"</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span><span class="guide-tag blue">从我的漫剧进入</span> → 直接加载已保存视频，隐藏"选择分镜"和"保存剧集"按钮</span></div>
+      <div class="guide-item"><div class="guide-dot gray"></div><span>调试器"入口来源"可切换模拟不同入口</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">3</span>合成状态</div>
+      <div class="guide-item"><div class="guide-dot gray"></div><span><span class="guide-tag gray">空闲</span> 显示引导态"点击下方选择分镜开始合成"，底部"选择分镜"按钮</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span><span class="guide-tag purple">合成中</span> Loading动画 + "正在合成视频..." + "分镜 N/M 已处理"</span></div>
+      <div class="guide-item"><div class="guide-dot green"></div><span><span class="guide-tag green">合成完成</span> 视频播放器（首帧+播放按钮+时长标签）</span></div>
+      <div class="guide-item"><div class="guide-dot red"></div><span><span class="guide-tag red">合成失败</span> ❌ + "合成失败，请重试" + "重新合成"按钮</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">4</span>底部按钮逻辑（动态显隐）</div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span><span class="guide-tag purple">选择分镜</span> 从环节4进入且未合成时显示，合成中隐藏</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span><span class="guide-tag purple">重新合成</span> 合成完成/失败时显示（从环节4进入），合成中隐藏</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span><span class="guide-tag purple">下载视频</span> 始终显示，合成完成时可用</span></div>
+      <div class="guide-item"><div class="guide-dot green"></div><span><span class="guide-tag green">保存剧集</span> 仅从环节4进入+合成完成时显示，点击后变为"保存中..."loading</span></div>
+      <div class="guide-item"><div class="guide-dot red"></div><span><span class="guide-tag red">重新合成（失败）</span> 合成失败时替换"保存剧集"位置</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>从我的漫剧进入时，只显示"下载视频"</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">5</span>返回逻辑</div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>合成完成/空闲 → 直接返回环节4</span></div>
+      <div class="guide-item"><div class="guide-dot orange"></div><span>合成中 → 弹窗「视频正在合成中，离开将中断合成，确定返回吗？」→ 确定 → 取消合成任务 → 返回环节4</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">6</span>分镜选择半屏</div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>展示所有分镜，已生成(videoNeedsRegen=false)可勾选，其余置灰</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>默认选中所有可选分镜</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>≥2个分镜时"合成"按钮可用</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>点击"合成"→传入shotIds→关闭半屏→开始合成</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>合成顺序固定按分镜序号，MVP不支持拖拽调序</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">7</span>保存剧集</div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>点击"保存剧集" → 校验登录 → 按钮变为"保存中..." → 保存成功半屏</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>保存失败 → 按钮恢复"保存剧集" + toast"保存失败，请重试"</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>半屏中可编辑剧集名称（默认"第N集"，最大20字）</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>保存操作在弹出半屏前已完成，"查看我的漫剧"不再触发保存</span></div>
+      <div class="guide-item"><div class="guide-dot green"></div><span>已保存剧集永久保留云端，不受分镜7天限制</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">8</span>视频播放</div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>iOS原生AVPlayer控件：播放/暂停/进度条/音量/全屏</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>点击视频区域 → 播放；再次点击 → 暂停</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>播放完毕回到首帧</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>下载视频 → 请求相册权限 → 保存到相册；权限拒绝→弹窗引导去设置</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">9</span>积分与登录</div>
+      <div class="guide-item"><div class="guide-dot green"></div><span>合成视频：0积分（FFmpeg服务端处理，无AI成本）</span></div>
+      <div class="guide-item"><div class="guide-dot green"></div><span>保存剧集：0积分（云存储操作）</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>保存剧集需登录（关联用户剧集库）</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>下载视频无需登录</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>查看我的漫剧需登录</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">10</span>关键设计决策</div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>分镜选择移入环节5 → 合成视频是环节5核心操作，选择+合成紧耦合</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>shotIds客户端传入（不持久化）→ 每次合成独立选择，无需selectedShotIds字段</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>服务端拼接（非客户端）→ 视频已在云端，避免客户端集成FFmpeg</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>FFmpeg -c copy优先 → Seedance输出编码一致，快且无损</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>最低2个分镜 → 1个无需合成</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>重新合成覆盖旧结果 → 同一episode不同版本，覆盖比新建合理</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>剧集永久保存 → 最终成品不受分镜7天限制</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>MVP不支持删除剧集 → 避免误删，减少复杂度</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>保存先于半屏确认 → 保存完成后才弹半屏，半屏仅编辑名称</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>并发合成防护 → merging状态隐藏选择/重新合成按钮</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>轮询超时2分钟视为失败 → 避免无限等待</span></div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- ===== 右栏：调试器 ===== -->
+<div class="col-right">
+<div class="debug-panel">
+  <div class="debug-header">状态调试器</div>
+  <div class="debug-body">
+    <div class="debug-row">
+      <span class="debug-label">登录状态</span>
+      <button class="debug-btn" id="dbLogin" onclick="toggleLogin()">未登录</button>
+    </div>
+    <div class="debug-row">
+      <span class="debug-label">会员</span>
+      <button class="debug-btn" id="dbMember" onclick="toggleMember()">非会员</button>
+    </div>
+    <div class="debug-section">
+      <div class="debug-row">
+        <span class="debug-label">入口来源</span>
+      </div>
+      <div class="debug-row">
+        <button class="debug-btn on" id="dbEntry4" onclick="setEntry('stage4')">从环节4</button>
+        <button class="debug-btn" id="dbEntryMy" onclick="setEntry('mydrama')">从我的漫剧</button>
+      </div>
+    </div>
+    <div class="debug-section">
+      <div class="debug-row">
+        <span class="debug-label">合成状态</span>
+      </div>
+      <div class="debug-row">
+        <button class="debug-btn" onclick="openShotSelect()">选择分镜</button>
+        <button class="debug-btn" onclick="finishMerge()">合成完成</button>
+      </div>
+      <div class="debug-row">
+        <button class="debug-btn warn" onclick="failMerge()">合成失败</button>
+        <button class="debug-btn" onclick="cancelMerge()">取消合成</button>
+      </div>
+      <div class="debug-row">
+        <button class="debug-btn" onclick="setMergeState('idle')">空闲</button>
+        <button class="debug-btn" onclick="resetAll()">重置全部</button>
+      </div>
+    </div>
+    <div class="debug-section">
+      <div class="debug-row">
+        <span class="debug-label">分镜数据</span>
+      </div>
+      <div class="debug-row">
+        <button class="debug-btn" onclick="addMockShot()">添加分镜</button>
+        <button class="debug-btn" onclick="toggleShotAvail()">切换可选</button>
+      </div>
+    </div>
+    <div class="debug-section">
+      <div class="debug-row">
+        <span class="debug-label">播放控制</span>
+      </div>
+      <div class="debug-row">
+        <button class="debug-btn" onclick="togglePlay()">播放/暂停</button>
+        <button class="debug-btn" onclick="resetPlayer()">重置播放</button>
+      </div>
+    </div>
+    <div class="debug-section">
+      <div class="debug-row">
+        <span class="debug-label">页面跳转</span>
+      </div>
+      <div class="debug-row">
+        <button class="debug-btn on" onclick="showPage('page1')">Page1</button>
+        <button class="debug-btn" onclick="showToast('全局模块，独立于环节5')">我的漫剧</button>
+      </div>
+    </div>
+    <div class="debug-section">
+      <div class="debug-row">
+        <span class="debug-label">数据操作</span>
+      </div>
+      <div class="debug-row">
+        <button class="debug-btn" onclick="addEpisode()">添加一集</button>
+        <button class="debug-btn" onclick="addMockRecord()">添加合成记录</button>
+      </div>
+      <div class="debug-row">
+        <button class="debug-btn warn" onclick="resetData()">重置数据</button>
+      </div>
+    </div>
+    <div class="debug-section">
+      <div class="debug-row" style="flex-direction:column;align-items:flex-start;gap:4px">
+        <span class="debug-label">当前状态</span>
+        <div class="debug-state" id="dbState"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+
+<script>
+/* ===== Data ===== */
+const numCn=n=>{const m=['','一','二','三','四','五','六','七','八','九','十'];return n<=10?m[n]:n+'';};
+
+const scripts=[
+  {id:1,name:'仙途缘起',genre:'修仙',episodes:[
+    {id:'ep1',name:'第一集',time:'2026-05-24 14:32',duration:22,number:1},
+    {id:'ep2',name:'第二集',time:'2026-05-24 15:10',duration:19,number:2},
+  ]},
+  {id:2,name:'都市暗影',genre:'都市',episodes:[
+    {id:'ep3',name:'第一集',time:'2026-05-23 20:48',duration:25,number:1},
+  ]},
+];
+
+// 可选分镜列表（模拟 GET /episodes/{id}/available-shots）
+let availableShots=[
+  {id:'s1',orderNum:1,name:'分镜1',mainChar:'陆沉',duration:6,available:true,status:'已生成'},
+  {id:'s2',orderNum:2,name:'分镜2',mainChar:'白芷',duration:5,available:true,status:'已生成'},
+  {id:'s3',orderNum:3,name:'分镜3',mainChar:'陆沉',duration:8,available:true,status:'已生成'},
+  {id:'s4',orderNum:4,name:'分镜4',mainChar:'白芷',duration:7,available:false,status:'待生成'},
+  {id:'s5',orderNum:5,name:'分镜5',mainChar:'陆沉',duration:4,available:false,status:'场景图已变更'},
+];
+
+// 当前合成选中的分镜
+let selectedShots=[];
+
+let isLoggedIn=false;
+let isMember=false;
+let entrySource='stage4'; // stage4 / mydrama
+let mergeState='idle'; // idle / merging / merged / failed
+let mergeProgress=0;
+let mergeTimer=null;
+let isPlaying=false;
+let playProgress=0;
+let playTimer=null;
+let totalDuration=0;
+let savedEpisodes=0;
+let mergeRecords=[]; // 合成视频记录列表
+let shotCompExpanded=true;
+let pendingSaveCallback=null;
+
+/* ===== Debug Controls ===== */
+function toggleLogin(){
+  isLoggedIn=!isLoggedIn;
+  const btn=document.getElementById('dbLogin');
+  btn.textContent=isLoggedIn?'已登录':'未登录';
+  btn.className='debug-btn'+(isLoggedIn?' on':'');
+}
+function toggleMember(){
+  isMember=!isMember;
+  const btn=document.getElementById('dbMember');
+  btn.textContent=isMember?'会员':'非会员';
+  btn.className='debug-btn'+(isMember?' on':'');
+}
+function setEntry(src){
+  entrySource=src;
+  document.getElementById('dbEntry4').className='debug-btn'+(src==='stage4'?' on':'');
+  document.getElementById('dbEntryMy').className='debug-btn'+(src==='mydrama'?' on':'');
+  renderVideoArea();
+  renderBottomBar();
+  showToast(src==='stage4'?'切换：从环节4进入':'切换：从我的漫剧进入');
+}
+function setMergeState(s){
+  clearInterval(mergeTimer);
+  clearInterval(playTimer);
+  isPlaying=false;
+  mergeState=s;
+  mergeProgress=0;
+  playProgress=0;
+  renderVideoArea();
+  renderBottomBar();
+  updateDbState();
+}
+function resetAll(){
+  setMergeState('idle');
+  selectedShots=[];
+  savedEpisodes=0;
+  isLoggedIn=false;
+  isMember=false;
+  document.getElementById('dbLogin').textContent='未登录';
+  document.getElementById('dbLogin').className='debug-btn';
+  document.getElementById('dbMember').textContent='非会员';
+  document.getElementById('dbMember').className='debug-btn';
+  setEntry('stage4');
+  showToast('全部已重置');
+}
+function addMockShot(){
+  const n=availableShots.length+1;
+  availableShots.push({id:'s'+n,orderNum:n,name:'分镜'+n,mainChar:n%2===0?'白芷':'陆沉',duration:Math.floor(Math.random()*6)+4,available:true,status:'已生成'});
+  showToast('添加分镜'+n);
+  updateDbState();
+}
+function toggleShotAvail(){
+  // 切换最后一个可选分镜的状态
+  const lastAvail=availableShots.filter(s=>s.available).pop();
+  if(lastAvail){
+    lastAvail.available=false;
+    lastAvail.status='描述已修改';
+    showToast('分镜'+lastAvail.orderNum+'→不可选');
+  }else{
+    const lastUnavail=availableShots.filter(s=>!s.available).pop();
+    if(lastUnavail){
+      lastUnavail.available=true;
+      lastUnavail.status='已生成';
+      showToast('分镜'+lastUnavail.orderNum+'→可选');
+    }
+  }
+  updateDbState();
+}
+
+/* ===== Page Navigation ===== */
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+/* ===== Page1: 合成视频 ===== */
+function renderVideoArea(){
+  const area=document.getElementById('videoArea');
+  if(mergeState==='merging'){
+    area.innerHTML=`
+      <div class="merge-progress">
+        <div class="merge-spinner"></div>
+        <div class="merge-text">正在合成视频...</div>
+        <div class="merge-sub">分镜 ${mergeProgress}/${selectedShots.length} 已处理</div>
+      </div>`;
+  }else if(mergeState==='failed'){
+    area.innerHTML=`
+      <div class="merge-fail">
+        <div class="merge-fail-icon">&#10060;</div>
+        <div class="merge-fail-text">合成失败，请重试</div>
+      </div>`;
+  }else if(mergeState==='merged'){
+    totalDuration=selectedShots.reduce((a,s)=>a+s.duration,0);
+    const mm=Math.floor(totalDuration/60);
+    const ss=totalDuration%60;
+    const timeStr=mm>0?`${mm}:${ss.toString().padStart(2,'0')}`:`0:${ss.toString().padStart(2,'0')}`;
+    const epLabel=savedEpisodes>0?`第${numCn(savedEpisodes)}集`:'预览';
+    area.innerHTML=`
+      <div class="video-ready">
+        <div class="video-poster" id="videoPoster" onclick="togglePlay()">
+          <div class="ep-tag" id="epTag">${epLabel}</div>
+          <div class="play-big" id="playBtn"></div>
+          <div class="dur-info">${timeStr}</div>
+        </div>
+        <div class="av-controls" id="avControls">
+          <div class="av-play" id="avPlay" onclick="togglePlay()"></div>
+          <div class="av-time" id="avTimeCur">0:00</div>
+          <div class="av-bar" id="avBar" onclick="seekTo(event)">
+            <div class="av-fill" id="avFill"></div>
+          </div>
+          <div class="av-time" id="avTimeEnd">${timeStr}</div>
+          <div class="av-full" onclick="showToast('全屏播放')">
+            <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+          </div>
+        </div>
+      </div>`;
+  }else{
+    area.innerHTML=`
+      <div class="merge-progress">
+        <div style="font-size:32px;opacity:.3;margin-bottom:8px">&#127916;</div>
+        <div class="merge-text" style="color:#666">点击下方选择分镜开始合成</div>
+        <div class="merge-sub">至少选择2个已生成的分镜视频</div>
+      </div>`;
+  }
+  renderShotComposition();
+  updateDbState();
+}
+
+function renderShotComposition(){
+  const el=document.getElementById('shotComp');
+  if(!el)return;
+  if(mergeState!=='merged'||selectedShots.length===0){el.style.display='none';return;}
+  el.style.display='block';
+  if(shotCompExpanded){
+    const rows=selectedShots.map(s=>`
+      <div class="sc-row">
+        <span class="sc-num">${s.orderNum}</span>
+        <div class="sc-thumb">&#127916;</div>
+        <span class="sc-char">${s.mainChar}</span>
+        <span class="sc-dur">${s.duration}s</span>
+      </div>`).join('');
+    el.innerHTML=`
+      <div class="sc-header" onclick="toggleShotComp()">
+        <span class="sc-title">包含 ${selectedShots.length} 个分镜</span>
+        <span class="sc-arrow">&#9660;</span>
+      </div>
+      <div class="sc-list">${rows}</div>`;
+  }else{
+    el.innerHTML=`
+      <div class="sc-header" onclick="toggleShotComp()">
+        <span class="sc-title">包含 ${selectedShots.length} 个分镜</span>
+        <span class="sc-arrow collapsed">&#9660;</span>
+      </div>`;
+  }
+}
+
+function toggleShotComp(){
+  shotCompExpanded=!shotCompExpanded;
+  renderShotComposition();
+}
+
+function renderBottomBar(){
+  const bar=document.getElementById('bottomBar');
+  if(!bar)return;
+  const isFromStage4=entrySource==='stage4';
+  const canDl=mergeState==='merged';
+  const canSave=mergeState==='merged'&&isFromStage4;
+  const isFailed=mergeState==='failed';
+  const isIdle=mergeState==='idle';
+  const isMerged=mergeState==='merged';
+  const isMerging=mergeState==='merging';
+
+  let btns='';
+  if(isFromStage4&&!isMerging){
+    if(isIdle){
+      btns+=`<button class="bar-btn out" onclick="openShotSelect()">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:#8b7bf7"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+        选择分镜
+      </button>`;
+    }else if(isMerged||isFailed){
+      btns+=`<button class="bar-btn out" onclick="openShotSelect()">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:#8b7bf7"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+        重新合成
+      </button>`;
+    }
+  }
+  btns+=`<button class="bar-btn out ${canDl?'':'disabled'}" onclick="download()" ${canDl?'':'disabled'}>
+    <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:#8b7bf7"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+    下载视频
+  </button>`;
+  if(isFailed&&isFromStage4){
+    btns+=`<button class="bar-btn retry" onclick="openShotSelect()">
+      重新合成
+    </button>`;
+  }else if(isFromStage4){
+    btns+=`<button class="bar-btn solid ${canSave?'':'disabled'}" onclick="openSave()" ${canSave?'':'disabled'}>
+      <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:#fff"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+      保存剧集
+    </button>`;
+  }
+  bar.innerHTML=btns;
+}
+
+/* ===== Shot Selection Half-Screen ===== */
+let shotChecked={};
+
+function openShotSelect(){
+  // 初始化勾选状态：所有可选分镜默认选中
+  shotChecked={};
+  availableShots.forEach(s=>{
+    if(s.available) shotChecked[s.id]=true;
+  });
+  renderShotList();
+  document.getElementById('shotSheet').classList.add('show');
+}
+
+function closeShotSelect(){
+  document.getElementById('shotSheet').classList.remove('show');
+}
+
+function renderShotList(){
+  const list=document.getElementById('shotList');
+  const availCount=availableShots.filter(s=>s.available).length;
+  list.innerHTML=availableShots.map(s=>{
+    const checked=shotChecked[s.id];
+    const isAvail=s.available;
+    return `
+    <div class="ss-item ${isAvail?'':'disabled'}">
+      <div class="ss-check ${checked?'checked':''}" onclick="${isAvail?`toggleShotCheck('${s.id}')`:''}"></div>
+      <div class="ss-thumb">&#127916;</div>
+      <div class="ss-info">
+        <div class="ss-name">分镜${s.orderNum}</div>
+        <div class="ss-meta">${s.mainChar} · ${s.duration}s</div>
+      </div>
+      <div class="ss-status ${isAvail?'done':''}">${s.status}</div>
+    </div>`;
+  }).join('');
+  updateShotCount();
+}
+
+function toggleShotCheck(id){
+  if(shotChecked[id]) delete shotChecked[id];
+  else shotChecked[id]=true;
+  renderShotList();
+}
+
+function updateShotCount(){
+  const count=Object.keys(shotChecked).filter(id=>shotChecked[id]).length;
+  document.getElementById('shotCount').textContent=count;
+  const btn=document.getElementById('shotMergeBtn');
+  if(count>=2){
+    btn.className='ss-merge-btn';
+  }else{
+    btn.className='ss-merge-btn disabled';
+  }
+}
+
+function confirmShotSelect(){
+  const checkedIds=Object.keys(shotChecked).filter(id=>shotChecked[id]);
+  if(checkedIds.length<2)return;
+  // 按orderNum排序
+  selectedShots=availableShots.filter(s=>checkedIds.includes(s.id)).sort((a,b)=>a.orderNum-b.orderNum);
+  closeShotSelect();
+  startMerge();
+}
+
+/* ===== Merge ===== */
+function startMerge(){
+  mergeState='merging';
+  mergeProgress=0;
+  renderVideoArea();
+  renderBottomBar();
+  clearInterval(mergeTimer);
+  mergeTimer=setInterval(()=>{
+    mergeProgress++;
+    renderVideoArea();
+    if(mergeProgress>=selectedShots.length){
+      clearInterval(mergeTimer);
+      setTimeout(()=>finishMerge(),400);
+    }
+  },800);
+}
+
+function finishMerge(){
+  mergeState='merged';
+  playProgress=0;
+  // 将旧记录isLatest设为false
+  mergeRecords.forEach(r=>r.isLatest=false);
+  // 创建新的合成记录
+  const dur=selectedShots.reduce((a,s)=>a+s.duration,0);
+  mergeRecords.unshift({
+    id:'mr_'+Date.now(),
+    shots:[...selectedShots],
+    shotCount:selectedShots.length,
+    duration:dur,
+    isLatest:true,
+    time:new Date().toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-')
+  });
+  renderVideoArea();
+  renderBottomBar();
+  showToast('合成完成');
+}
+
+function failMerge(){
+  clearInterval(mergeTimer);
+  mergeState='failed';
+  renderVideoArea();
+  renderBottomBar();
+}
+
+function cancelMerge(){
+  clearInterval(mergeTimer);
+  mergeState='idle';
+  mergeProgress=0;
+  renderVideoArea();
+  renderBottomBar();
+  showToast('合成已取消');
+}
+
+/* ===== Video Playback ===== */
+function togglePlay(){
+  if(mergeState!=='merged')return;
+  isPlaying=!isPlaying;
+  const playBtn=document.getElementById('playBtn');
+  const controls=document.getElementById('avControls');
+  const avPlay=document.getElementById('avPlay');
+  if(isPlaying){
+    if(playBtn) playBtn.style.display='none';
+    if(controls) controls.classList.add('show');
+    if(avPlay) avPlay.classList.add('playing');
+    clearInterval(playTimer);
+    playTimer=setInterval(()=>{
+      playProgress+=0.5;
+      if(playProgress>=totalDuration){
+        playProgress=0;isPlaying=false;
+        if(playBtn) playBtn.style.display='';
+        if(avPlay) avPlay.classList.remove('playing');
+        clearInterval(playTimer);
+      }
+      updatePlayUI();
+    },500);
+  }else{
+    if(playBtn) playBtn.style.display='';
+    if(avPlay) avPlay.classList.remove('playing');
+    clearInterval(playTimer);
+  }
+}
+
+function updatePlayUI(){
+  const fill=document.getElementById('avFill');
+  const curTime=document.getElementById('avTimeCur');
+  if(fill) fill.style.width=(playProgress/totalDuration*100)+'%';
+  if(curTime){
+    const mm=Math.floor(playProgress/60);
+    const ss=Math.floor(playProgress%60);
+    curTime.textContent=`${mm}:${ss.toString().padStart(2,'0')}`;
+  }
+}
+
+function seekTo(e){
+  const bar=document.getElementById('avBar');
+  if(!bar)return;
+  const rect=bar.getBoundingClientRect();
+  const pct=(e.clientX-rect.left)/rect.width;
+  playProgress=Math.max(0,Math.min(totalDuration,pct*totalDuration));
+  updatePlayUI();
+}
+
+function resetPlayer(){
+  isPlaying=false;
+  playProgress=0;
+  clearInterval(playTimer);
+  if(mergeState==='merged') renderVideoArea();
+}
+
+/* ===== Navigation ===== */
+function goBack(){
+  if(mergeState==='merging'){
+    showDlg('提示','视频正在合成中，离开将中断合成，确定返回吗？',()=>{
+      cancelMerge();
+      showToast('返回环节4：分镜生成');
+    });
+  }else{
+    showToast('返回环节4：分镜生成');
+  }
+}
+
+/* ===== Download ===== */
+function download(){
+  if(mergeState!=='merged')return;
+  // Simulate permission check
+  if(!window._dlPermGranted && Math.random()<0.3){
+    window._dlPermGranted=false;
+    showDlg('权限提示','需要相册权限才能保存视频',()=>{
+      showToast('跳转系统设置');
+      window._dlPermGranted=true;
+    });
+    return;
+  }
+  window._dlPermGranted=true;
+  showToast('已保存到相册');
+}
+
+/* ===== Save Episode ===== */
+function openSave(){
+  if(mergeState!=='merged')return;
+  if(!isLoggedIn){
+    pendingSaveCallback=openSave;
+    openLoginPopup();
+    return;
+  }
+  // Show "保存中..." loading on the button
+  const saveBtn=document.querySelector('.bar-btn.solid');
+  if(saveBtn){
+    saveBtn.innerHTML=`<span class="merge-spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:4px"></span>保存中...`;
+    saveBtn.classList.add('disabled');
+    saveBtn.disabled=true;
+  }
+  // Simulate save API call
+  setTimeout(()=>{
+    const saved=doSave();
+    if(saved){
+      const nextNum=savedEpisodes;
+      document.getElementById('saveSub').textContent=`已保存为第${numCn(nextNum)}集`;
+      document.getElementById('nameArea').innerHTML=`
+        <div class="ep-name-edit" onclick="editEpName()">
+          <span class="name-text" id="epNameDisplay">第${numCn(nextNum)}集</span>
+          <span class="edit-hint">点击编辑</span>
+        </div>`;
+      document.getElementById('saveSheet').classList.add('show');
+    }else{
+      showToast('保存失败，请重试');
+    }
+    renderBottomBar();
+  },800);
+}
+
+function doSave(){
+  const nextNum=scripts[0].episodes.length+1;
+  scripts[0].episodes.push({
+    id:'ep'+(nextNum+2),name:`第${numCn(nextNum)}集`,
+    time:new Date().toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-'),
+    duration:totalDuration||22,number:nextNum
+  });
+  savedEpisodes=scripts[0].episodes.length;
+  const tag=document.getElementById('epTag');
+  if(tag) tag.textContent=`第${numCn(nextNum)}集`;
+  return true;
+}
+
+function editEpName(){
+  const current=document.getElementById('epNameDisplay').textContent;
+  document.getElementById('nameArea').innerHTML=`
+    <input class="ep-name-input" id="epNameInput" value="${current}" maxlength="20"
+      onblur="confirmNameEdit()" onkeydown="if(event.key==='Enter')confirmNameEdit()">`;
+  const inp=document.getElementById('epNameInput');
+  inp.focus();inp.select();
+}
+
+function confirmNameEdit(){
+  const inp=document.getElementById('epNameInput');
+  if(!inp)return;
+  const val=inp.value.trim()||'第一集';
+  document.getElementById('nameArea').innerHTML=`
+    <div class="ep-name-edit" onclick="editEpName()">
+      <span class="name-text" id="epNameDisplay">${val}</span>
+      <span class="edit-hint">点击编辑</span>
+    </div>`;
+}
+
+function closeSave(){document.getElementById('saveSheet').classList.remove('show');}
+
+function goMyDrama(){
+  closeSave();
+  showToast('跳转全局模块：我的漫剧');
+}
+
+/* ===== Login ===== */
+function openLoginPopup(){document.getElementById('loginPopup').classList.add('show');}
+function closeLogin(){
+  document.getElementById('loginPopup').classList.remove('show');
+  document.getElementById('phoneInput').value='';
+  document.getElementById('codeInput').value='';
+  pendingSaveCallback=null;
+}
+function doLogin(){
+  const phone=document.getElementById('phoneInput').value.trim();
+  if(phone.length<11){showToast('请输入正确的手机号');return;}
+  isLoggedIn=true;
+  document.getElementById('dbLogin').textContent='已登录';
+  document.getElementById('dbLogin').className='debug-btn on';
+  closeLogin();
+  showToast('登录成功');
+  if(pendingSaveCallback){pendingSaveCallback();pendingSaveCallback=null;}
+}
+
+/* ===== Dialog ===== */
+let dlgCb=null;
+function showDlg(t,m,cb){
+  document.getElementById('dlgT').textContent=t;
+  document.getElementById('dlgM').textContent=m;
+  dlgCb=cb;
+  document.getElementById('dlgOk').onclick=()=>{closeDlg();if(dlgCb)dlgCb();};
+  document.getElementById('dlg').classList.add('show');
+}
+function closeDlg(){document.getElementById('dlg').classList.remove('show');}
+
+/* ===== History Sheet ===== */
+function openHist(){
+  const list=document.getElementById('histList');
+  if(!mergeRecords.length){
+    list.innerHTML='<div style="text-align:center;padding:40px 0;color:#444;font-size:12px">暂无记录</div>';
+  }else{
+    list.innerHTML=mergeRecords.map((r,i)=>`
+    <div class="h-item" style="${r.isLatest?'border:1px solid #7c3aed;border-radius:6px;padding:8px':''}" onclick="loadMergeRecord(${i})">
+      <div class="h-thumb"></div>
+      <div class="h-info">
+        <div class="h-name">${r.isLatest?'最新 · ':''}${r.shotCount}个分镜 · ${r.duration}s</div>
+        <div class="h-time">${r.time}</div>
+      </div>
+      <button class="h-dl" onclick="event.stopPropagation();showToast('下载合成视频')">下载</button>
+    </div>`).join('');
+  }
+  document.getElementById('histSheet').classList.add('show');
+}
+function closeHist(){document.getElementById('histSheet').classList.remove('show');}
+function loadMergeRecord(idx){
+  const r=mergeRecords[idx];
+  closeHist();
+  // 加载该合成记录到播放器
+  selectedShots=r.shots;
+  totalDuration=r.duration;
+  mergeState='merged';
+  playProgress=0;
+  isPlaying=false;
+  clearInterval(playTimer);
+  renderVideoArea();
+  renderBottomBar();
+  showToast('加载合成视频：'+r.shotCount+'个分镜');
+}
+
+/* ===== Debug State ===== */
+function updateDbState(){
+  const el=document.getElementById('dbState');
+  if(!el)return;
+  const td=totalDuration||selectedShots.reduce((a,s)=>a+s.duration,0);
+  const availCount=availableShots.filter(s=>s.available).length;
+  el.innerHTML=`entrySource: ${entrySource}\nmergeState: ${mergeState}\nselectedShots: ${selectedShots.length}\nmergeRecords: ${mergeRecords.length}\navailableShots: ${availCount}/${availableShots.length}\nisPlaying: ${isPlaying}\nplayProgress: ${playProgress.toFixed(1)}s / ${td}s\nmergeProgress: ${mergeProgress}/${selectedShots.length}\nsavedEpisodes: ${savedEpisodes}\nisLoggedIn: ${isLoggedIn}\nisMember: ${isMember}`;
+}
+
+function addEpisode(){
+  const n=scripts[0].episodes.length+1;
+  scripts[0].episodes.push({
+    id:'ep_new_'+n,name:`第${numCn(n)}集`,
+    time:new Date().toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-'),
+    duration:Math.floor(Math.random()*20)+5,number:n
+  });
+  savedEpisodes=scripts[0].episodes.length;
+  showToast('添加第'+numCn(n)+'集');
+  updateDbState();
+}
+
+function addMockRecord(){
+  mergeRecords.forEach(r=>r.isLatest=false);
+  const shotCount=Math.floor(Math.random()*3)+2;
+  const dur=shotCount*6+Math.floor(Math.random()*5);
+  mergeRecords.unshift({
+    id:'mr_mock_'+Date.now(),
+    shots:availableShots.slice(0,shotCount).map(s=>({...s})),
+    shotCount:shotCount,
+    duration:dur,
+    isLatest:true,
+    time:new Date().toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-')
+  });
+  showToast('添加合成记录：'+shotCount+'个分镜');
+  updateDbState();
+}
+
+function resetData(){
+  scripts[0].episodes=[
+    {id:'ep1',name:'第一集',time:'2026-05-24 14:32',duration:22,number:1},
+    {id:'ep2',name:'第二集',time:'2026-05-24 15:10',duration:19,number:2},
+  ];
+  scripts[1].episodes=[
+    {id:'ep3',name:'第一集',time:'2026-05-23 20:48',duration:25,number:1},
+  ];
+  availableShots=[
+    {id:'s1',orderNum:1,name:'分镜1',mainChar:'陆沉',duration:6,available:true,status:'已生成'},
+    {id:'s2',orderNum:2,name:'分镜2',mainChar:'白芷',duration:5,available:true,status:'已生成'},
+    {id:'s3',orderNum:3,name:'分镜3',mainChar:'陆沉',duration:8,available:true,status:'已生成'},
+    {id:'s4',orderNum:4,name:'分镜4',mainChar:'白芷',duration:7,available:false,status:'待生成'},
+    {id:'s5',orderNum:5,name:'分镜5',mainChar:'陆沉',duration:4,available:false,status:'场景图已变更'},
+  ];
+  selectedShots=[];
+  mergeRecords=[];
+  savedEpisodes=0;
+  mergeProgress=0;
+  isPlaying=false;
+  playProgress=0;
+  clearInterval(mergeTimer);
+  clearInterval(playTimer);
+  renderVideoArea();
+  renderBottomBar();
+  showToast('数据已重置');
+  updateDbState();
+}
+
+/* ===== Toast ===== */
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+/* ===== Init ===== */
+(function(){
+  const params=new URLSearchParams(window.location.search);
+  const shotParam=params.get('shots');
+  if(shotParam){
+    const ids=shotParam.split(',').map(Number);
+    selectedShots=availableShots.filter(s=>ids.includes(s.orderNum)&&s.available);
+    if(selectedShots.length>=2){
+      totalDuration=selectedShots.reduce((a,s)=>a+s.duration,0);
+      entrySource='stage4';
+      // 自动开始合成
+      startMerge();
+    }
+  }
+})();
+renderVideoArea();
+renderBottomBar();
+updateDbState();
+</script>
+</body>
+</html>

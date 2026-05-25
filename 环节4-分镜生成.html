@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI漫剧创作大师 — 环节4 分镜生成</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;background:#f5f0e8;display:flex;justify-content:center;align-items:flex-start;min-height:100vh;padding:30px 20px;gap:24px}
+
+/* iPhone Frame */
+.phone-frame{width:390px;height:844px;background:#0f0f1a;border-radius:44px;border:4px solid #c8c0b4;overflow:hidden;position:relative;box-shadow:0 4px 30px rgba(0,0,0,0.15),0 10px 20px rgba(0,0,0,0.1);flex-shrink:0}
+.phone-notch{width:160px;height:34px;background:#0f0f1a;border-radius:0 0 20px 20px;margin:0 auto;position:relative;z-index:100}
+.phone-notch::before{content:'';width:10px;height:10px;background:#1a1a2e;border-radius:50%;position:absolute;right:30px;top:12px}
+.status-bar{display:flex;justify-content:space-between;align-items:center;padding:0 28px;height:20px;color:#fff;font-size:12px;font-weight:600}
+.app-content{height:calc(844px - 34px - 20px);display:flex;flex-direction:column;background:#0f0f1a}
+
+/* Nav */
+.nav-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0}
+.nav-bar .back-btn{width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:#a78bfa;font-size:20px;cursor:pointer}
+.nav-bar .title{font-size:18px;font-weight:600;color:#fff}
+.nav-bar .nav-right{display:flex;align-items:center;gap:8px}
+
+.save-indicator{position:absolute;top:52px;right:16px;font-size:10px;color:#4ade80;opacity:0;transition:opacity .3s;pointer-events:none}
+.save-indicator.show{opacity:1}
+
+/* Points Badge */
+.points-badge{display:flex;align-items:center;gap:4px;font-size:11px;color:#fbbf24;background:rgba(251,191,36,0.1);padding:4px 10px;border-radius:12px;cursor:pointer;transition:background .15s}
+.points-badge:hover{background:rgba(251,191,36,0.18)}
+.points-badge svg{width:12px;height:12px;fill:#fbbf24}
+.points-badge .pts-num{font-weight:700}
+
+/* Step Badge */
+.step-badge{font-size:12px;color:#a78bfa;background:rgba(167,139,250,0.12);padding:4px 10px;border-radius:12px}
+
+.scroll{flex:1;overflow-y:auto;padding:12px 20px 80px;-webkit-overflow-scrolling:touch}
+.scroll::-webkit-scrollbar{width:0}
+
+/* Tip Banner */
+.retention-tip{display:flex;align-items:center;gap:6px;padding:10px 12px;background:rgba(124,58,237,0.06);border:1px solid rgba(124,58,237,0.12);border-radius:10px;margin-bottom:12px}
+.retention-tip .tip-icon{font-size:14px}
+.retention-tip .tip-text{font-size:11px;color:#a78bfa;line-height:1.4}
+
+/* === Shot Card === */
+.shot-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:14px;margin-bottom:12px}
+
+.shot-video-area{width:100px;height:60px;border-radius:10px;overflow:hidden;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.shot-video-area:hover{border-color:rgba(167,139,250,0.3)}
+.shot-video-area .scene-img{width:100%;height:100%;object-fit:cover}
+.shot-video-area .video-placeholder{width:100%;height:100%;background:linear-gradient(135deg,rgba(124,58,237,0.08),rgba(167,139,250,0.12));display:flex;align-items:center;justify-content:center;font-size:22px;opacity:.4}
+.shot-video-area .scene-thumb{position:absolute;top:3px;right:3px;width:28px;height:16px;border-radius:3px;overflow:hidden;border:1px solid rgba(124,58,237,0.4);cursor:pointer;z-index:2}
+.shot-video-area .scene-thumb .st-img{width:100%;height:100%;object-fit:cover}
+.shot-video-area .scene-thumb .st-tag{position:absolute;bottom:0;left:0;right:0;background:rgba(124,58,237,0.85);color:#fff;font-size:7px;text-align:center;padding:1px 0;font-weight:600}
+.shot-video-area .gen-overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(15,15,26,0.6)}
+.shot-video-area .gen-overlay .skel{position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,255,255,0.02) 25%,rgba(255,255,255,0.06) 50%,rgba(255,255,255,0.02) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.shot-video-area .gen-overlay .gen-text{position:relative;z-index:1;font-size:10px;color:#a78bfa;font-weight:600;animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.shot-video-area .play-overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.25);cursor:pointer;transition:background .15s;z-index:1}
+.shot-video-area .play-overlay:hover{background:rgba(0,0,0,0.35)}
+.shot-video-area .play-overlay::after{content:'▶';font-size:18px;color:rgba(255,255,255,0.9);text-shadow:0 1px 4px rgba(0,0,0,0.3)}
+.shot-video-area .dur-tag{position:absolute;bottom:4px;left:4px;padding:1px 6px;border-radius:4px;background:rgba(0,0,0,0.7);color:#ccc;font-size:9px;font-weight:600;display:none;z-index:2}
+.shot-video-area .fail-overlay{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(15,15,26,0.7)}
+.shot-video-area .fail-overlay .fail-icon{font-size:16px;color:#ef4444}
+.shot-video-area .fail-overlay .fail-txt{font-size:9px;color:#f87171;margin-top:2px}
+.shot-video-area .pending-overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(15,15,26,0.4)}
+.shot-video-area .pending-overlay .pending-txt{font-size:10px;color:#6b6b8d;font-weight:600}
+.shot-video-area .regen-overlay{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(15,15,26,0.55)}
+.shot-video-area .regen-overlay .regen-icon{font-size:14px;color:#fbbf24}
+.shot-video-area .regen-overlay .regen-txt{font-size:9px;color:#fbbf24;margin-top:2px;font-weight:600}
+.shot-video-area .regen-overlay.warn .regen-icon{color:#f59e0b}
+.shot-video-area .regen-overlay.warn .regen-txt{color:#f59e0b}
+.shot-video-area .regen-overlay.pink .regen-icon{color:#f472b6}
+.shot-video-area .regen-overlay.pink .regen-txt{color:#f472b6}
+.shot-video-area .done-tag{position:absolute;top:3px;left:3px;padding:1px 6px;border-radius:3px;background:rgba(74,222,128,0.85);color:#fff;font-size:8px;font-weight:600;z-index:2}
+
+.shot-info{flex:1;display:flex;flex-direction:column;min-width:0;gap:4px}
+.shot-name{font-size:15px;font-weight:600;color:#e2e0f0}
+.shot-pov-tag{font-size:10px;color:#a78bfa;background:rgba(167,139,250,0.12);padding:2px 8px;border-radius:6px;white-space:nowrap}
+.shot-status{font-size:11px}
+.shot-status.pending{color:#4a4a6a}
+.shot-status.done{color:#4ade80}
+.shot-status.error{color:#f87171}
+.shot-status.generating{color:#a78bfa}
+.shot-status.modified{color:#fbbf24}
+.shot-status.scene-changed{color:#fbbf24}
+.shot-status.style-changed{color:#fbbf24}
+
+.shot-btn{align-self:flex-start;padding:6px 16px;border-radius:8px;font-size:12px;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:all .15s}
+.shot-btn.pri{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;box-shadow:0 2px 12px rgba(124,58,237,0.3)}
+.shot-btn.pri:active{transform:scale(.97)}
+.shot-btn.out{background:transparent;border:1px solid rgba(124,58,237,0.4);color:#a78bfa}
+.shot-btn.out:active{transform:scale(.97)}
+.shot-btn.dis{background:rgba(255,255,255,0.06);color:#4a4a6a;cursor:not-allowed}
+
+/* Prompt Area */
+.shot-prompt-label{font-size:11px;color:#6b6b8d;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center}
+.shot-prompt-count{font-size:10px;color:#4a4a6a}
+.shot-prompt-count.warn{color:#ef4444}
+.shot-prompt{font-size:12px;color:#8b8ba7;line-height:1.6;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:10px 12px;word-break:break-all;transition:all .15s;cursor:pointer;max-height:90px;overflow-y:auto}
+.shot-prompt::-webkit-scrollbar{width:0}
+.shot-prompt:hover{background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1)}
+.shot-prompt.disabled{cursor:not-allowed;opacity:.5}
+.shot-prompt.disabled:hover{background:rgba(255,255,255,0.03);border-color:rgba(255,255,255,0.06)}
+
+/* === Prompt Edit Sheet === */
+.edit-sheet-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.7);z-index:350;opacity:0;pointer-events:none;transition:opacity .25s}
+.edit-sheet-overlay.show{opacity:1;pointer-events:all}
+.edit-sheet{position:absolute;bottom:0;left:0;right:0;background:#1a1a2e;border-radius:20px 20px 0 0;padding:20px 16px 28px;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1)}
+.edit-sheet-overlay.show .edit-sheet{transform:translateY(0)}
+.edit-sheet .sheet-handle{width:36px;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;margin:0 auto 16px}
+.edit-sheet-title{font-size:16px;font-weight:600;color:#fff;margin-bottom:4px}
+.edit-sheet-sub{font-size:11px;color:#6b6b8d;margin-bottom:12px}
+.edit-sheet textarea{width:100%;height:160px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px;color:#e2e0f0;font-size:13px;line-height:1.6;resize:none;outline:none;font-family:inherit}
+.edit-sheet textarea:focus{border-color:rgba(167,139,250,0.4)}
+.edit-sheet textarea::placeholder{color:#4a4a6a}
+.edit-sheet-count{font-size:11px;color:#6b6b8d;text-align:right;margin-top:4px;margin-bottom:16px}
+.edit-sheet-count.warn{color:#ef4444}
+.edit-sheet-btns{display:flex;gap:10px}
+.edit-sheet-btn{flex:1;padding:13px;border-radius:12px;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:inherit}
+.edit-sheet-btn.cancel{background:rgba(255,255,255,0.06);color:#8b8ba7}
+.edit-sheet-btn.confirm{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;box-shadow:0 4px 16px rgba(124,58,237,0.3)}
+
+/* === Bottom Bar === */
+.bottom-bar{position:absolute;bottom:0;left:0;right:0;padding:16px 20px;padding-bottom:calc(16px + env(safe-area-inset-bottom,20px));border-top:1px solid rgba(255,255,255,0.06);display:flex;gap:10px;background:rgba(15,15,26,0.95);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.bar-btn{flex:1;padding:14px;border-radius:14px;font-size:15px;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:all .15s}
+.bar-btn.ghost{background:#1a1a2e;color:#a78bfa;border:1px solid rgba(167,139,250,0.3)}
+.bar-btn.ghost:active{transform:scale(.98)}
+.bar-btn.solid{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;box-shadow:0 4px 20px rgba(124,58,237,0.4)}
+.bar-btn.solid:active{transform:scale(.98)}
+.bar-btn.solid:disabled{background:rgba(255,255,255,0.06);color:#4a4a6a;box-shadow:none;cursor:not-allowed}
+
+/* Full Screen Loading Overlay */
+.loading-overlay{position:absolute;inset:0;background:rgba(15,15,26,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .3s}
+.loading-overlay.show{opacity:1;pointer-events:all}
+.spinner{width:48px;height:48px;border:3px solid rgba(124,58,237,0.2);border-top-color:#7c3aed;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:20px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{color:#a78bfa;font-size:16px;font-weight:500}
+.loading-sub{color:#6b6b8d;font-size:13px;margin-top:8px}
+
+/* Login Popup */
+.login-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:500;opacity:0;pointer-events:none;transition:opacity .2s}
+.login-overlay.show{opacity:1;pointer-events:all}
+.login-box{width:300px;background:#1a1a2e;border-radius:16px;padding:24px 20px}
+.login-title{font-size:17px;font-weight:700;color:#fff;margin-bottom:4px;text-align:center}
+.login-sub{font-size:12px;color:#6b6b8d;margin-bottom:18px;text-align:center}
+.login-field{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:0 12px;margin-bottom:10px}
+.login-field input{flex:1;background:transparent;border:none;color:#fff;font-size:14px;padding:12px 0;outline:none;font-family:inherit}
+.login-field input::placeholder{color:#4a4a6a}
+.login-field .code-btn{font-size:12px;color:#a78bfa;cursor:pointer;white-space:nowrap;flex-shrink:0;padding:4px 0}
+.login-field .code-btn.disabled{color:#4a4a6a;cursor:not-allowed}
+.login-submit{width:100%;padding:13px;border-radius:12px;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;margin-top:6px;transition:all .15s}
+.login-submit:active{transform:scale(.98)}
+.login-close{position:absolute;top:12px;right:14px;color:#6b6b8d;font-size:22px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:background .15s}
+.login-close:hover{background:rgba(255,255,255,0.06)}
+
+/* Points Insufficient Sheet */
+.pts-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:500;opacity:0;pointer-events:none;transition:opacity .2s}
+.pts-overlay.show{opacity:1;pointer-events:all}
+.pts-box{width:280px;background:#1a1a2e;border-radius:16px;padding:24px 20px;text-align:center}
+.pts-icon{font-size:36px;margin-bottom:8px}
+.pts-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:4px}
+.pts-msg{font-size:12px;color:#6b6b8d;margin-bottom:18px;line-height:1.5}
+.pts-balance{background:rgba(255,255,255,0.04);border-radius:10px;padding:12px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+.pts-balance .pb-label{font-size:12px;color:#6b6b8d}
+.pts-balance .pb-val{font-size:18px;font-weight:700;color:#ef4444}
+.pts-btns{display:flex;gap:10px}
+.pts-btn{flex:1;padding:11px;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:inherit}
+.pts-btn.cancel{background:rgba(255,255,255,0.06);color:#8b8ba7}
+.pts-btn.ok{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1a1a2e}
+
+/* Dialog */
+.dlg-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:400;opacity:0;pointer-events:none;transition:opacity .2s}
+.dlg-overlay.show{opacity:1;pointer-events:all}
+.dlg-box{width:280px;background:#1a1a2e;border-radius:14px;padding:20px;text-align:center}
+.dlg-title{font-size:15px;font-weight:700;color:#fff;margin-bottom:8px}
+.dlg-msg{font-size:12px;color:#6b6b8d;line-height:1.5;margin-bottom:16px}
+.dlg-btns{display:flex;gap:8px}
+.dlg-btn{flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;border:none;cursor:pointer;font-family:inherit}
+.dlg-btn.cancel{background:rgba(255,255,255,0.06);color:#8b8ba7}
+.dlg-btn.ok{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff}
+
+.toast{position:absolute;top:56px;left:50%;transform:translateX(-50%);padding:8px 16px;background:rgba(74,222,128,0.9);color:#fff;border-radius:8px;font-size:12px;z-index:600;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+
+/* === Merge Sheet === */
+.sheet-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.7);z-index:300;opacity:0;pointer-events:none;transition:opacity .25s}
+.sheet-overlay.show{opacity:1;pointer-events:all}
+.sheet{position:absolute;bottom:0;left:0;right:0;background:#1a1a2e;border-radius:20px 20px 0 0;padding:20px 16px 28px;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1)}
+.sheet-overlay.show .sheet{transform:translateY(0)}
+.sheet-handle{width:36px;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;margin:0 auto 16px}
+.sheet-title{font-size:16px;font-weight:600;color:#fff;margin-bottom:4px}
+.sheet-sub{font-size:11px;color:#6b6b8d;margin-bottom:14px}
+.merge-list{max-height:320px;overflow-y:auto;margin-bottom:16px}
+.merge-list::-webkit-scrollbar{width:0}
+.merge-item{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+.merge-item:last-child{border-bottom:none}
+.merge-ck{width:22px;height:22px;border-radius:6px;border:2px solid rgba(255,255,255,0.1);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+.merge-ck.on{background:#7c3aed;border-color:#7c3aed;box-shadow:0 2px 8px rgba(124,58,237,0.3)}
+.merge-ck.on::after{content:'✓';color:#fff;font-size:12px;font-weight:700}
+.merge-ck.off{opacity:.3;cursor:not-allowed}
+.merge-thumb{width:54px;height:30px;border-radius:6px;overflow:hidden;background:rgba(255,255,255,0.04);flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.merge-thumb .mt-done{width:100%;height:100%;background:linear-gradient(135deg,rgba(124,58,237,0.15),rgba(167,139,250,0.15))}
+.merge-thumb .mt-nd{color:#4a4a6a;font-size:10px}
+.merge-info{flex:1;min-width:0}
+.merge-name{font-size:13px;font-weight:600;color:#e2e0f0}
+.merge-meta{font-size:10px;color:#6b6b8d;margin-top:2px}
+.merge-stag{font-size:9px;padding:2px 8px;border-radius:6px;font-weight:600;flex-shrink:0}
+.merge-stag.done{background:rgba(74,222,128,0.1);color:#4ade80}
+.merge-stag.nd{background:rgba(255,255,255,0.04);color:#4a4a6a}
+.sheet-footer{display:flex;align-items:center;justify-content:space-between}
+.sheet-count{font-size:11px;color:#6b6b8d}
+.sheet-count b{color:#a78bfa}
+.merge-btn{padding:12px 32px;border-radius:12px;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;box-shadow:0 4px 16px rgba(124,58,237,0.3);transition:all .15s}
+.merge-btn:active{transform:scale(.98)}
+.merge-btn:disabled{background:rgba(255,255,255,0.06);color:#4a4a6a;box-shadow:none;cursor:not-allowed}
+
+/* === Scene Image Preview === */
+.preview-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.92);z-index:550;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.preview-overlay.show{opacity:1;pointer-events:all}
+.preview-overlay .pv-close{position:absolute;top:48px;right:16px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.15);color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.preview-overlay .pv-close:active{background:rgba(255,255,255,0.3)}
+.preview-overlay .pv-label{font-size:12px;color:#6b6b8d;margin-bottom:12px}
+.preview-overlay .pv-img{max-width:85%;max-height:70%;border-radius:10px;background:linear-gradient(135deg,rgba(124,58,237,0.15),rgba(167,139,250,0.15))}
+
+/* === Inline Video Player (iOS AVPlayer style) === */
+.shot-video-area .inline-prog{position:absolute;bottom:0;left:0;right:0;height:2px;background:rgba(255,255,255,0.15);z-index:3;display:none}
+.shot-video-area .inline-prog-fill{height:100%;background:#a78bfa;width:0%;border-radius:1px}
+.shot-video-area .inline-time{position:absolute;bottom:4px;right:4px;padding:1px 4px;border-radius:3px;background:rgba(0,0,0,0.7);color:#ccc;font-size:7px;z-index:3;display:none;font-weight:600}
+.shot-video-area.is-playing .play-overlay{display:flex!important}
+.shot-video-area.is-playing .play-overlay::after{content:'⏸';font-size:14px}
+.shot-video-area.is-playing .done-tag{display:none}
+.shot-video-area.is-playing .dur-tag{display:none!important}
+.shot-video-area.is-playing .inline-prog{display:block}
+.shot-video-area.is-playing .inline-time{display:block}
+
+/* === Debug Panel === */
+.debug-panel{background:#fff;border:2px solid #c8c0b4;border-radius:16px;padding:16px 20px;width:280px;flex-shrink:0;font-family:"PingFang SC","Microsoft YaHei",sans-serif;position:sticky;top:30px;max-height:90vh;overflow-y:auto}
+.debug-panel::-webkit-scrollbar{width:4px}
+.debug-panel::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:4px}
+.dbg-title{font-size:14px;font-weight:700;color:#7c3aed;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #7c3aed}
+.dbg-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:13px}
+.dbg-label{color:#666;width:48px;flex-shrink:0;font-weight:600}
+.dbg-val{color:#333;font-weight:600;min-width:50px}
+.dbg-val.on{color:#16a34a}
+.dbg-val.off{color:#999}
+.dbg-val.warn{color:#f59e0b}
+.dbg-btn{padding:2px 10px;border:1px solid #d1d5db;border-radius:6px;background:#f9fafb;color:#374151;font-size:11px;cursor:pointer;font-family:inherit;transition:all .15s}
+.dbg-btn:hover{background:#e5e7eb}
+.dbg-btn:active{transform:scale(.95)}
+.dbg-btn.on{background:#7c3aed;color:#fff;border-color:#7c3aed}
+.dbg-btn.danger{background:#fef2f2;color:#dc2626;border-color:#fecaca;width:100%;padding:6px;font-weight:600}
+.dbg-btn.danger:hover{background:#fee2e2}
+.dbg-btn.preset{background:#ede5f7;color:#7c3aed;border-color:#d8c8f0;font-size:10px;padding:4px 8px}
+.dbg-btn.preset:hover{background:#ddd0f0}
+.dbg-section-title{font-size:11px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;margin-top:4px}
+.dbg-divider{height:1px;background:#e5e7eb;margin:10px 0}
+.dbg-select{flex:1;padding:3px 6px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;color:#374151;background:#fff;outline:none;font-family:inherit;max-width:130px}
+.dbg-select:focus{border-color:#7c3aed}
+.dbg-input{width:60px;padding:3px 6px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;color:#374151;background:#fff;outline:none;font-family:inherit;text-align:center}
+.dbg-input:focus{border-color:#7c3aed}
+
+/* === Guide Panel === */
+.guide-panel{background:#fff;border-radius:14px;border:1px solid #ddd;box-shadow:0 1px 3px rgba(0,0,0,0.06);overflow:hidden;width:420px;flex-shrink:0;font-family:"PingFang SC","Microsoft YaHei",sans-serif;position:sticky;top:30px}
+.guide-header{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;padding:14px 18px;font-size:16px;font-weight:700;letter-spacing:1px}
+.guide-body{padding:16px 18px;max-height:85vh;overflow-y:auto}
+.guide-body::-webkit-scrollbar{width:4px}
+.guide-body::-webkit-scrollbar-thumb{background:#ccc;border-radius:2px}
+.guide-section{margin-bottom:18px}
+.guide-section:last-child{margin-bottom:0}
+.guide-sec-title{font-size:14px;font-weight:700;color:#7c3aed;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.guide-sec-title .num{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#7c3aed;color:#fff;font-size:11px;font-weight:700;flex-shrink:0}
+.guide-item{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;font-size:13px;color:#555;line-height:1.6}
+.guide-dot{width:5px;height:5px;border-radius:50%;background:#ccc;flex-shrink:0;margin-top:7px}
+.guide-dot.purple{background:#7c3aed}
+.guide-dot.green{background:#16a34a}
+.guide-dot.orange{background:#d97706}
+.guide-dot.red{background:#ef4444}
+.guide-dot.blue{background:#3b82f6}
+.guide-dot.gray{background:#888}
+.guide-tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:3px;font-weight:600;vertical-align:middle}
+.guide-tag.purple{color:#7c3aed;background:rgba(124,58,237,0.08)}
+.guide-tag.green{color:#16a34a;background:rgba(22,163,74,0.08)}
+.guide-tag.orange{color:#d97706;background:rgba(217,119,6,0.08)}
+.guide-tag.red{color:#ef4444;background:rgba(239,68,68,0.08)}
+.guide-tag.blue{color:#3b82f6;background:rgba(59,130,246,0.08)}
+.guide-tag.gray{color:#888;background:#f0f0f0}
+.guide-divider{border:none;border-top:1px solid #f0f0f0;margin:14px 0}
+
+/* === Member Page === */
+.member-page{position:absolute;inset:0;background:#0f0f1a;z-index:450;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s ease}
+.member-page.show{transform:translateX(0)}
+.member-nav{display:flex;align-items:center;padding:12px 20px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0}
+.member-nav .back-btn{width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:#a78bfa;font-size:20px;cursor:pointer}
+.member-nav .title{flex:1;text-align:center;font-size:17px;font-weight:600;color:#fff}
+.member-nav .hist-link{font-size:12px;color:#a78bfa;cursor:pointer}
+.member-scroll{flex:1;overflow-y:auto;padding:16px 20px;-webkit-overflow-scrolling:touch}
+.member-scroll::-webkit-scrollbar{width:0}
+.member-balance{background:linear-gradient(135deg,#7c3aed,#5b21b6);border-radius:16px;padding:20px;margin-bottom:16px;text-align:center}
+.member-balance .bal-label{font-size:12px;color:rgba(255,255,255,0.6)}
+.member-balance .bal-num{font-size:36px;font-weight:800;color:#fff;margin:4px 0}
+.member-balance .bal-sub{font-size:11px;color:rgba(255,255,255,0.5)}
+.member-tabs{display:flex;background:rgba(255,255,255,0.04);border-radius:10px;padding:3px;margin-bottom:16px}
+.member-tab{flex:1;text-align:center;padding:8px 0;font-size:13px;font-weight:600;color:#6b6b8d;border-radius:8px;cursor:pointer;transition:all .2s}
+.member-tab.active{background:rgba(124,58,237,0.2);color:#a78bfa}
+.sub-cards{display:flex;flex-direction:column;gap:12px;margin-bottom:12px}
+.sub-card{background:rgba(255,255,255,0.04);border:2px solid rgba(255,255,255,0.08);border-radius:14px;padding:16px;cursor:pointer;transition:all .15s;display:flex;justify-content:space-between;align-items:center;position:relative}
+.sub-card:active{transform:scale(.98)}
+.sub-card.selected{border-color:#7c3aed;background:rgba(124,58,237,0.08)}
+.sub-badge{position:absolute;top:-1px;right:12px;font-size:9px;color:#fff;background:#ef4444;padding:2px 8px;border-radius:0 0 6px 6px}
+.sub-badge.purple{background:#7c3aed}
+.sub-left .sub-name{font-size:15px;font-weight:700;color:#fff;margin-bottom:3px}
+.sub-left .sub-desc{font-size:11px;color:#8b8ba7;margin-bottom:2px}
+.sub-left .sub-benefits{font-size:10px;color:#6b6b8d}
+.sub-right{text-align:right}
+.sub-right .sub-price{font-size:20px;font-weight:800;color:#fbbf24}
+.sub-right .sub-period{font-size:11px;font-weight:400;color:#8b8ba7}
+.sub-right .sub-save{font-size:10px;color:#4ade80;margin-top:2px}
+.sub-note{font-size:10px;color:#6b6b8d;line-height:1.5;margin-bottom:12px}
+.pkg-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.pkg-card{background:rgba(255,255,255,0.04);border:2px solid rgba(255,255,255,0.08);border-radius:14px;padding:16px 12px;cursor:pointer;transition:all .15s;text-align:center;position:relative}
+.pkg-card:active{transform:scale(.97)}
+.pkg-card.selected{border-color:#f59e0b;background:rgba(245,158,11,0.08)}
+.pkg-card .pkg-pts{font-size:22px;font-weight:800;color:#fff;margin-bottom:2px}
+.pkg-card .pkg-price{font-size:16px;font-weight:700;color:#fbbf24;margin-bottom:2px}
+.pkg-card .pkg-unit{font-size:10px;color:#6b6b8d}
+.pkg-card .pkg-tag{position:absolute;top:-1px;left:50%;transform:translateX(-50%);font-size:9px;color:#fff;background:#f59e0b;padding:2px 8px;border-radius:0 0 6px 6px}
+.pay-btn{width:100%;padding:14px;border-radius:14px;font-size:16px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;margin-top:6px;transition:all .15s}
+.pay-btn.amber{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1a1a2e}
+.pay-btn:active{transform:scale(.98)}
+.pay-btn:disabled{background:#333;color:#666;cursor:not-allowed;transform:none}
+
+/* === Points Detail Page === */
+.pts-detail-page{position:absolute;inset:0;background:#0f0f1a;z-index:450;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s ease}
+.pts-detail-page.show{transform:translateX(0)}
+.pts-detail-nav{display:flex;align-items:center;padding:12px 20px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0}
+.pts-detail-nav .back-btn{width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:#a78bfa;font-size:20px;cursor:pointer}
+.pts-detail-nav .title{flex:1;text-align:center;font-size:17px;font-weight:600;color:#fff}
+.pts-detail-scroll{flex:1;overflow-y:auto;padding:16px 20px;-webkit-overflow-scrolling:touch}
+.pts-detail-scroll::-webkit-scrollbar{width:0}
+.detail-item{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+.detail-item:last-child{border-bottom:none}
+.detail-left{flex:1}
+.detail-desc{font-size:13px;color:#e2e0f0;margin-bottom:2px}
+.detail-time{font-size:10px;color:#4a4a6a}
+.detail-right{text-align:right;flex-shrink:0}
+.detail-amount{font-size:14px;font-weight:700}
+.detail-amount.plus{color:#4ade80}
+.detail-amount.minus{color:#f87171}
+.detail-type{font-size:9px;color:#4a4a6a;margin-top:2px}
+</style>
+</head>
+<body>
+<div class="phone-frame" id="phoneFrame">
+  <div class="phone-notch"></div>
+  <div class="status-bar"><span>9:41</span><span>&#9679;&#9679;&#9679;&#9679;</span></div>
+
+  <!-- ===== 一级页面 ===== -->
+  <div class="app-content" id="mainPage" style="position:relative">
+    <div class="nav-bar">
+      <div class="back-btn" onclick="goBack()">&larr;</div>
+      <div class="title">分镜生成</div>
+      <div class="nav-right">
+        <div class="points-badge" id="pointsBadge" onclick="openMember()">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          <span class="pts-num" id="ptsDisplay">200</span>
+        </div>
+        <div class="step-badge">4/5</div>
+      </div>
+      <div class="save-indicator" id="saveIndicator">已保存</div>
+    </div>
+    <div class="scroll" id="cardList"></div>
+    <div class="bottom-bar">
+      <button class="bar-btn ghost" onclick="onGenAll()">生成全部</button>
+      <button class="bar-btn solid" id="nextBtn" disabled onclick="goNext()">合成视频</button>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loadingText">正在生成分镜视频…</div>
+    <div class="loading-sub" id="loadingSub">Seedance 1.5 Pro 生成中，请稍候</div>
+  </div>
+
+  <!-- Login Modal -->
+  <div class="login-overlay" id="loginModal">
+    <div class="login-box" style="position:relative">
+      <div class="login-close" onclick="closeLogin()">&times;</div>
+      <div class="login-title">登录账号</div>
+      <div class="login-sub">积分绑定手机号，登录后可使用AI功能</div>
+      <div class="login-field">
+        <input type="tel" placeholder="请输入手机号" maxlength="11" id="loginPhone" oninput="this.style.borderColor=''">
+      </div>
+      <div class="login-field">
+        <input type="text" placeholder="请输入验证码" maxlength="6" id="loginCode" oninput="this.parentElement.style.borderColor=''">
+        <span class="code-btn" id="codeBtn" onclick="sendCode()">获取验证码</span>
+      </div>
+      <button class="login-submit" onclick="doLogin()">登录</button>
+    </div>
+  </div>
+
+  <!-- Points Insufficient Modal -->
+  <div class="pts-overlay" id="ptsModal">
+    <div class="pts-box">
+      <div class="pts-icon">&#128176;</div>
+      <div class="pts-title">积分不足，请充值后继续</div>
+      <div class="pts-msg" id="ptsModalMsg">当前可用积分不足</div>
+      <div class="pts-balance">
+        <span class="pb-label">当前积分</span>
+        <span class="pb-val" id="ptsModalBal">0</span>
+      </div>
+      <div class="pts-btns">
+        <button class="pts-btn cancel" onclick="closePtsModal()">取消</button>
+        <button class="pts-btn ok" id="ptsModalOk" onclick="closePtsModal();openMember()">去充值</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leave Confirm Dialog -->
+  <div class="pts-overlay" id="leaveConfirmOverlay">
+    <div class="pts-box">
+      <div class="pts-icon" style="font-size:28px">&#9888;</div>
+      <div class="pts-title">提示</div>
+      <div class="pts-msg" id="leaveConfirmMsg">离开本页面，生成进度将中断，确定离开吗？</div>
+      <div class="pts-btns">
+        <button class="pts-btn cancel" onclick="closeLeaveConfirm()">继续生成</button>
+        <button class="pts-btn ok" style="background:rgba(239,68,68,0.9)" onclick="confirmLeave()">确定离开</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dialog -->
+  <div class="dlg-overlay" id="dlg">
+    <div class="dlg-box">
+      <div class="dlg-title" id="dlgT"></div>
+      <div class="dlg-msg" id="dlgM"></div>
+      <div class="dlg-btns">
+        <button class="dlg-btn cancel" onclick="closeDlg()">取消</button>
+        <button class="dlg-btn ok" id="dlgOk">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Member Page (会员订阅) -->
+  <div class="member-page" id="memberPage">
+    <div class="member-nav">
+      <div class="back-btn" onclick="closeMember()">&larr;</div>
+      <div class="title">会员中心</div>
+      <div class="hist-link" onclick="openPtsDetail()">积分明细</div>
+    </div>
+    <div class="member-scroll">
+      <div class="member-balance">
+        <div class="bal-label">可用积分</div>
+        <div class="bal-num" id="memberPts">200</div>
+        <div class="bal-sub">会员每月发放积分，畅用AI创作</div>
+      </div>
+      <div class="member-tabs">
+        <div class="member-tab active" onclick="switchMemberTab('sub')">会员订阅</div>
+        <div class="member-tab" onclick="switchMemberTab('recharge')">积分充值</div>
+      </div>
+      <!-- 会员订阅 -->
+      <div class="member-tab-content" id="subTab">
+        <div class="sub-cards" id="subCards">
+          <div class="sub-card selected" onclick="selectSub(this,'monthly')">
+            <div class="sub-badge">热门</div>
+            <div class="sub-left">
+              <div class="sub-name">月度会员</div>
+              <div class="sub-desc">50积分/月 · 赠送5积分/月</div>
+              <div class="sub-benefits">每月1号发放55积分</div>
+            </div>
+            <div class="sub-right">
+              <div class="sub-price">¥25<span class="sub-period">/月</span></div>
+            </div>
+          </div>
+          <div class="sub-card" onclick="selectSub(this,'yearly')">
+            <div class="sub-badge purple">推荐</div>
+            <div class="sub-left">
+              <div class="sub-name">年度会员</div>
+              <div class="sub-desc">50积分/月 · 赠送10积分/月</div>
+              <div class="sub-benefits">每月1号发放60积分 · 专属画风优先体验</div>
+            </div>
+            <div class="sub-right">
+              <div class="sub-price">¥228<span class="sub-period">/年</span></div>
+              <div class="sub-save">省¥72</div>
+            </div>
+          </div>
+        </div>
+        <div class="sub-note">会员积分配额每月1号发放，赠送积分当月有效</div>
+        <button class="pay-btn" id="payBtn" onclick="doPay()">立即开通 ¥25/月</button>
+      </div>
+      <!-- 积分充值 -->
+      <div class="member-tab-content" id="rechargeTab" style="display:none">
+        <div class="pkg-grid" id="pkgGrid">
+          <div class="pkg-card" onclick="selectPkg(this,10,6)">
+            <div class="pkg-pts">10积分</div>
+            <div class="pkg-price">¥6</div>
+            <div class="pkg-unit">¥0.6/积分</div>
+          </div>
+          <div class="pkg-card selected" onclick="selectPkg(this,30,15)">
+            <div class="pkg-pts">30积分</div>
+            <div class="pkg-price">¥15</div>
+            <div class="pkg-unit">¥0.5/积分</div>
+            <div class="pkg-tag">热门</div>
+          </div>
+          <div class="pkg-card" onclick="selectPkg(this,100,45)">
+            <div class="pkg-pts">100积分</div>
+            <div class="pkg-price">¥45</div>
+            <div class="pkg-unit">¥0.45/积分</div>
+            <div class="pkg-tag">最划算</div>
+          </div>
+          <div class="pkg-card" onclick="selectPkg(this,300,120)">
+            <div class="pkg-pts">300积分</div>
+            <div class="pkg-price">¥120</div>
+            <div class="pkg-unit">¥0.4/积分</div>
+          </div>
+        </div>
+        <div class="sub-note">积分包购买的积分永久有效</div>
+        <button class="pay-btn amber" id="rechargePayBtn" onclick="doRecharge()">立即充值 ¥15</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Points Detail Page -->
+  <div class="pts-detail-page" id="ptsDetailPage">
+    <div class="pts-detail-nav">
+      <div class="back-btn" onclick="closePtsDetail()">&larr;</div>
+      <div class="title">积分明细</div>
+      <div></div>
+    </div>
+    <div class="pts-detail-scroll" id="ptsDetailList"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Merge Sheet -->
+  <div class="sheet-overlay" id="mergeSheet" onclick="if(event.target===this)closeMerge()">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">选择分镜</div>
+      <div class="sheet-sub">选择要合成的分镜视频，至少选择2个</div>
+      <div class="merge-list" id="mergeList"></div>
+      <div class="sheet-footer">
+        <div class="sheet-count">已选 <b id="selCount">0</b> 个分镜</div>
+        <button class="merge-btn" id="mergeBtn" disabled onclick="doMerge()">跳转环节5</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scene Image Preview -->
+  <div class="preview-overlay" id="previewOverlay" onclick="closePreview()">
+    <div class="pv-close">&times;</div>
+    <div class="pv-label">场景图（视频首帧）</div>
+    <div class="pv-img" id="pvImg"></div>
+  </div>
+
+  <!-- Prompt Edit Sheet -->
+  <div class="edit-sheet-overlay" id="editSheetOverlay" onclick="if(event.target===this)cancelEditPrompt()">
+    <div class="edit-sheet">
+      <div class="sheet-handle"></div>
+      <div class="edit-sheet-title" id="editSheetTitle">编辑分镜描述</div>
+      <div class="edit-sheet-sub" id="editSheetSub">修改后需重新生成视频</div>
+      <textarea id="editTextarea" placeholder="请输入分镜描述" oninput="onEditTextInput()"></textarea>
+      <div class="edit-sheet-count" id="editCount">0/500</div>
+      <div class="edit-sheet-btns">
+        <button class="edit-sheet-btn cancel" onclick="cancelEditPrompt()">取消</button>
+        <button class="edit-sheet-btn confirm" onclick="confirmEditPrompt()">确认</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Debug Panel -->
+<div class="debug-panel">
+  <div class="dbg-title">状态调试面板</div>
+
+  <!-- 快捷场景 -->
+  <div class="dbg-section-title">快捷场景</div>
+  <div class="dbg-row" style="flex-wrap:wrap;gap:6px">
+    <button class="dbg-btn preset" onclick="dbgPreset('newUser')">新用户(未登录)</button>
+    <button class="dbg-btn preset" onclick="dbgPreset('freeUser')">免费用户(0积分)</button>
+    <button class="dbg-btn preset" onclick="dbgPreset('member')">会员(100积分)</button>
+    <button class="dbg-btn preset" onclick="dbgPreset('lowPts')">积分紧张(2分)</button>
+  </div>
+
+  <div class="dbg-divider"></div>
+
+  <!-- 用户状态 -->
+  <div class="dbg-section-title">用户状态</div>
+  <div class="dbg-row">
+    <span class="dbg-label">登录</span>
+    <select class="dbg-select" id="dbgLoginSel" onchange="dbgSetLogin(this.value)">
+      <option value="0">未登录</option>
+      <option value="1" selected>已登录</option>
+    </select>
+  </div>
+  <div class="dbg-row">
+    <span class="dbg-label">会员</span>
+    <select class="dbg-select" id="dbgMemberSel" onchange="dbgSetMember(this.value)">
+      <option value="0">非会员</option>
+      <option value="1">会员</option>
+    </select>
+  </div>
+  <div class="dbg-row">
+    <span class="dbg-label">积分</span>
+    <input class="dbg-input" type="number" id="dbgPtsInput" value="200" min="0" onchange="dbgSetPoints(this.value)">
+    <span class="dbg-val" id="dbgPoints">200</span>
+  </div>
+
+  <div class="dbg-divider"></div>
+
+  <!-- 分镜状态 -->
+  <div class="dbg-section-title">分镜状态</div>
+  <div class="dbg-row">
+    <span class="dbg-label">总数</span>
+    <span class="dbg-val on" id="dbgTotal">4</span>
+  </div>
+  <div class="dbg-row">
+    <span class="dbg-label">已生成</span>
+    <span class="dbg-val on" id="dbgDone">0</span>
+  </div>
+  <div class="dbg-row">
+    <span class="dbg-label">生成中</span>
+    <span class="dbg-val warn" id="dbgBusy">0</span>
+  </div>
+  <div class="dbg-row">
+    <span class="dbg-label">失败</span>
+    <span class="dbg-val" id="dbgFailed">0</span>
+  </div>
+
+  <div class="dbg-divider"></div>
+
+  <!-- 快捷操作 -->
+  <div class="dbg-section-title">快捷操作</div>
+  <div class="dbg-row" style="flex-wrap:wrap;gap:6px">
+    <button class="dbg-btn" onclick="genAllInstant()">全部瞬间生成</button>
+    <button class="dbg-btn" onclick="failOne(1)">分镜1失败</button>
+  </div>
+  <div class="dbg-row" style="flex-wrap:wrap;gap:6px">
+    <button class="dbg-btn" onclick="changeScene()">模拟场景图变更</button>
+    <button class="dbg-btn" onclick="changeStyle()">模拟画风变更</button>
+    <button class="dbg-btn" onclick="changeCharacter()">模拟角色外貌变更</button>
+    <button class="dbg-btn" onclick="changeScript()">模拟剧本内容变更</button>
+  </div>
+  <div class="dbg-row" style="flex-wrap:wrap;gap:6px">
+    <button class="dbg-btn" onclick="dbgToggleLoading()">显示Loading</button>
+  </div>
+
+  <div class="dbg-row" style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,0,0,0.1)">
+    <button class="dbg-btn danger" onclick="dbgResetAll()">全部重置</button>
+  </div>
+</div>
+
+<!-- Guide Panel -->
+<div class="guide-panel">
+  <div class="guide-header">环节4 - 分镜生成 操作说明</div>
+  <div class="guide-body">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">1</span>页面结构</div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span><span class="guide-tag purple">一级页面</span> 分镜生成列表页，纵向卡片布局（左侧视频区+右侧信息行+下方全宽描述）</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span><span class="guide-tag purple">无二级页面</span> 分镜描述通过底部Sheet编辑，无需跳转二级页</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span><span class="guide-tag blue">底部操作栏</span> 「生成全部」幽灵按钮 + 「合成视频」渐变紫色按钮（≥2条已生成时可用）</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">2</span>一级页面操作</div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>点击分镜描述文本 → 底部弹出编辑Sheet</span></div>
+      <div class="guide-item"><div class="guide-dot green"></div><span>点击 <span class="guide-tag green">生成分镜</span> 按钮 → 校验登录+积分 → 生成视频（50积分）</span></div>
+      <div class="guide-item"><div class="guide-dot green"></div><span>点击 <span class="guide-tag green">重新生成</span> 按钮 → 积分充足直接执行（无确认弹窗）</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>点击播放按钮 → iOS原生AVPlayer内联播放（卡片区域内播放，非全屏）</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>点击场景图缩略图 → 全屏放大预览</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>点击 <span class="guide-tag purple">合成视频</span> → 弹出分镜选择半屏 → 选择≥2条分镜 → 点击「跳转环节5」→ 携带选中分镜ID跳转环节5</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>点击 <span class="guide-tag purple">←返回</span> → 按视频状态区分弹窗（见第7节）</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">3</span>分镜描述编辑（底部Sheet）</div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>点击描述区域 → 底部弹出编辑Sheet（文本框+字数统计+取消/确认）</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>字数限制 <span class="guide-tag purple">500字</span>，超限红色警告，为空不允许提交</span></div>
+      <div class="guide-item"><div class="guide-dot orange"></div><span>编辑已生成视频的描述后 → 自动标记 <span class="guide-tag orange">描述已修改，需重新生成</span></span></div>
+      <div class="guide-item"><div class="guide-dot orange"></div><span>双一致性约束被删除 → 保存时自动补回 + toast提示</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>生成中的分镜描述禁止编辑（灰色不可点击）</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">4</span>视频状态</div>
+      <div class="guide-item"><div class="guide-dot gray"></div><span><span class="guide-tag gray">待生成</span> 「待生成」文字覆盖 + 「生成分镜」按钮（紫色）</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span><span class="guide-tag purple">生成中</span> shimmer动画 + 按钮置灰 + 描述禁止编辑</span></div>
+      <div class="guide-item"><div class="guide-dot green"></div><span><span class="guide-tag green">已生成</span> ▶播放按钮+时长+绿色角标 + 「重新生成」按钮 + iOS原生AVPlayer内联播放</span></div>
+      <div class="guide-item"><div class="guide-dot red"></div><span><span class="guide-tag red">生成失败</span> ❌图标 + 「重新生成」按钮 + 退还积分</span></div>
+      <div class="guide-item"><div class="guide-dot orange"></div><span><span class="guide-tag orange">描述已修改</span> ✎图标+黄色覆盖 + 「重新生成」按钮（紫色）</span></div>
+      <div class="guide-item"><div class="guide-dot orange"></div><span><span class="guide-tag orange">场景图已变更</span> ⚠图标+橙色覆盖 + 「重新生成」按钮（紫色）</span></div>
+      <div class="guide-item"><div class="guide-dot orange"></div><span><span class="guide-tag orange">画风已变更</span> ⚠图标+粉色覆盖 + 「重新生成」按钮（紫色）— 优先级最高</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>状态优先级：<span class="guide-tag orange">画风已变更</span> > <span class="guide-tag orange">场景图已变更</span> > <span class="guide-tag orange">描述已修改</span></span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">5</span>底部按钮逻辑</div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span><span class="guide-tag purple">生成全部</span> 有未完成/需重新生成的分镜时显示，逐条校验积分依次生成</span></div>
+      <div class="guide-item"><div class="guide-dot green"></div><span><span class="guide-tag green">合成视频</span> ≥2条已生成时可用，点击弹出分镜选择半屏，已生成视频默认勾选，选择≥2条后点击「跳转环节5」</span></div>
+      <div class="guide-item"><div class="guide-dot orange"></div><span>生成全部时积分不足 → 中断 + toast「积分不足，还差X积分」，已生成的保留</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">6</span>视频库规则</div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>环节4不设视频库，分镜视频不入库</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>视频不自动填充，每集分镜视频均独立生成</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>不支持删除分镜视频（删除会影响合成流程）</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>有已生成视频时，顶部显示提示条「分镜作品仅在云端保留7天，请及时保存」</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">7</span>前序环节联动（4种变更类型）</div>
+      <div class="guide-item"><div class="guide-dot orange"></div><span>环节3场景图变更 → videoPrompt重新组装 + 视频标记 <span class="guide-tag orange">场景图已变更，需重新生成</span></span></div>
+      <div class="guide-item"><div class="guide-dot orange"></div><span>环节1画风变更 → 所有videoPrompt重新组装 + 场景图+视频标记 <span class="guide-tag orange">画风已变更，需重新生成</span></span></div>
+      <div class="guide-item"><div class="guide-dot orange"></div><span>环节2角色外貌变更 → 含该角色videoPrompt重新组装 + 场景图+视频标记需重新生成</span></div>
+      <div class="guide-item"><div class="guide-dot orange"></div><span>环节1剧本内容变更 → 对应videoPrompt重新组装 + 场景图+视频标记需重新生成</span></div>
+      <div class="guide-item"><div class="guide-dot orange"></div><span>重新组装会覆盖用户手动编辑，toast提示「分镜描述已更新」</span></div>
+      <div class="guide-item"><div class="guide-dot orange"></div><span>调试器中「模拟×变更」按钮可触发各联动</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">8</span>videoPrompt模板化组装</div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>videoPrompt = <span class="guide-tag purple">画风特征</span> + <span class="guide-tag purple">镜头运动</span> + 画面中<span class="guide-tag purple">主视角位置+动作</span> + <span class="guide-tag purple">非参考角色外貌+位置+动作</span> + <span class="guide-tag purple">音色公式</span> + 「<span class="guide-tag purple">对白</span>」+ <span class="guide-tag purple">氛围音效</span> + 双一致性约束</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>主视角角色不写外貌（五官由首帧场景图锚定），非参考角色才写角色外貌</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>前序变更时按模板重新组装，各部分从结构化字段取最新值</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>调试器底部可查看组装结果</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">9</span>积分与登录</div>
+      <div class="guide-item"><div class="guide-dot green"></div><span>分镜视频生成：50积分/条，生成/重新生成/生成全部均需消耗</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>生成前校验：未登录→登录弹窗 → 积分不足→积分不足半屏</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>积分不足半屏：非会员→「去充值」跳转会员订阅，会员→「去充值」跳转积分充值</span></div>
+      <div class="guide-item"><div class="guide-dot green"></div><span>生成成功扣减积分，失败/超时退还</span></div>
+      <div class="guide-item"><div class="guide-dot green"></div><span>重新生成无确认弹窗，积分充足直接执行</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">10</span>返回确认（按视频状态区分）</div>
+      <div class="guide-item"><div class="guide-dot red"></div><span>视频生成中 → 弹窗「视频正在生成中，离开将中断进度，确定返回场景图环节吗？」→ 确定后中断+退还积分</span></div>
+      <div class="guide-item"><div class="guide-dot orange"></div><span>有已生成视频 → 弹窗「已生成的视频将保留，确定返回场景图环节吗？」</span></div>
+      <div class="guide-item"><div class="guide-dot purple"></div><span>无任何视频 → 直接返回环节3</span></div>
+    </div>
+
+    <hr class="guide-divider">
+
+    <div class="guide-section">
+      <div class="guide-sec-title"><span class="num">11</span>调试面板</div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>登录/会员/积分 → 下拉选择/输入，模拟不同用户状态</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>快捷场景 → 一键切换新用户/免费用户/会员/积分紧张</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>全部瞬间生成 → 所有分镜跳过等待直接标记为已生成</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>分镜1失败 → 模拟网络异常，分镜1标记为失败+退还积分</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>模拟场景图/画风/角色外貌/剧本内容变更 → 触发对应联动</span></div>
+      <div class="guide-item"><div class="guide-dot blue"></div><span>全部重置 → 红色按钮，所有状态恢复初始值</span></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ===== 全局状态 =====
+let isLoggedIn=true;
+let hasMembership=false;
+let userPoints=200;
+const VIDEO_COST=50;
+let pendingAction=null;
+let codeTimer=null;
+let selectedSubType='monthly';
+let selectedPkg={pts:30,price:15};
+const subPlans={monthly:{pts:55,price:25,period:'/月'},yearly:{pts:60,price:228,period:'/年'}};
+const ptsHistory=[
+  {desc:'新人注册赠送',time:'2026-05-22 10:00',amount:10,type:'赠送'},
+  {desc:'月度会员发放',time:'2026-05-23 00:00',amount:55,type:'会员'},
+];
+
+const shots=[
+  {id:1,mainChar:'陆沉',duration:6,status:'pending',statusText:'视频待生成',
+   sceneGradient:'linear-gradient(135deg,#2d1f3d 0%,#1a2a1a 40%,#3d2f1f 100%)',
+   videoPrompt:'水墨晕染底色与精致3D渲染结合的古风仙侠画面，青绿金赤色调，柔和立体光影，镜头从庭院全景缓缓推向画面中央，画面中央低头看着手中泛黄书卷微微叹气，男 青年 中低音 缓慢 低落 中文，「三年了，连入门功法都学不会...」，秋风落叶沙沙声，保持角色人脸与首帧图一致，保持画面风格色调光影与首帧图一致'},
+  {id:2,mainChar:'陆沉',duration:5,status:'pending',statusText:'视频待生成',
+   sceneGradient:'linear-gradient(135deg,#1f2d3d 0%,#2a1a2a 50%,#3d2f2a 100%)',
+   videoPrompt:'水墨晕染底色与精致3D渲染结合的古风仙侠画面，青绿金赤色调，柔和立体光影，镜头从画面中央缓缓摇向院门方向，画面中回头目光警觉，身穿白色儒裙长发及腰眉目温婉的年轻女子推门而入微微一笑，男 青年 中低音 急促 警觉 中文，「谁？！」，女 青年 清亮音色 中速 温婉 中文，「师兄让我把这个交给你。」，门轴吱呀声，保持角色人脸与首帧图一致，保持画面风格色调光影与首帧图一致'},
+  {id:3,mainChar:'白芷',duration:5,status:'pending',statusText:'视频待生成',
+   sceneGradient:'linear-gradient(135deg,#3d2d1f 0%,#2a2a1a 50%,#1f2d3d 100%)',
+   videoPrompt:'水墨晕染底色与精致3D渲染结合的古风仙侠画面，青绿金赤色调，柔和立体光影，镜头缓缓推近白芷面部，画面中将一枚玉符放在石桌上轻声开口，身穿灰色粗布道袍黑发披散面容清瘦的青年男子目光落在玉符上，女 青年 清亮音色 轻柔 关切 中文，「这是师兄让我转交的，他说你用得上。」，远处晚钟声，保持角色人脸与首帧图一致，保持画面风格色调光影与首帧图一致'},
+  {id:4,mainChar:'陆沉',duration:6,status:'pending',statusText:'视频待生成',
+   sceneGradient:'linear-gradient(135deg,#1a1a2d 0%,#2d1f3d 50%,#1f3d2d 100%)',
+   videoPrompt:'水墨晕染底色与精致3D渲染结合的古风仙侠画面，青绿金赤色调，柔和立体光影，镜头从面部缓缓下移至手中玉符，画面中双手握住玉符闭上眼睛玉符散发微弱青光，男 青年 中低音 颤抖 震惊 中文，「这...是引气入体的法门？」，石室回响低鸣，保持角色人脸与首帧图一致，保持画面风格色调光影与首帧图一致'},
+];
+
+const PROMPT_MAX=500;
+
+function updatePtsDisplay(){
+  document.getElementById('ptsDisplay').textContent=userPoints;
+  document.getElementById('memberPts').textContent=userPoints;
+  updateDebugPanel();
+}
+
+// ===== 校验流程（登录→积分→执行） =====
+function checkPoints(cost,action){
+  if(!isLoggedIn){
+    pendingAction=action||null;
+    document.getElementById('loginPhone').value='';
+    document.getElementById('loginCode').value='';
+    document.getElementById('loginPhone').style.borderColor='';
+    document.getElementById('loginCode').parentElement.style.borderColor='';
+    document.getElementById('loginModal').classList.add('show');
+    showValidationToast('您还未登录');
+    return false;
+  }
+  if(userPoints<cost){
+    document.getElementById('ptsModalMsg').textContent='本次操作需要 '+cost+' 积分';
+    document.getElementById('ptsModalBal').textContent=userPoints;
+    const okBtn=document.getElementById('ptsModalOk');
+    if(hasMembership){
+      okBtn.textContent='去充值';
+      okBtn.onclick=()=>{closePtsModal();openMember('recharge');};
+    }else{
+      okBtn.textContent='去充值';
+      okBtn.onclick=()=>{closePtsModal();openMember('sub');};
+    }
+    document.getElementById('ptsModal').classList.add('show');
+    return false;
+  }
+  return true;
+}
+
+function checkAndRun(callback,cost){
+  if(!checkPoints(cost,callback))return;
+  callback();
+}
+
+// ===== Back Button =====
+function goBack(){
+  const hasGenerating=shots.some(s=>s.status==='generating');
+  const hasDone=shots.some(s=>s.status==='done');
+  if(hasGenerating){
+    document.getElementById('leaveConfirmMsg').textContent='视频正在生成中，离开将中断进度，确定返回场景图环节吗？';
+    document.getElementById('leaveConfirmOverlay').classList.add('show');
+    return;
+  }
+  if(hasDone){
+    document.getElementById('leaveConfirmMsg').textContent='已生成的视频将保留，确定返回场景图环节吗？';
+    document.getElementById('leaveConfirmOverlay').classList.add('show');
+    return;
+  }
+  showToast('返回环节3：分镜场景');
+}
+
+function closeLeaveConfirm(){
+  document.getElementById('leaveConfirmOverlay').classList.remove('show');
+}
+
+function confirmLeave(){
+  closeLeaveConfirm();
+  // 中断生成中状态
+  shots.forEach(s=>{
+    if(s.status==='generating'){
+      s.status='pending';
+      s.statusText='视频待生成';
+      userPoints+=VIDEO_COST;
+      ptsHistory.unshift({desc:'分镜'+s.id+'生成中断(退还)',time:new Date().toLocaleString('zh-CN'),amount:VIDEO_COST,type:'退还'});
+    }
+  });
+  updatePtsDisplay();
+  render();
+  showToast('返回环节3：分镜场景');
+}
+
+// ===== Login =====
+function closeLogin(){document.getElementById('loginModal').classList.remove('show');}
+
+function sendCode(){
+  const phone=document.getElementById('loginPhone').value;
+  if(phone.length<11)return;
+  const btn=document.getElementById('codeBtn');
+  btn.classList.add('disabled');
+  let sec=60;
+  btn.textContent=sec+'s';
+  codeTimer=setInterval(()=>{
+    sec--;
+    btn.textContent=sec+'s';
+    if(sec<=0){clearInterval(codeTimer);btn.textContent='获取验证码';btn.classList.remove('disabled');}
+  },1000);
+}
+
+function doLogin(){
+  const phone=document.getElementById('loginPhone').value;
+  const code=document.getElementById('loginCode').value;
+  if(phone.length<11){document.getElementById('loginPhone').style.borderColor='#ef4444';return;}
+  if(code.length<4){document.getElementById('loginCode').parentElement.style.borderColor='#ef4444';return;}
+  const btn=document.querySelector('.login-submit');
+  btn.textContent='登录中...';btn.disabled=true;
+  setTimeout(()=>{
+    isLoggedIn=true;
+    document.getElementById('loginModal').classList.remove('show');
+    btn.textContent='登录';btn.disabled=false;
+    updatePtsDisplay();
+    showToast('登录成功');
+    if(pendingAction){pendingAction();pendingAction=null;}
+  },800);
+}
+
+// ===== Points Insufficient Modal =====
+function closePtsModal(){document.getElementById('ptsModal').classList.remove('show');}
+
+// ===== Member Page =====
+function openMember(tab){
+  if(!isLoggedIn){closePtsModal();checkPoints(0);return;}
+  if(tab)switchMemberTab(tab);
+  document.getElementById('memberPage').classList.add('show');
+}
+function closeMember(){document.getElementById('memberPage').classList.remove('show');}
+
+function switchMemberTab(tab){
+  document.querySelectorAll('.member-tab').forEach(t=>t.classList.remove('active'));
+  if(tab==='sub'){
+    document.querySelectorAll('.member-tab')[0].classList.add('active');
+    document.getElementById('subTab').style.display='';
+    document.getElementById('rechargeTab').style.display='none';
+  }else{
+    document.querySelectorAll('.member-tab')[1].classList.add('active');
+    document.getElementById('subTab').style.display='none';
+    document.getElementById('rechargeTab').style.display='';
+  }
+}
+
+function selectSub(el,type){
+  document.querySelectorAll('.sub-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedSubType=type;
+  const plan=subPlans[type];
+  document.getElementById('payBtn').textContent='立即开通 ¥'+plan.price+plan.period;
+}
+
+function doPay(){
+  const btn=document.getElementById('payBtn');
+  btn.disabled=true;btn.textContent='支付中...';
+  const plan=subPlans[selectedSubType];
+  setTimeout(()=>{
+    userPoints+=plan.pts;
+    hasMembership=true;
+    updatePtsDisplay();
+    btn.disabled=false;
+    btn.textContent='立即开通 ¥'+plan.price+plan.period;
+    ptsHistory.unshift({desc:'开通'+(selectedSubType==='monthly'?'月度':'年度')+'会员',time:new Date().toLocaleString('zh-CN'),amount:plan.pts,type:'会员'});
+    showToast('开通成功！+'+plan.pts+'积分');
+    closeMember();
+  },1500);
+}
+
+function selectPkg(el,pts,price){
+  document.querySelectorAll('.pkg-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedPkg={pts,price};
+  document.getElementById('rechargePayBtn').textContent='立即充值 ¥'+price;
+}
+
+function doRecharge(){
+  const btn=document.getElementById('rechargePayBtn');
+  btn.disabled=true;btn.textContent='支付中...';
+  setTimeout(()=>{
+    userPoints+=selectedPkg.pts;
+    updatePtsDisplay();
+    btn.disabled=false;
+    btn.textContent='立即充值 ¥'+selectedPkg.price;
+    ptsHistory.unshift({desc:'充值'+selectedPkg.pts+'积分',time:new Date().toLocaleString('zh-CN'),amount:selectedPkg.pts,type:'充值'});
+    showToast('充值成功！+'+selectedPkg.pts+'积分');
+    closeMember();
+  },1500);
+}
+
+// ===== Points Detail =====
+function openPtsDetail(){
+  const list=document.getElementById('ptsDetailList');
+  list.innerHTML=ptsHistory.map(h=>`
+    <div class="detail-item">
+      <div class="detail-left">
+        <div class="detail-desc">${h.desc}</div>
+        <div class="detail-time">${h.time}</div>
+      </div>
+      <div class="detail-right">
+        <div class="detail-amount ${h.amount>0?'plus':'minus'}">${h.amount>0?'+':''}${h.amount}</div>
+        <div class="detail-type">${h.type}</div>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('ptsDetailPage').classList.add('show');
+}
+function closePtsDetail(){document.getElementById('ptsDetailPage').classList.remove('show');}
+
+// ===== Render =====
+function render(){
+  const hasDone=shots.some(s=>s.status==='done'||s.status==='modified'||s.status==='scene-changed'||s.status==='style-changed');
+  document.getElementById('cardList').innerHTML=
+    `<div class="retention-tip" id="retentionTip" style="display:${hasDone?'flex':'none'}"><span class="tip-icon">&#9200;</span><span class="tip-text">分镜作品仅在云端保留7天，请及时保存</span></div>`+
+    shots.map(s=>{
+    const sceneImgBg = s.sceneGradient || 'linear-gradient(135deg,rgba(124,58,237,0.12),rgba(167,139,250,0.18))';
+    return `
+  <div class="shot-card">
+      <div style="display:flex;gap:12px">
+      <div class="shot-video-area" id="vbox-${s.id}">
+        <div class="scene-img" style="background:${sceneImgBg}"></div>
+        <div class="scene-thumb" onclick="event.stopPropagation();previewScene(${s.id})">
+          <div class="st-img" style="background:${sceneImgBg}"></div>
+          <div class="st-tag">首帧</div>
+        </div>
+        ${s.status==='generating'
+          ?`<div class="gen-overlay" style="display:flex"><div class="skel"></div><div class="gen-text">生成中</div></div>`
+          :s.status==='done'
+          ?`<div class="play-overlay" style="display:flex" onclick="event.stopPropagation();toggleInlinePlay(${s.id})"></div>
+            <div class="dur-tag" style="display:block">${s.duration}s</div>
+            <div class="done-tag">已生成</div>
+            <div class="inline-prog"><div class="inline-prog-fill" id="ipf-${s.id}"></div></div>
+            <div class="inline-time" id="it-${s.id}">0:00/${Math.floor(s.duration/60)}:${s.duration%60<10?'0':''}${s.duration%60}</div>`
+          :s.status==='error'
+          ?`<div class="fail-overlay" style="display:flex"><div class="fail-icon">&#10060;</div><div class="fail-txt">生成失败</div></div>`
+          :s.status==='modified'
+          ?`<div class="regen-overlay" style="display:flex"><div class="regen-icon">&#9998;</div><div class="regen-txt">描述已修改</div></div>`
+          :s.status==='scene-changed'
+          ?`<div class="regen-overlay warn" style="display:flex"><div class="regen-icon">&#9888;</div><div class="regen-txt">场景图已变更</div></div>`
+          :s.status==='style-changed'
+          ?`<div class="regen-overlay pink" style="display:flex"><div class="regen-icon">&#9888;</div><div class="regen-txt">画风已变更</div></div>`
+          :`<div class="pending-overlay" style="display:flex"><div class="pending-txt">待生成</div></div>`
+        }
+      </div>
+      <div class="shot-info">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="shot-name">分镜${s.id}</div>
+          <div class="shot-pov-tag">${s.mainChar}</div>
+          <div class="shot-status ${s.status}">${s.statusText}</div>
+          <div style="flex:1"></div>
+          ${s.status==='done'
+            ?`<button class="shot-btn out" onclick="onRegen(${s.id})">重新生成</button>`
+            :s.status==='generating'
+            ?`<button class="shot-btn dis">生成中...</button>`
+            :s.status==='error'
+            ?`<button class="shot-btn out" onclick="onGenOne(${s.id})">重新生成</button>`
+            :s.status==='modified'
+            ?`<button class="shot-btn pri" onclick="onGenOne(${s.id})">重新生成</button>`
+            :s.status==='scene-changed'
+            ?`<button class="shot-btn pri" onclick="onGenOne(${s.id})">重新生成</button>`
+            :s.status==='style-changed'
+            ?`<button class="shot-btn pri" onclick="onGenOne(${s.id})">重新生成</button>`
+            :`<button class="shot-btn pri" onclick="onGenOne(${s.id})">生成分镜</button>`
+          }
+        </div>
+      </div>
+      </div>
+      <div class="shot-prompt-label">分镜描述 <span class="shot-prompt-count" id="vc-${s.id}">${s.videoPrompt.length}/${PROMPT_MAX}</span></div>
+      <div class="shot-prompt${s.status==='generating'?' disabled':''}" id="vp-${s.id}" onclick="${s.status==='generating'?'':`editPrompt(${s.id})`}">${s.videoPrompt}</div>
+  </div>`;
+  }).join('');
+  updateBtn();
+  updateDebugPanel();
+  restoreInlinePlayState();
+}
+
+function updateBtn(){
+  const doneCount=shots.filter(s=>s.status==='done').length;
+  document.getElementById('nextBtn').disabled=doneCount<2;
+}
+
+// ===== Edit Prompt (Sheet) =====
+let editingShotId=null;
+function editPrompt(id){
+  const s=shots.find(x=>x.id===id);
+  if(!s||s.status==='generating')return;
+  editingShotId=id;
+  document.getElementById('editSheetTitle').textContent='编辑分镜'+id+'描述';
+  document.getElementById('editSheetSub').textContent='修改后需重新生成视频';
+  const ta=document.getElementById('editTextarea');
+  ta.value=s.videoPrompt;
+  ta.readOnly=false;
+  const countEl=document.getElementById('editCount');
+  countEl.textContent=s.videoPrompt.length+'/'+PROMPT_MAX;
+  countEl.className='edit-sheet-count'+(s.videoPrompt.length>PROMPT_MAX?' warn':'');
+  document.getElementById('editSheetOverlay').classList.add('show');
+  setTimeout(()=>ta.focus(),300);
+}
+function onEditTextInput(){
+  const ta=document.getElementById('editTextarea');
+  const len=ta.value.length;
+  const countEl=document.getElementById('editCount');
+  countEl.textContent=len+'/'+PROMPT_MAX;
+  countEl.className='edit-sheet-count'+(len>PROMPT_MAX?' warn':'');
+}
+function cancelEditPrompt(){
+  document.getElementById('editSheetOverlay').classList.remove('show');
+  editingShotId=null;
+}
+function confirmEditPrompt(){
+  if(editingShotId===null)return;
+  const s=shots.find(x=>x.id===editingShotId);
+  let newPrompt=document.getElementById('editTextarea').value.trim();
+  const CONSTRAINT='保持角色人脸与首帧图一致，保持画面风格色调光影与首帧图一致';
+  if(!newPrompt){
+    showToast('分镜描述不能为空');
+    return;
+  }
+  if(newPrompt.length>PROMPT_MAX){
+    showToast('描述超出字数限制');
+    return;
+  }
+  if(!newPrompt.includes(CONSTRAINT)){
+    newPrompt=newPrompt.replace(/[,，]\s*$/,'')+'，'+CONSTRAINT;
+    showToast('双一致性约束已自动补回');
+  }
+  if(s.videoPrompt!==newPrompt){
+    s.videoPrompt=newPrompt;
+    if(s.status==='done'){s.status='modified';s.statusText='描述已修改，需重新生成';}
+    else if(s.status==='scene-changed'){/* keep scene-changed status */}
+  }
+  document.getElementById('editSheetOverlay').classList.remove('show');
+  editingShotId=null;
+  render();
+  showSaveIndicator();
+}
+
+// ===== Save Indicator =====
+function showSaveIndicator(){
+  const si=document.getElementById('saveIndicator');
+  si.classList.add('show');
+  setTimeout(()=>si.classList.remove('show'),1500);
+}
+
+// ===== 生成入口（带校验） =====
+function onGenOne(id){
+  checkAndRun(()=>genOne(id),VIDEO_COST);
+}
+function onRegen(id){
+  checkAndRun(()=>genOne(id),VIDEO_COST);
+}
+function onGenAll(){
+  const toGen=shots.filter(s=>s.status!=='done'&&s.status!=='generating');
+  if(toGen.length===0){showToast('所有分镜已生成');return;}
+  const totalCost=VIDEO_COST*toGen.length;
+  checkAndRun(genAll,totalCost);
+}
+
+// ===== Generation =====
+function genOne(id){
+  const s=shots.find(x=>x.id===id);
+  s.status='generating';
+  s.statusText='正在生成视频...';
+  userPoints-=VIDEO_COST;
+  updatePtsDisplay();
+  render();
+
+  setTimeout(()=>{
+    s.status='done';
+    s.statusText='视频已生成';
+    ptsHistory.unshift({desc:'分镜'+s.id+'视频生成',time:new Date().toLocaleString('zh-CN'),amount:-VIDEO_COST,type:'消耗'});
+    render();
+    showToast('分镜'+s.id+'视频已生成');
+    showSaveIndicator();
+  },1200);
+}
+
+function genAll(){
+  const toGen=shots.filter(s=>s.status!=='done'&&s.status!=='generating');
+  if(toGen.length===0)return;
+
+  // 1. All queued at once: mark all as generating, deduct all points upfront
+  const totalCost=VIDEO_COST*toGen.length;
+  userPoints-=totalCost;
+  updatePtsDisplay();
+  toGen.forEach(s=>{
+    s.status='generating';
+    s.statusText='正在生成视频...';
+  });
+  render();
+
+  // 2. Complete them one by one
+  let idx=0;
+  function completeOne(){
+    if(idx>=toGen.length)return;
+    const s=toGen[idx];
+    s.status='done';
+    s.statusText='视频已生成';
+    ptsHistory.unshift({desc:'分镜'+s.id+'视频生成',time:new Date().toLocaleString('zh-CN'),amount:-VIDEO_COST,type:'消耗'});
+    render();
+    showToast('分镜'+s.id+'视频已生成');
+    showSaveIndicator();
+    idx++;
+    if(idx<toGen.length)setTimeout(completeOne,1200);
+  }
+  setTimeout(completeOne,1200);
+}
+
+// ===== Inline Video Player (iOS AVPlayer) =====
+const inlinePlaying={};
+
+function toggleInlinePlay(id){
+  const s=shots.find(x=>x.id===id);
+  if(!s||s.status!=='done')return;
+  const vbox=document.getElementById('vbox-'+id);
+  if(!vbox)return;
+
+  if(inlinePlaying[id]){
+    // Pause
+    clearInterval(inlinePlaying[id].timer);
+    delete inlinePlaying[id];
+    vbox.classList.remove('is-playing');
+  }else{
+    // Start playing
+    vbox.classList.add('is-playing');
+    let progress=0;
+    inlinePlaying[id]={progress:0};
+    inlinePlaying[id].timer=setInterval(()=>{
+      progress+=0.5;
+      inlinePlaying[id].progress=progress;
+      const pct=s.duration>0?(progress/s.duration*100):0;
+      const fillEl=document.getElementById('ipf-'+id);
+      const timeEl=document.getElementById('it-'+id);
+      if(fillEl)fillEl.style.width=pct+'%';
+      if(timeEl){
+        const cs=Math.floor(progress%60);
+        const ts=s.duration%60;
+        timeEl.textContent=Math.floor(progress/60)+':'+(cs<10?'0':'')+cs+'/'+Math.floor(s.duration/60)+':'+(ts<10?'0':'')+ts;
+      }
+      if(progress>=s.duration){
+        clearInterval(inlinePlaying[id].timer);
+        delete inlinePlaying[id];
+        vbox.classList.remove('is-playing');
+        if(fillEl)fillEl.style.width='0%';
+        if(timeEl)timeEl.textContent='0:00/'+Math.floor(s.duration/60)+':'+(s.duration%60<10?'0':'')+(s.duration%60);
+      }
+    },500);
+  }
+}
+
+function restoreInlinePlayState(){
+  Object.keys(inlinePlaying).forEach(id=>{
+    const s=shots.find(x=>x.id===parseInt(id));
+    if(!s||s.status!=='done')return;
+    const vbox=document.getElementById('vbox-'+id);
+    if(vbox)vbox.classList.add('is-playing');
+  });
+}
+
+function goNext(){openMerge();}
+
+// ===== Loading Overlay =====
+function showLoading(text,sub){
+  if(text)document.getElementById('loadingText').textContent=text;
+  if(sub)document.getElementById('loadingSub').textContent=sub;
+  document.getElementById('loadingOverlay').classList.add('show');
+}
+function hideLoading(){
+  document.getElementById('loadingOverlay').classList.remove('show');
+}
+
+// ===== Scene Image Preview =====
+function previewScene(id){
+  const s=shots.find(x=>x.id===id);
+  document.getElementById('pvImg').style.background=s.sceneGradient||'linear-gradient(135deg,rgba(124,58,237,0.15),rgba(167,139,250,0.15))';
+  document.getElementById('previewOverlay').classList.add('show');
+}
+function closePreview(){document.getElementById('previewOverlay').classList.remove('show');}
+
+// ===== Merge Sheet =====
+let selIds=new Set();
+function openMerge(){
+  selIds.clear();
+  shots.forEach(s=>{if(s.status==='done')selIds.add(s.id);});
+  renderMerge();
+  document.getElementById('mergeSheet').classList.add('show');
+}
+function closeMerge(){document.getElementById('mergeSheet').classList.remove('show');}
+function toggleSel(id){
+  const s=shots.find(x=>x.id===id);
+  if(s.status!=='done')return;
+  selIds.has(id)?selIds.delete(id):selIds.add(id);
+  renderMerge();
+}
+function renderMerge(){
+  const list=document.getElementById('mergeList');
+  const statusMap={pending:'待生成',generating:'生成中',error:'生成失败',modified:'描述已修改',scene_changed:'场景图已变更','style-changed':'画风已变更'};
+  const stagClass={pending:'nd',generating:'nd',error:'nd',modified:'nd',scene_changed:'nd','style-changed':'nd'};
+  list.innerHTML=shots.map(s=>{
+    const done=s.status==='done';
+    const canSelect=done;
+    const sel=selIds.has(s.id);
+    const shortStatus=done?'已生成':(statusMap[s.status]||'未生成');
+    return `<div class="merge-item">
+      <div class="merge-ck ${canSelect?(sel?'on':''):'off'}" onclick="toggleSel(${s.id})"></div>
+      <div class="merge-thumb" style="width:54px;height:30px;border-radius:6px;overflow:hidden;background:rgba(255,255,255,0.04);flex-shrink:0;display:flex;align-items:center;justify-content:center">${done?'<div class="mt-done" style="width:100%;height:100%;background:'+s.sceneGradient+'"></div>':'<div class="mt-nd" style="color:#4a4a6a;font-size:10px">&#127909;</div>'}</div>
+      <div class="merge-info">
+        <div class="merge-name">分镜${s.id}</div>
+        <div class="merge-meta">${done?s.duration+'s · '+s.mainChar+' · 已生成':s.mainChar+' · '+s.statusText}</div>
+      </div>
+      <div class="merge-stag ${done?'done':'nd'}">${shortStatus}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('selCount').textContent=selIds.size;
+  document.getElementById('mergeBtn').disabled=selIds.size<2;
+}
+function doMerge(){
+  const ids=[...selIds].sort((a,b)=>a-b);
+  closeMerge();
+  showToast('选择分镜'+ids.join('、')+'，跳转环节5');
+  setTimeout(()=>{
+    window.location.href='环节5-合成视频.html?shots='+ids.join(',');
+  },600);
+}
+
+// ===== Dialog =====
+let dlgCb=null;
+function showDlg(t,m,cb){
+  document.getElementById('dlgT').textContent=t;
+  document.getElementById('dlgM').textContent=m;
+  dlgCb=cb;
+  document.getElementById('dlgOk').onclick=()=>{closeDlg();if(dlgCb)dlgCb();};
+  document.getElementById('dlg').classList.add('show');
+}
+function closeDlg(){document.getElementById('dlg').classList.remove('show');}
+
+// ===== Toast =====
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.background='rgba(74,222,128,0.9)';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+function showValidationToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.background='rgba(239,68,68,0.95)';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ===== Debug Panel =====
+function updateDebugPanel(){
+  const loginSel=document.getElementById('dbgLoginSel');
+  const memberSel=document.getElementById('dbgMemberSel');
+  const ptsInput=document.getElementById('dbgPtsInput');
+  const ptsVal=document.getElementById('dbgPoints');
+  if(loginSel)loginSel.value=isLoggedIn?'1':'0';
+  if(memberSel)memberSel.value=hasMembership?'1':'0';
+  if(ptsInput)ptsInput.value=userPoints;
+  if(ptsVal){
+    ptsVal.textContent=userPoints;
+    ptsVal.className='dbg-val'+(userPoints<VIDEO_COST?' warn':' on');
+  }
+  const done=shots.filter(s=>s.status==='done').length;
+  const busy=shots.filter(s=>s.status==='generating').length;
+  const failed=shots.filter(s=>s.status==='error').length;
+  const dDone=document.getElementById('dbgDone');
+  const dBusy=document.getElementById('dbgBusy');
+  const dFailed=document.getElementById('dbgFailed');
+  if(dDone){dDone.textContent=done;dDone.className='dbg-val on';}
+  if(dBusy){dBusy.textContent=busy;dBusy.className='dbg-val'+(busy>0?' warn':'');}
+  if(dFailed){dFailed.textContent=failed;dFailed.className='dbg-val'+(failed>0?' warn':'');}
+}
+
+function dbgSetLogin(val){
+  isLoggedIn=val==='1';
+  if(!isLoggedIn)hasMembership=false;
+  updateDebugPanel();
+  showToast(isLoggedIn?'调试：已登录':'调试：已登出');
+}
+
+function dbgSetMember(val){
+  hasMembership=val==='1';
+  updateDebugPanel();
+  showToast(hasMembership?'调试：设为会员':'调试：取消会员');
+}
+
+function dbgSetPoints(val){
+  userPoints=Math.max(0,parseInt(val)||0);
+  updatePtsDisplay();
+}
+
+function dbgPreset(type){
+  switch(type){
+    case 'newUser':
+      isLoggedIn=false;hasMembership=false;userPoints=0;
+      shots.forEach(s=>{s.status='pending';s.statusText='视频待生成';});
+      break;
+    case 'freeUser':
+      isLoggedIn=true;hasMembership=false;userPoints=0;
+      shots.forEach(s=>{s.status='pending';s.statusText='视频待生成';});
+      break;
+    case 'member':
+      isLoggedIn=true;hasMembership=true;userPoints=100;
+      shots.forEach(s=>{s.status='pending';s.statusText='视频待生成';});
+      break;
+    case 'lowPts':
+      isLoggedIn=true;hasMembership=false;userPoints=2;
+      break;
+  }
+  updatePtsDisplay();render();
+  showToast('预设：'+{newUser:'新用户',freeUser:'免费用户0积分',member:'会员100积分',lowPts:'积分仅剩2'}[type]);
+}
+
+// ===== Debug Helpers =====
+function genAllInstant(){
+  shots.forEach(s=>{
+    if(s.status!=='done'){s.status='done';s.statusText='视频已生成';}
+  });
+  hideLoading();
+  render();
+  showToast('全部生成完成');
+}
+
+function failOne(id){
+  const s=shots.find(x=>x.id===id);
+  if(s){
+    s.status='error';s.statusText='网络异常，请重试';
+    userPoints+=VIDEO_COST;
+    ptsHistory.unshift({desc:'分镜'+s.id+'视频生成失败(退还)',time:new Date().toLocaleString('zh-CN'),amount:VIDEO_COST,type:'退还'});
+    updatePtsDisplay();render();
+    showToast('生成失败，请重试');
+  }
+}
+
+function changeScene(){
+  shots.forEach(s=>{
+    if(s.status==='done'){
+      s.status='scene-changed';
+      s.statusText='场景图已变更，需重新生成';
+      s.promptReassembled=true;
+    }
+  });
+  render();
+  showToast('场景图已变更，分镜描述已更新，请重新生成对应分镜视频');
+}
+
+function changeStyle(){
+  shots.forEach(s=>{
+    if(s.status==='done'||s.status==='modified'||s.status==='scene-changed'){
+      s.status='style-changed';
+      s.statusText='画风已变更，需重新生成';
+      s.promptReassembled=true;
+    }
+  });
+  render();
+  showToast('画风已变更，分镜描述已更新，请重新生成分镜视频');
+}
+
+function changeCharacter(){
+  // Simulate character appearance change - affects shots with that character
+  const charName=shots.length>0&&shots[0].mainChar?shots[0].mainChar:'角色';
+  let count=0;
+  shots.forEach(s=>{
+    if(s.status==='done'||s.status==='modified'||s.status==='desc-edited'){
+      if(s.mainChar===charName||(s.characters&&s.characters.includes(charName))){
+        s.status='scene-changed';
+        s.statusText='角色外貌已变更，需重新生成';
+        s.promptReassembled=true;
+        count++;
+      }
+    }
+  });
+  render();
+  if(count>0) showToast(`角色外貌已变更，${count}条分镜描述已更新`);
+  else showToast('无可更新的分镜');
+}
+
+function changeScript(){
+  // Simulate script content change - affects first 2 shots as example
+  let count=0;
+  shots.forEach((s,i)=>{
+    if(i<2&&(s.status==='done'||s.status==='modified'||s.status==='desc-edited')){
+      s.status='scene-changed';
+      s.statusText='剧本内容已变更，需重新生成';
+      s.promptReassembled=true;
+      count++;
+    }
+  });
+  render();
+  if(count>0) showToast(`剧本内容已变更，${count}条分镜描述已更新`);
+  else showToast('无可更新的分镜');
+}
+
+function dbgToggleLoading(){
+  const ol=document.getElementById('loadingOverlay');
+  if(ol.classList.contains('show')){hideLoading();}
+  else{showLoading('正在生成分镜视频…','Seedance 1.5 Pro 生成中，请稍候');}
+}
+
+function dbgResetAll(){
+  isLoggedIn=false;
+  hasMembership=false;
+  userPoints=200;
+  shots.forEach(s=>{s.status='pending';s.statusText='视频待生成';});
+  hideLoading();
+  updatePtsDisplay();render();
+  showToast('已重置');
+}
+
+// 初始化
+updatePtsDisplay();
+render();
+</script>
+</body>
+</html>
