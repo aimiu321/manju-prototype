@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI漫剧创作大师 — 制作同款</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;background:#e8e8e8;min-height:100vh;display:flex;justify-content:center;padding:20px}
+
+/* === 三栏布局 === */
+.layout{display:flex;gap:20px;max-width:1440px;width:100%}
+.col-left{flex-shrink:0;display:flex;align-items:flex-start;justify-content:center}
+.col-mid{flex:1;min-width:0}
+.col-right{flex-shrink:0;width:320px}
+
+/* === 手机模型 === */
+.phone-frame{width:390px;height:844px;background:#0d0d0d;border-radius:44px;border:2px solid #ccc;overflow:hidden;position:relative;box-shadow:0 4px 24px rgba(0,0,0,0.1)}
+.phone-notch{width:126px;height:30px;background:#0d0d0d;border-radius:0 0 18px 18px;margin:0 auto;position:relative;z-index:100}
+.phone-notch::before{content:'';width:8px;height:8px;background:#1a1a1a;border-radius:50%;position:absolute;right:26px;top:10px}
+.status-bar{display:flex;justify-content:space-between;align-items:center;padding:0 28px;height:18px;color:#ccc;font-size:11px;font-weight:600}
+.app-content{height:calc(844px - 30px - 18px);display:flex;flex-direction:column;background:#0d0d0d}
+
+/* Nav */
+.nav-bar{display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid #1a1a1a;flex-shrink:0}
+.nav-bar .back{color:#8b7bf7;font-size:18px;cursor:pointer;margin-right:8px}
+.nav-bar .title{font-size:16px;font-weight:700;color:#fff;flex:1}
+
+/* Page */
+.page{display:none;flex-direction:column;height:100%}
+.page.active{display:flex}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.scroll::-webkit-scrollbar{width:0}
+
+/* === 一级页面：漫剧短片列表 === */
+/* 分组标签栏 */
+.tab-bar{display:flex;gap:0;padding:8px 16px;flex-shrink:0;border-bottom:1px solid #1a1a1a;overflow-x:auto}
+.tab-bar::-webkit-scrollbar{width:0}
+.tab-item{padding:6px 16px;border-radius:18px;font-size:12px;font-weight:600;color:#555;cursor:pointer;white-space:nowrap;transition:all .15s;background:transparent}
+.tab-item.on{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff}
+.tab-item:not(.on):hover{color:#8b7bf7}
+
+/* 区域标题 */
+.section-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 8px}
+.section-title{font-size:15px;font-weight:700;color:#fff}
+.section-more{font-size:11px;color:#555;cursor:pointer}
+
+/* 剧集网格 两列 */
+.drama-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 16px}
+.drama-card{cursor:pointer;transition:transform .12s}
+.drama-card:active{transform:scale(.97)}
+.drama-cover{width:100%;aspect-ratio:3/4;border-radius:10px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.drama-cover .cover-bg{position:absolute;inset:0}
+.drama-cover .cover-title{position:relative;z-index:2;font-size:13px;font-weight:700;color:#fff;text-align:center;padding:8px 6px;line-height:1.4;text-shadow:0 1px 4px rgba(0,0,0,0.6)}
+.drama-cover .play-icon{position:absolute;bottom:8px;right:8px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:2}
+.drama-cover .play-icon::after{content:'';width:0;height:0;border-top:6px solid transparent;border-bottom:6px solid transparent;border-left:10px solid rgba(255,255,255,0.8);margin-left:2px}
+.drama-name{font-size:12px;font-weight:600;color:#ccc;margin-top:6px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* 封面渐变背景 */
+.bg-1{background:linear-gradient(135deg,#2d1b4e,#4a1942,#1a0a2e)}
+.bg-2{background:linear-gradient(135deg,#1a2a4a,#2a1a3c,#0a1a3e)}
+.bg-3{background:linear-gradient(135deg,#1a3a2a,#0a2a1a,#2a4a1a)}
+.bg-4{background:linear-gradient(135deg,#4a2a1a,#3a1a0a,#2a1a0a)}
+.bg-5{background:linear-gradient(135deg,#1a1a4a,#2a2a5a,#0a0a3a)}
+.bg-6{background:linear-gradient(135deg,#3a1a3a,#4a1a2a,#2a0a2a)}
+.bg-7{background:linear-gradient(135deg,#2a3a2a,#1a2a1a,#0a1a0a)}
+.bg-8{background:linear-gradient(135deg,#4a1a2a,#3a0a1a,#2a1a3a)}
+
+/* 底部创建入口 */
+.home-create{position:absolute;bottom:0;left:0;right:0;padding:12px 16px 24px;background:linear-gradient(transparent,#0d0d0d 20%);z-index:10}
+.create-btn{width:100%;padding:13px;border-radius:12px;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;display:flex;align-items:center;justify-content:center;gap:6px}
+.create-btn:active{transform:scale(.98)}
+.create-btn .plus{font-size:18px;font-weight:400}
+
+/* === 二级页面：视频播放 === */
+.video-page{display:flex;flex-direction:column;height:100%}
+.video-area{flex:1;position:relative;display:flex;align-items:center;justify-content:center;background:#000}
+.video-area .placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;position:relative}
+.video-area .v-bg{position:absolute;inset:0;opacity:.6}
+.video-controls{position:absolute;bottom:0;left:0;right:0;padding:8px 12px;background:linear-gradient(transparent,rgba(0,0,0,0.7))}
+.progress-bar{width:100%;height:3px;background:rgba(255,255,255,0.2);border-radius:2px;margin-bottom:6px;position:relative}
+.progress-fill{width:35%;height:100%;background:#7c3aed;border-radius:2px}
+.progress-dot{width:10px;height:10px;background:#7c3aed;border-radius:50%;position:absolute;top:50%;right:0;transform:translate(50%,-50%)}
+.video-time{display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,0.6)}
+.play-big{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2;transition:all .15s}
+.play-big:active{transform:scale(.9)}
+.play-big::after{content:'';width:0;height:0;border-top:11px solid transparent;border-bottom:11px solid transparent;border-left:18px solid rgba(255,255,255,0.8);margin-left:4px}
+.video-info{padding:14px 16px 0;background:#0d0d0d;flex-shrink:0}
+.video-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:4px}
+.video-tags{display:flex;gap:6px;margin-bottom:8px}
+.v-tag{padding:3px 8px;border-radius:4px;font-size:10px;font-weight:600}
+.v-tag.genre{background:rgba(124,58,237,0.15);color:#8b7bf7}
+.v-tag.style{background:rgba(234,179,8,0.15);color:#d97706}
+.v-tag.ratio{background:rgba(34,197,94,0.15);color:#16a34a}
+.video-desc{font-size:12px;color:#555;line-height:1.5;margin-bottom:12px}
+
+/* 制作同款按钮 */
+.make-btn-area{padding:12px 16px 28px;background:#0d0d0d;flex-shrink:0}
+.make-btn{width:100%;padding:14px;border-radius:12px;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;box-shadow:0 4px 20px rgba(124,58,237,0.3);display:flex;align-items:center;justify-content:center;gap:8px;transition:all .15s}
+.make-btn:active{transform:scale(.97)}
+.make-btn .icon{font-size:18px}
+
+/* Toast */
+.toast{position:absolute;top:56px;left:50%;transform:translateX(-50%);padding:8px 16px;background:rgba(124,58,237,0.9);color:#fff;border-radius:8px;font-size:12px;z-index:500;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+
+/* === 操作说明面板 === */
+.guide-panel{background:#fff;border-radius:14px;border:1px solid #ddd;box-shadow:0 1px 3px rgba(0,0,0,0.06);overflow:hidden}
+.guide-header{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;padding:14px 18px;font-size:16px;font-weight:700;letter-spacing:1px}
+.guide-body{padding:16px 18px;max-height:812px;overflow-y:auto}
+.guide-body::-webkit-scrollbar{width:4px}
+.guide-body::-webkit-scrollbar-thumb{background:#ccc;border-radius:2px}
+.guide-sec{margin-bottom:16px}
+.guide-sec h3{font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:6px;padding-left:8px;border-left:3px solid #7c3aed}
+.guide-sec p{font-size:12px;color:#555;line-height:1.7}
+.guide-step{display:flex;gap:8px;margin-bottom:6px;font-size:12px;color:#555;line-height:1.6}
+.guide-step .num{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:#7c3aed;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <!-- 左侧：手机原型 -->
+  <div class="col-left">
+    <div class="phone-frame">
+      <div class="phone-notch"></div>
+      <div class="status-bar"><span>9:41</span><span>5G ●</span></div>
+      <div class="app-content">
+
+        <!-- ====== 一级页面：漫剧短片列表 ====== -->
+        <div class="page active" id="page-list">
+          <div class="nav-bar">
+            <div class="title">漫剧</div>
+          </div>
+
+          <!-- 分组标签栏 -->
+          <div class="tab-bar">
+            <div class="tab-item on" data-tab="hot">热门漫剧</div>
+            <div class="tab-item" data-tab="rebirth">重生</div>
+            <div class="tab-item" data-tab="reverse">逆袭</div>
+            <div class="tab-item" data-tab="xianxia">玄幻修仙</div>
+            <div class="tab-item" data-tab="urban">都市言情</div>
+            <div class="tab-item" data-tab="scifi">异能科幻</div>
+          </div>
+
+          <div class="scroll" id="list-scroll">
+            <div class="section-header">
+              <div class="section-title">热门漫剧</div>
+            </div>
+
+            <div class="drama-grid">
+              <!-- 1 -->
+              <div class="drama-card" onclick="goPlay(0)">
+                <div class="drama-cover">
+                  <div class="cover-bg bg-1"></div>
+                  <div class="cover-title">嫁死对头<br>全京城的脸都肿了</div>
+                  <div class="play-icon"></div>
+                </div>
+                <div class="drama-name">嫁死对头，全京城的脸都肿了</div>
+              </div>
+              <!-- 2 -->
+              <div class="drama-card" onclick="goPlay(1)">
+                <div class="drama-cover">
+                  <div class="cover-bg bg-2"></div>
+                  <div class="cover-title">三年一到<br>恭迎战神归位</div>
+                  <div class="play-icon"></div>
+                </div>
+                <div class="drama-name">三年一到，恭迎战神归位</div>
+              </div>
+              <!-- 3 -->
+              <div class="drama-card" onclick="goPlay(2)">
+                <div class="drama-cover">
+                  <div class="cover-bg bg-3"></div>
+                  <div class="cover-title">末世囤粮一千年<br>国家请我出山</div>
+                  <div class="play-icon"></div>
+                </div>
+                <div class="drama-name">末世囤粮一千年，国家请我出山</div>
+              </div>
+              <!-- 4 -->
+              <div class="drama-card" onclick="goPlay(3)">
+                <div class="drama-cover">
+                  <div class="cover-bg bg-4"></div>
+                  <div class="cover-title">闪婚当夜<br>我查爆他底细</div>
+                  <div class="play-icon"></div>
+                </div>
+                <div class="drama-name">闪婚当夜，我查爆他底细</div>
+              </div>
+              <!-- 5 -->
+              <div class="drama-card" onclick="goPlay(4)">
+                <div class="drama-cover">
+                  <div class="cover-bg bg-5"></div>
+                  <div class="cover-title">AI男友奔现<br>毁了我人生</div>
+                  <div class="play-icon"></div>
+                </div>
+                <div class="drama-name">AI男友奔现，毁了我人生</div>
+              </div>
+              <!-- 6 -->
+              <div class="drama-card" onclick="goPlay(5)">
+                <div class="drama-cover">
+                  <div class="cover-bg bg-6"></div>
+                  <div class="cover-title">别让司机发现<br>你能说话</div>
+                  <div class="play-icon"></div>
+                </div>
+                <div class="drama-name">别让司机发现，你能说话</div>
+              </div>
+              <!-- 7 -->
+              <div class="drama-card" onclick="goPlay(6)">
+                <div class="drama-cover">
+                  <div class="cover-bg bg-7"></div>
+                  <div class="cover-title">流放荒城？<br>我带医术原地封神</div>
+                  <div class="play-icon"></div>
+                </div>
+                <div class="drama-name">流放荒城？我带医术原地封神</div>
+              </div>
+              <!-- 8 -->
+              <div class="drama-card" onclick="goPlay(7)">
+                <div class="drama-cover">
+                  <div class="cover-bg bg-8"></div>
+                  <div class="cover-title">攻略病娇？<br>直接虐哭他</div>
+                  <div class="play-icon"></div>
+                </div>
+                <div class="drama-name">攻略病娇？直接虐哭他</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ====== 二级页面：视频播放 ====== -->
+        <div class="page" id="page-play">
+          <div class="video-page">
+            <!-- 视频区 -->
+            <div class="video-area">
+              <div class="placeholder">
+                <div class="v-bg" id="play-bg"></div>
+                <div class="play-big" id="play-btn" onclick="togglePlay()"></div>
+              </div>
+              <div class="video-controls">
+                <div class="progress-bar">
+                  <div class="progress-fill">
+                    <div class="progress-dot"></div>
+                  </div>
+                </div>
+                <div class="video-time">
+                  <span>01:12</span>
+                  <span>03:26</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 视频信息 -->
+            <div class="video-info">
+              <div class="video-title" id="play-title">嫁死对头，全京城的脸都肿了</div>
+              <div class="video-tags" id="play-tags"></div>
+              <div class="video-desc" id="play-desc"></div>
+            </div>
+
+            <!-- 制作同款按钮 -->
+            <div class="make-btn-area">
+              <button class="make-btn" onclick="makeSimilar()">
+                <span class="icon">✨</span> 制作同款
+              </button>
+            </div>
+          </div>
+
+          <!-- 返回按钮浮层 -->
+          <div style="position:absolute;top:44px;left:12px;z-index:20">
+            <div style="width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="goBack()">
+              <span style="color:#fff;font-size:16px">‹</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Toast -->
+        <div class="toast" id="toast"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右侧：操作说明 -->
+  <div class="col-right">
+    <div class="guide-panel">
+      <div class="guide-header">制作同款 — 交互说明</div>
+      <div class="guide-body">
+        <div class="guide-sec">
+          <h3>一级页面：漫剧短片列表</h3>
+          <div class="guide-step"><div class="num">1</div><div>顶部分组标签栏，MVP仅"热门漫剧"可选，其余置灰</div></div>
+          <div class="guide-step"><div class="num">2</div><div>8部精选漫剧短片，两列竖向排列</div></div>
+          <div class="guide-step"><div class="num">3</div><div>每张卡片：竖版封面 + 剧集名称 + 设定·集数</div></div>
+          <div class="guide-step"><div class="num">4</div><div>点击任意卡片 → 进入视频播放页</div></div>
+        </div>
+        <div class="guide-sec">
+          <h3>二级页面：视频播放</h3>
+          <div class="guide-step"><div class="num">5</div><div>自动播放漫剧视频，支持暂停/播放</div></div>
+          <div class="guide-step"><div class="num">6</div><div>展示剧集名称 + 设定/画风/比例标签</div></div>
+          <div class="guide-step"><div class="num">7</div><div>底部"制作同款"按钮 → 跳转环节①内容创作</div></div>
+          <div class="guide-step"><div class="num">8</div><div>自动带入：漫剧设定 + 画面风格 + 视频比例 + 分辨率</div></div>
+        </div>
+        <div class="guide-sec">
+          <h3>制作同款自动填入字段</h3>
+          <div class="guide-step" style="flex-direction:column;gap:2px">
+            <div style="font-size:12px;color:#555">✅ 漫剧设定（如：都市言情）</div>
+            <div style="font-size:12px;color:#555">✅ 画面风格（如：都市风）</div>
+            <div style="font-size:12px;color:#555">✅ 视频比例（如：9:16）</div>
+            <div style="font-size:12px;color:#555">✅ 分辨率（如：720p）</div>
+            <div style="font-size:12px;color:#999">❌ 漫剧名称 — 用户自行填写</div>
+            <div style="font-size:12px;color:#999">❌ 集数 — 用户自行选择</div>
+            <div style="font-size:12px;color:#999">❌ 大纲/剧本 — 用户自行填写</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// 短片数据
+const dramas = [
+  { name:'嫁死对头，全京城的脸都肿了', genre:'重生', style:'3D国漫', ratio:'9:16', res:'720p', eps:'5集', bg:'bg-1', desc:'重生回到出嫁当日，这次我绝不嫁那个渣男！' },
+  { name:'三年一到，恭迎战神归位', genre:'逆袭', style:'都市风', ratio:'9:16', res:'720p', eps:'10集', bg:'bg-2', desc:'蛰伏三年，一朝归来，天下震动。' },
+  { name:'末世囤粮一千年，国家请我出山', genre:'异能', style:'末世风', ratio:'9:16', res:'720p', eps:'10集', bg:'bg-3', desc:'末世降临，别人还在挨饿，我已囤粮千年。' },
+  { name:'闪婚当夜，我查爆他底细', genre:'都市言情', style:'都市风', ratio:'9:16', res:'720p', eps:'5集', bg:'bg-4', desc:'闪婚老公身份不简单，当夜就查出了惊天秘密。' },
+  { name:'AI男友奔现，毁了我人生', genre:'科幻', style:'赛博朋克风', ratio:'9:16', res:'720p', eps:'5集', bg:'bg-5', desc:'和AI男友奔现后，现实比虚拟更可怕。' },
+  { name:'别让司机发现，你能说话', genre:'悬疑', style:'暗黑风', ratio:'9:16', res:'720p', eps:'5集', bg:'bg-6', desc:'后座乘客突然开口，司机的冷汗下来了。' },
+  { name:'流放荒城？我带医术原地封神', genre:'修仙', style:'水墨风', ratio:'9:16', res:'720p', eps:'10集', bg:'bg-7', desc:'被流放荒城？凭一手医术直接封神！' },
+  { name:'攻略病娇？直接虐哭他', genre:'逆袭', style:'2D国漫', ratio:'9:16', res:'720p', eps:'5集', bg:'bg-8', desc:'重生回来，这次我绝不心软。' }
+];
+
+let currentDrama = null;
+let isPlaying = true;
+
+// Tab 切换
+document.querySelectorAll('.tab-item').forEach(tab => {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('on'));
+    this.classList.add('on');
+    // MVP 仅"热门漫剧"有内容
+    if(this.dataset.tab !== 'hot') {
+      showToast('后续版本开放');
+      document.querySelectorAll('.tab-item')[0].classList.add('on');
+      this.classList.remove('on');
+    }
+  });
+});
+
+// 进入播放页
+function goPlay(idx) {
+  currentDrama = dramas[idx];
+  document.getElementById('page-list').classList.remove('active');
+  document.getElementById('page-play').classList.add('active');
+
+  document.getElementById('play-title').textContent = currentDrama.name;
+  document.getElementById('play-bg').className = 'v-bg ' + currentDrama.bg;
+  document.getElementById('play-desc').textContent = currentDrama.desc;
+
+  const tagsEl = document.getElementById('play-tags');
+  tagsEl.innerHTML = `
+    <span class="v-tag genre">${currentDrama.genre}</span>
+    <span class="v-tag style">${currentDrama.style}</span>
+    <span class="v-tag ratio">${currentDrama.ratio}</span>
+  `;
+
+  isPlaying = true;
+  updatePlayBtn();
+}
+
+// 返回列表
+function goBack() {
+  document.getElementById('page-play').classList.remove('active');
+  document.getElementById('page-list').classList.add('active');
+  currentDrama = null;
+}
+
+// 播放/暂停
+function togglePlay() {
+  isPlaying = !isPlaying;
+  updatePlayBtn();
+}
+
+function updatePlayBtn() {
+  const btn = document.getElementById('play-btn');
+  if(!isPlaying) {
+    btn.style.background = 'rgba(255,255,255,0.15)';
+  } else {
+    btn.style.background = 'rgba(255,255,255,0.1)';
+  }
+}
+
+// 制作同款
+function makeSimilar() {
+  if(currentDrama) {
+    showToast('跳转内容创作：' + currentDrama.genre + ' · ' + currentDrama.style);
+  }
+}
+
+// Toast
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+</script>
+</body>
+</html>
